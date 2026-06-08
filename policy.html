@@ -187,38 +187,26 @@
   </footer>
 
   <script>
-    // Theme
-    const themeButtons = document.querySelectorAll(".theme-toggle .icon-btn");
-    function applyTheme(opt) {
-      let actual = opt;
-      if (opt === "system") {
-        actual = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      }
-      document.body.classList.toggle("dark", actual === "dark");
-      document.body.classList.toggle("light", actual === "light");
-      themeButtons.forEach((b) => b.classList.toggle("active", b.dataset.themeOption === opt));
-      try { localStorage.setItem("ss-theme", opt); } catch (e) {}
-    }
-    themeButtons.forEach((b) => b.addEventListener("click", () => applyTheme(b.dataset.themeOption)));
-    (() => {
-      let saved = "light";
-      try { saved = localStorage.getItem("ss-theme") || "light"; } catch (e) {}
-      applyTheme(saved);
-    })();
-
-    // Smooth scroll for table of contents
-    document.querySelectorAll('.toc a').forEach((a) => {
-      a.addEventListener('click', (e) => {
-        const id = a.getAttribute('href').slice(1);
-        const target = document.getElementById(id);
-        if (target) {
-          e.preventDefault();
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          history.replaceState(null, '', `#${id}`);
-        }
+  <script>
+  // Ensure theme buttons work on Policy page
+  document.addEventListener('DOMContentLoaded', () => {
+    const themeButtons = document.querySelectorAll('.theme-toggle .icon-btn');
+    if (themeButtons.length) {
+      themeButtons.forEach((b) => {
+        b.addEventListener('click', () => {
+          const opt = b.dataset.themeOption;
+          // Call the global applyTheme defined in script.js
+          if (typeof applyTheme === 'function') {
+            applyTheme(opt);
+          } else {
+            console.warn('applyTheme not available');
+          }
+        });
       });
-    });
-  </script>
+    }
+  });
+</script>
+</script>
   <script src="wallpaper.js"></script>
 </body>
 </html>
