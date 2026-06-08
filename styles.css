@@ -1761,8 +1761,7 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 20px 24px;
-  position: sticky;
-  top: 80px;
+  position: static;
 }
 
 .toc h3 {
