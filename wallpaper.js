@@ -43,6 +43,8 @@
 
   // ---------------------------------------------------------------- themes
   const THEMES = [
+    { id: "daylight", name: "Daylight Clouds", desc: "Soft blue sky with drifting fluffy clouds (Light Theme).", emoji: "⛅" },
+    { id: "sunrise", name: "Golden Sunrise", desc: "Warm morning glow with gentle light rays (Light Theme).", emoji: "🌅" },
     { id: "earth",    name: "Earth From Space",   desc: "Realistic rotating Earth, drifting clouds, city lights.", emoji: "🌍" },
     { id: "galaxy",   name: "Deep Space Galaxy",  desc: "Stars, nebula, cosmic rotation, shooting stars.",         emoji: "🌌" },
     { id: "neural",   name: "Neural Network AI",  desc: "Connected nodes pulsing data through the brain.",         emoji: "🧠" },
@@ -90,6 +92,7 @@
       pointerEvents: "none",
       display: "block",
       background: "#050505",
+      transition: "background 0.6s ease",
     });
     document.body.prepend(c);
     state.canvas = c;
@@ -135,8 +138,10 @@
     state.parallax.y += ((state.mouse.y - 0.5) * 30 - state.parallax.y) * 0.04;
 
     const ctx = state.ctx;
+    const isLight = state.currentTheme && state.currentTheme.isLight;
+    state.canvas.style.background = isLight ? (state.currentTheme.bg || "#f0f0f0") : "#050505";
     ctx.save();
-    ctx.fillStyle = "#050505";
+    ctx.fillStyle = isLight ? (state.currentTheme.bg || "#f0f4ff") : "#050505";
     ctx.fillRect(0, 0, state.w, state.h);
 
     // Cross-fade between previous and new theme.
@@ -173,7 +178,14 @@
     }
     state.currentTheme = mod;
     state.currentId = def.id;
-    try { localStorage.setItem(STORAGE_KEY, def.id); } catch (e) {}
+    try {
+      localStorage.setItem(STORAGE_KEY, def.id);
+      if (mod.isLight) {
+        localStorage.setItem("scriptspark.wallpaper.light", def.id);
+      } else {
+        localStorage.setItem("scriptspark.wallpaper.dark", def.id);
+      }
+    } catch (e) {}
     document.body.dataset.wallpaper = def.id;
     if (state.paused) { state.paused = false; state.last = performance.now(); loop(); }
     // Notify any open gallery to refresh "active" indicator.
@@ -259,7 +271,7 @@
           p.t += dt;
           const ctx = p.ctx;
           ctx.save();
-          ctx.fillStyle = "#050505";
+          ctx.fillStyle = (p.mod && p.mod.bg) ? p.mod.bg : "#050505";
           ctx.fillRect(0, 0, p.c.width, p.c.height);
           p.mod.draw(ctx, p.c.width, p.c.height, dt, p.t, { x: 0, y: 0 });
           ctx.restore();
@@ -355,6 +367,22 @@
     document.querySelectorAll("[data-open-wallpaper]").forEach((b) => {
       b.addEventListener("click", (e) => { e.preventDefault(); openGallery(); });
     });
+
+    // Listen for app theme changes — auto-switch wallpaper to match mood
+    document.addEventListener("appThemeChanged", (e) => {
+      const newTheme = e.detail && e.detail.theme;
+      const currentMod = THEME_MODULES[state.currentId];
+      const currentIsLight = currentMod && currentMod.isLight;
+      if (newTheme === "light" && !currentIsLight) {
+        // Switch to a bright wallpaper
+        const lightSaved = localStorage.getItem("scriptspark.wallpaper.light") || "daylight";
+        setTheme(lightSaved);
+      } else if (newTheme === "dark" && currentIsLight) {
+        // Switch back to dark wallpaper
+        const darkSaved = localStorage.getItem("scriptspark.wallpaper.dark") || "earth";
+        setTheme(darkSaved);
+      }
+    });
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
@@ -362,6 +390,77 @@
     boot();
   }
 
+  
+  // ---- DAYLIGHT CLOUDS (LIGHT THEME) ------------------------------------
+  THEME_MODULES.daylight = (function () {
+    let clouds = [];
+    function init(w, h) {
+      clouds = Array.from({ length: Math.floor(40 * PERF) }, () => ({
+        x: rand(0, w), y: rand(0, h * 0.7),
+        s: rand(0.5, 1.5), r: rand(30, 100),
+        a: rand(0.2, 0.6)
+      }));
+    }
+    function draw(ctx, w, h, dt, t, par) {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, "#74ebd5");
+      g.addColorStop(1, "#ACB6E5");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      
+      clouds.forEach((c) => {
+        c.x += c.s * 10 * dt;
+        if (c.x - c.r > w) c.x = -c.r;
+        const cg = ctx.createRadialGradient(c.x + par.x * 0.2, c.y + par.y * 0.2, 0, c.x + par.x * 0.2, c.y + par.y * 0.2, c.r);
+        cg.addColorStop(0, `rgba(255,255,255,${c.a})`);
+        cg.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = cg;
+        ctx.beginPath(); ctx.arc(c.x + par.x * 0.2, c.y + par.y * 0.2, c.r, 0, TAU); ctx.fill();
+      });
+    }
+    return { init, draw, resize: init, bg: "#ACB6E5", isLight: true };
+  })();
+
+  // ---- GOLDEN SUNRISE (LIGHT THEME) ------------------------------------
+  THEME_MODULES.sunrise = (function () {
+    let rays = [];
+    function init(w, h) {
+      rays = Array.from({ length: 12 }, (_, i) => ({
+        ang: (i / 12) * Math.PI, speed: rand(0.05, 0.15)
+      }));
+    }
+    function draw(ctx, w, h, dt, t, par) {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, "#ffb347");
+      g.addColorStop(1, "#ffcc33");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      
+      const cx = w / 2 + par.x * 0.3;
+      const cy = h * 0.8 + par.y * 0.3;
+      
+      ctx.save();
+      ctx.translate(cx, cy);
+      rays.forEach((r, i) => {
+        r.ang += r.speed * dt;
+        ctx.rotate(r.ang);
+        const rg = ctx.createLinearGradient(0, 0, 0, -h);
+        rg.addColorStop(0, "rgba(255,255,255,0.4)");
+        rg.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = rg;
+        ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(20, 0); ctx.lineTo(100, -h); ctx.lineTo(-100, -h); ctx.fill();
+        ctx.rotate(-r.ang);
+      });
+      ctx.restore();
+      
+      const sg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 150);
+      sg.addColorStop(0, "rgba(255,255,255,1)");
+      sg.addColorStop(0.3, "rgba(255,255,255,0.8)");
+      sg.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = sg;
+      ctx.beginPath(); ctx.arc(cx, cy, 150, 0, TAU); ctx.fill();
+    }
+    return { init, draw, resize: init, bg: "#ffcc33", isLight: true };
+  })();
+  
   // ===================================================================
   //  THEME MODULES — each: { init(w,h)?, resize(w,h)?, draw(ctx,w,h,dt,t,parallax) }
   //  Assigned into THEME_MODULES (declared above THEMES) at module load.

@@ -314,6 +314,9 @@ function applyTheme(opt) {
   if (toggleBtn) {
     toggleBtn.textContent = opt === 'dark' ? '☀️' : '🌙';
   }
+
+  // Notify the wallpaper engine so it can swap to a theme-appropriate wallpaper
+  document.dispatchEvent(new CustomEvent("appThemeChanged", { detail: { theme: opt } }));
 }
 
 const toggleBtn = document.getElementById('theme-toggle-btn');
