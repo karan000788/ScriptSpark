@@ -28,23 +28,6 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="wallpaper.css" />
 
-<script>
-// theme-toggle JS
-const saved = localStorage.getItem('theme') || 'dark';
-document.documentElement.setAttribute('data-theme', saved);
-document.addEventListener("DOMContentLoaded", () => {
-  const toggleBtn = document.getElementById('theme-toggle-btn');
-  if (toggleBtn) {
-    toggleBtn.textContent = saved === 'dark' ? '☀️' : '🌙';
-    toggleBtn.addEventListener('click', () => {
-      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
-      toggleBtn.textContent = next === 'dark' ? '☀️' : '🌙';
-    });
-  }
-});
-</script>
 </head>
 <body class="light" data-theme="light">
 

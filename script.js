@@ -303,24 +303,32 @@ window.addEventListener("unhandledrejection", (e) => {
 // ============================================================
 //  THEME
 // ============================================================
-const themeButtons = document.querySelectorAll(".theme-toggle .icon-btn");
 function applyTheme(opt) {
-  let actual = opt;
-  if (opt === "system") {
-    actual = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
-  document.body.dataset.theme = actual;
-  document.body.classList.toggle("dark", actual === "dark");
-  document.body.classList.toggle("light", actual === "light");
-  themeButtons.forEach((b) => b.classList.toggle("active", b.dataset.themeOption === opt));
+  document.documentElement.setAttribute('data-theme', opt);
+  document.body.dataset.theme = opt;
+  document.body.classList.toggle("dark", opt === "dark");
+  document.body.classList.toggle("light", opt === "light");
   try { localStorage.setItem("ss-theme", opt); } catch (e) {}
+  
+  const toggleBtn = document.getElementById('theme-toggle-btn');
+  if (toggleBtn) {
+    toggleBtn.textContent = opt === 'dark' ? '☀️' : '🌙';
+  }
 }
-themeButtons.forEach((b) =>
-  b.addEventListener("click", () => applyTheme(b.dataset.themeOption))
-);
+
+const toggleBtn = document.getElementById('theme-toggle-btn');
+if (toggleBtn) {
+  toggleBtn.addEventListener("click", () => {
+    let current = document.documentElement.getAttribute('data-theme');
+    if(!current) current = localStorage.getItem("ss-theme") || "dark";
+    const next = current === "dark" ? "light" : "dark";
+    applyTheme(next);
+  });
+}
+
 (() => {
-  let saved = "light";
-  try { saved = localStorage.getItem("ss-theme") || "light"; } catch (e) {}
+  let saved = "dark";
+  try { saved = localStorage.getItem("ss-theme") || "dark"; } catch (e) {}
   applyTheme(saved);
 })();
 
