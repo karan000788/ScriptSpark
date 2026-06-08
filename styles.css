@@ -1,42 +1,60 @@
 :root {
-  --bg: #fafafa;
-  --card-bg: #ffffff;
-  --text: #111111;
-  --text-muted: #5f5f5f;
-  --border: #ececec;
-  --input-bg: #ffffff;
-  --accent: #f5a623;
-  --accent-hover: #e0941a;
-  --accent-soft: rgba(245, 166, 35, 0.12);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08), 0 12px 40px rgba(0, 0, 0, 0.08);
-  --backdrop: rgba(0, 0, 0, 0.4);
-  --toast-bg: #111111;
-  --toast-text: #ffffff;
-  --badge-bg: rgba(245, 166, 35, 0.15);
-  --badge-text: #b97a0e;
-  --code-bg: #f4f4f4;
+  --bg-primary: #0f0f13;
+  --bg-secondary: #1a1a24;
+  --bg-card: #1e1e2e;
+  --bg-glass: rgba(26, 26, 36, 0.8);
+  --accent: #7c3aed;
+  --accent-2: #2563eb;
+  --accent-gradient: linear-gradient(135deg, #7c3aed, #2563eb);
+  --text-primary: #f0eeff;
+  --text-secondary: #a89ec0;
+  --text-muted: #5e5a72;
+  --border: rgba(255,255,255,0.08);
+  --border-accent: rgba(124,58,237,0.4);
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --glow: 0 0 20px rgba(124,58,237,0.35);
+  --radius: 12px;
+  --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+
+  /* Fallbacks for existing CSS usage that wasn't modified */
+  --bg: var(--bg-primary);
+  --card-bg: var(--bg-card);
+  --text: var(--text-primary);
+  --input-bg: var(--bg-secondary);
+  --accent-soft: rgba(124,58,237,0.15);
+  --accent-hover: #9061f9;
+  --toast-bg: var(--bg-secondary);
+  --toast-text: var(--text-primary);
+  --shadow-lg: var(--shadow);
 }
 
-[data-theme="dark"] {
-  --bg: #0f0f0f;
-  --card-bg: #1a1a1a;
-  --text: #f5f5f5;
-  --text-muted: #a0a0a0;
-  --border: #262626;
-  --input-bg: #1f1f1f;
-  --accent: #f5a623;
-  --accent-hover: #ffb83d;
-  --accent-soft: rgba(245, 166, 35, 0.14);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.5), 0 12px 40px rgba(0, 0, 0, 0.4);
-  --backdrop: rgba(0, 0, 0, 0.7);
-  --toast-bg: #f5f5f5;
-  --toast-text: #111111;
-  --badge-bg: rgba(245, 166, 35, 0.2);
-  --badge-text: #f5a623;
-  --code-bg: #1f1f1f;
+[data-theme="light"] {
+  --bg-primary: #f5f4ff;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-glass: rgba(245,244,255,0.85);
+  --accent: #6d28d9;
+  --accent-2: #1d4ed8;
+  --accent-gradient: linear-gradient(135deg, #6d28d9, #1d4ed8);
+  --text-primary: #1a1035;
+  --text-secondary: #5b4f7a;
+  --text-muted: #9d8fbb;
+  --border: rgba(0,0,0,0.08);
+  --border-accent: rgba(109,40,217,0.3);
+  --shadow: 0 4px 24px rgba(109,40,217,0.08);
+  --glow: 0 0 20px rgba(109,40,217,0.2);
+
+  --bg: var(--bg-primary);
+  --card-bg: var(--bg-card);
+  --text: var(--text-primary);
+  --input-bg: var(--bg-secondary);
+  --accent-soft: rgba(109,40,217,0.15);
+  --accent-hover: #7c3aed;
+  --toast-bg: var(--bg-secondary);
+  --toast-text: var(--text-primary);
+  --shadow-lg: var(--shadow);
 }
+
 
 @media (prefers-color-scheme: dark) {
   :root[data-theme="system"] {
@@ -76,8 +94,8 @@ html {
 
 body {
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Devanagari", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Bengali", sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -135,8 +153,8 @@ textarea {
   align-items: center;
   justify-content: space-between;
   padding: 16px 32px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
   backdrop-filter: saturate(180%) blur(8px);
   transition: background 0.2s ease, border-color 0.2s ease;
 }
@@ -147,7 +165,7 @@ textarea {
   gap: 8px;
   font-weight: 700;
   font-size: 1.15rem;
-  color: var(--text);
+  color: var(--text-primary);
 }
 
 .logo-icon {
@@ -182,7 +200,7 @@ textarea {
   align-items: center;
   gap: 2px;
   padding: 2px;
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 10px;
 }
@@ -235,8 +253,8 @@ textarea {
 }
 
 .btn-ghost {
-  background: var(--card-bg);
-  color: var(--text);
+  background: var(--bg-card);
+  color: var(--text-primary);
   border: 1px solid var(--border);
 }
 
@@ -296,7 +314,7 @@ textarea {
 }
 
 .hero-card {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px;
@@ -311,7 +329,7 @@ textarea {
   width: 100%;
   padding: 14px 16px;
   background: var(--input-bg);
-  color: var(--text);
+  color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: 10px;
   outline: none;
@@ -355,7 +373,7 @@ textarea {
 }
 
 .step {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 24px;
@@ -399,7 +417,7 @@ textarea {
 }
 
 .feature-card {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 24px;
@@ -440,7 +458,7 @@ textarea {
 }
 
 .results-block {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 28px;
@@ -471,7 +489,7 @@ textarea {
 
 .idea-item {
   position: relative;
-  background: var(--bg);
+  background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px 18px;
@@ -551,7 +569,7 @@ textarea {
 .lock-text {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text);
+  color: var(--text-primary);
 }
 
 .script-card {
@@ -575,7 +593,7 @@ textarea {
 
 .script-section {
   position: relative;
-  background: var(--bg);
+  background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px 18px;
@@ -617,7 +635,7 @@ textarea {
   border-radius: 12px;
   padding: 14px 18px;
   margin: 0 0 18px;
-  color: var(--text);
+  color: var(--text-primary);
 }
 .tts-banner-icon {
   font-size: 1.6rem;
@@ -628,7 +646,7 @@ textarea {
   font-size: 0.92rem;
   line-height: 1.55;
 }
-.tts-banner-text b { color: var(--text); }
+.tts-banner-text b { color: var(--text-primary); }
 
 .music-list {
   display: flex;
@@ -640,7 +658,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: var(--bg);
+  background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px 16px;
@@ -666,7 +684,7 @@ textarea {
   font-size: 0.78rem;
   color: var(--text-muted);
   padding: 4px 8px;
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 6px;
   white-space: nowrap;
@@ -680,7 +698,7 @@ textarea {
 
 .price-card {
   position: relative;
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 28px 24px;
@@ -742,7 +760,7 @@ textarea {
   padding: 8px 0;
   font-size: 0.92rem;
   color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
+  border: 1px solid var(--border);
 }
 
 .price-card li:last-child {
@@ -759,7 +777,7 @@ textarea {
 .footer {
   text-align: center;
   padding: 32px 24px;
-  border-top: 1px solid var(--border);
+  border: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 0.9rem;
 }
@@ -825,7 +843,7 @@ textarea {
 }
 
 .modal {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
   width: 100%;
@@ -856,7 +874,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
+  border: 1px solid var(--border);
 }
 
 .modal-header h2 {
@@ -882,7 +900,7 @@ textarea {
 .modal-body select {
   padding: 12px 14px;
   background: var(--input-bg);
-  color: var(--text);
+  color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: 10px;
   outline: none;
@@ -916,7 +934,7 @@ textarea {
   display: block;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--text);
+  color: var(--text-primary);
   margin-bottom: 6px;
   margin-top: 12px;
 }
@@ -929,7 +947,7 @@ textarea {
   width: 100%;
   padding: 14px 16px;
   background: var(--input-bg);
-  color: var(--text);
+  color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: 10px;
   font-family: inherit;
@@ -1040,8 +1058,8 @@ textarea {
   position: sticky;
   top: 65px;
   z-index: 40;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
   padding: 12px 24px;
   margin-bottom: 8px;
   backdrop-filter: saturate(180%) blur(8px);
@@ -1087,14 +1105,14 @@ textarea {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   font-size: 0.75rem;
   font-weight: 700;
 }
 
 .step-item.active {
-  color: var(--text);
+  color: var(--text-primary);
   background: var(--accent-soft);
 }
 
@@ -1132,7 +1150,7 @@ textarea {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 22px 14px;
@@ -1171,7 +1189,7 @@ textarea {
 .chip-suggest {
   font-size: 0.85rem;
   padding: 6px 12px;
-  background: var(--bg);
+  background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 999px;
   cursor: pointer;
@@ -1194,7 +1212,7 @@ textarea {
 
 .format-card {
   position: relative;
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 28px 22px;
@@ -1335,7 +1353,7 @@ textarea {
 }
 
 .scene-item {
-  background: var(--bg);
+  background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px 14px;
@@ -1391,7 +1409,7 @@ textarea {
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  background: var(--bg);
+  background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px 16px;
@@ -1434,8 +1452,8 @@ textarea {
 .upload-box {
   flex: 1;
   position: relative;
-  background: var(--bg);
-  border: 2px dashed var(--border);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 18px;
   cursor: pointer;
@@ -1551,7 +1569,7 @@ textarea {
 .page-hero {
   text-align: center;
   padding: 40px 20px 48px;
-  border-bottom: 1px solid var(--border);
+  border: 1px solid var(--border);
   margin-bottom: 32px;
 }
 
@@ -1594,12 +1612,12 @@ textarea {
   font-weight: 600;
   margin-top: 22px;
   margin-bottom: 10px;
-  color: var(--text);
+  color: var(--text-primary);
 }
 
 .page-section p {
   margin-bottom: 12px;
-  color: var(--text);
+  color: var(--text-primary);
   line-height: 1.7;
 }
 
@@ -1634,7 +1652,7 @@ textarea {
 
 /* Step cards in docs */
 .step-doc {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 22px 24px;
@@ -1679,7 +1697,7 @@ textarea {
 }
 
 .tip-list li {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 14px 16px;
@@ -1688,7 +1706,7 @@ textarea {
 
 /* FAQ */
 .faq-item {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0;
@@ -1739,7 +1757,7 @@ textarea {
 
 /* Table of contents */
 .toc {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 20px 24px;
@@ -1766,7 +1784,7 @@ textarea {
 }
 
 .toc a {
-  color: var(--text);
+  color: var(--text-primary);
   text-decoration: none;
   padding: 6px 8px;
   border-radius: 6px;
@@ -1786,7 +1804,7 @@ textarea {
   flex-wrap: wrap;
   justify-content: center;
   padding-top: 32px;
-  border-top: 1px solid var(--border);
+  border: 1px solid var(--border);
 }
 
 .page-cta .btn-primary,
@@ -1815,7 +1833,7 @@ textarea {
 }
 
 .editor-scene {
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
@@ -1873,8 +1891,8 @@ textarea {
 .editor-scene-text {
   width: 100%;
   padding: 8px 10px;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: 8px;
   font-family: inherit;
@@ -1901,8 +1919,8 @@ textarea {
 .editor-scene-secs {
   width: 70px;
   padding: 4px 8px;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 0.85rem;
@@ -1919,7 +1937,7 @@ textarea {
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  background: var(--bg);
+  background: var(--bg-primary);
   border: 1px solid var(--border);
   display: inline-flex;
   align-items: center;
@@ -1958,7 +1976,7 @@ textarea {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: var(--bg);
+  background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 10px;
   transition: border-color 0.15s ease, transform 0.15s ease;
@@ -2011,7 +2029,7 @@ textarea {
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  background: var(--card-bg);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   cursor: pointer;
   display: inline-flex;
@@ -2062,12 +2080,12 @@ textarea {
   text-align: left;
   padding: 10px 14px;
   border-radius: 10px;
-  border: 1.5px solid var(--border);
-  background: var(--card-bg);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   cursor: pointer;
   font-size: 13px;
   line-height: 1.4;
-  color: var(--text);
+  color: var(--text-primary);
   transition: all 0.15s;
   font-family: inherit;
 }
@@ -2109,7 +2127,7 @@ textarea {
 .voice-model-section {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid var(--border);
+  border: 1px solid var(--border);
 }
 .section-label {
   display: block;
@@ -2139,14 +2157,14 @@ textarea {
   gap: 2px;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1.5px solid var(--border);
-  background: var(--card-bg);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   cursor: pointer;
   text-align: left;
   transition: all 0.15s;
   width: 100%;
   font-family: inherit;
-  color: var(--text);
+  color: var(--text-primary);
 }
 .voice-model-card:hover {
   border-color: var(--accent);
@@ -2164,7 +2182,7 @@ textarea {
 .voice-name {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--text-primary);
   line-height: 1.3;
   word-break: break-word;
 }

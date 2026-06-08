@@ -508,6 +508,7 @@ $("settingsLink").addEventListener("click", async (e) => {
   e.preventDefault();
   await loadSettings();
   $("pexelsKey").value = state.pexelsKey || "";
+  if($("groqKey")) $("groqKey").value = state.groqKey || localStorage.getItem("groqKey") || "";
   populateVoices();
   $("settingsModal").hidden = false;
 });
@@ -1314,24 +1315,20 @@ $("regenIdeasBtn").addEventListener("click", safe(async (e) => {
 // ============================================================
 async function callClaude(system, user, maxTokens = 1500) {
   const body = {
-    model: "claude-sonnet-4-20250514",
-    max_tokens: maxTokens,
-    messages: [{ role: "user", content: user }],
+    model: "llama-3.1-8b-instant",
+    messages: [
+      { role: "system", content: system || "" },
+      { role: "user", content: user }
+    ],
   };
-  if (system) body.system = system;
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + (state.groqKey || localStorage.getItem('groqKey')) },
     body: JSON.stringify(body),
   });
-  if (!response.ok) {
-    let detail = "";
-    try { const e = await response.json(); detail = e?.error?.message || ""; } catch {}
-    throw new Error("AI API " + response.status + (detail ? " — " + detail : ""));
-  }
+  if (!response.ok) throw new Error("Groq API error " + response.status);
   const data = await response.json();
-  if (!data?.content?.[0]?.text) throw new Error("AI returned empty response");
-  return data.content[0].text;
+  return data.choices[0].message.content;
 }
 
 function parseAIClaimingJSON(text) {
@@ -3819,3 +3816,50 @@ function slug(s) {
   } catch {}
   goToStep(1);
 })();
+
+document.querySelectorAll('.card, .lang-card, .idea-item, .format-card').forEach(card => {
+  card.classList.add('card-3d');
+  card.addEventListener('mousemove', e => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -8;
+    const rotateY = ((x - centerX) / centerX) * 8;
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+    card.style.boxShadow = `${-rotateY * 2}px ${rotateX * 2}px 40px rgba(124,58,237,0.3)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
+    card.style.boxShadow = 'var(--shadow)';
+    card.style.transition = 'all 0.5s ease';
+  });
+});
+
+// Toast notifications replacement
+window.showToast = function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: var(--bg-card); border: 1px solid var(--border-accent);
+    color: var(--text-primary); padding: 12px 20px; border-radius: var(--radius);
+    box-shadow: var(--glow); font-size: 14px; font-weight: 500;
+    animation: slideIn 0.3s ease; max-width: 320px;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+// Onboarding tooltip
+if (!localStorage.getItem('onboardingDismissed')) {
+  const tooltip = document.createElement('div');
+  tooltip.style.cssText = `position: fixed; bottom: 20px; left: 20px; background: var(--bg-card); padding: 15px; border-radius: 12px; border: 1px solid var(--border-accent); box-shadow: var(--glow); z-index: 10000; cursor: pointer;`;
+  tooltip.innerHTML = "👋 Start by picking your language → topic → brief. Takes 2 minutes!";
+  tooltip.addEventListener('click', () => {
+    tooltip.remove();
+    localStorage.setItem('onboardingDismissed', 'true');
+  });
+  document.body.appendChild(tooltip);
+}

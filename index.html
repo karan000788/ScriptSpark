@@ -24,9 +24,27 @@
   " />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800;900&family=Noto+Sans+Devanagari:wght@600;800&family=Noto+Sans+Tamil:wght@600;800&family=Noto+Sans+Telugu:wght@600;800&family=Noto+Sans+Bengali:wght@600;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="wallpaper.css" />
+
+<script>
+// theme-toggle JS
+const saved = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', saved);
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleBtn = document.getElementById('theme-toggle-btn');
+  if (toggleBtn) {
+    toggleBtn.textContent = saved === 'dark' ? '☀️' : '🌙';
+    toggleBtn.addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      toggleBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+    });
+  }
+});
+</script>
 </head>
 <body class="light" data-theme="light">
 
@@ -44,17 +62,7 @@
       <a href="docs.html" class="nav-link">📖 Docs</a>
       <a href="policy.html" class="nav-link">🛡️ Policy</a>
       <a href="#" class="nav-link" data-open-wallpaper title="Pick a cinematic wallpaper">🪐 Themes</a>
-      <div class="theme-toggle" role="group" aria-label="Theme">
-        <button class="icon-btn active" data-theme-option="light" title="Light" aria-label="Light theme">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        </button>
-        <button class="icon-btn" data-theme-option="dark" title="Dark" aria-label="Dark theme">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        </button>
-        <button class="icon-btn" data-theme-option="system" title="System" aria-label="System theme">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        </button>
-      </div>
+      <button id="theme-toggle-btn" style="background:transparent;border:none;font-size:20px;cursor:pointer;">🌙</button>
     </nav>
   </header>
 
@@ -431,14 +439,16 @@
     </section>
   </main>
 
-  <footer class="footer">
-    <p>Made with 🐯 in India · ScriptSpark.in — Generate viral YouTube content in your language</p>
-    <p class="footer-links">
-      <a href="docs.html">📖 Docs</a> ·
-      <a href="policy.html">🛡️ Policy</a> ·
-      <a href="mailto:hello@scriptspark.in">📧 Contact</a>
-    </p>
-  </footer>
+  <footer style="margin-top:60px; border-top:1px solid var(--border); background:var(--bg-secondary); padding:20px 24px;">
+  <div style="max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <span style="font-size:13px; color:var(--text-muted);">Made with 🐯 in India · <strong style="background:var(--accent-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">ScriptSpark.in</strong></span>
+    <div style="display:flex; gap:20px;">
+      <a href="docs.html" style="font-size:13px; color:var(--text-secondary); text-decoration:none; font-weight:500;">Docs</a>
+      <a href="policy.html" style="font-size:13px; color:var(--text-secondary); text-decoration:none; font-weight:500;">Privacy</a>
+      <a href="mailto:hello@scriptspark.in" style="font-size:13px; color:var(--text-secondary); text-decoration:none; font-weight:500;">Contact</a>
+    </div>
+  </div>
+</footer>
 
   <!-- Toast -->
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -457,6 +467,11 @@
         <label class="field-label" for="pexelsKey">🎬 Pexels API Key <span class="badge-inline">Free · 200 req/hr</span></label>
         <div style="display:flex; gap:6px;">
           <input type="password" id="pexelsKey" placeholder="Paste your free Pexels API key here" autocomplete="off" />
+        </div>
+        <label class="field-label" for="groqKey" style="margin-top:14px;">🧠 Groq API Key <span class="badge-inline">Required for AI</span></label>
+        <div style="display:flex; gap:6px;">
+          <input type="password" id="groqKey" placeholder="Paste your Groq API key here" autocomplete="off" />
+          <button class="btn-ghost" id="toggleGroqKey" title="Show/hide key">👁</button>
           <button class="btn-ghost" id="togglePexelsKey" title="Show/hide key">👁</button>
         </div>
         <p class="modal-hint">Get your free key in 30 seconds at <a href="https://www.pexels.com/api/" target="_blank" rel="noopener">pexels.com/api</a> · Sign up → Dashboard → API Keys. We use this to fetch <b>real stock videos</b> matching your topic as backgrounds.</p>
