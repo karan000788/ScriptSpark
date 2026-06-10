@@ -2212,3 +2212,388 @@ textarea {
   font-size: 0.78rem;
   border-radius: 8px;
 }
+
+/* =========================
+   Hamburger Menu
+   ========================= */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 60;
+  padding: 10px;
+}
+.hamburger-line {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.hamburger-btn.open .hamburger-line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger-btn.open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+.hamburger-btn.open .hamburger-line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* =========================
+   Mobile Stepper (compact)
+   ========================= */
+.mobile-stepper {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+  position: sticky;
+  top: 65px;
+  z-index: 40;
+}
+.mobile-step-prev,
+.mobile-step-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.mobile-step-prev:hover:not(:disabled),
+.mobile-step-next:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.mobile-step-prev:disabled,
+.mobile-step-next:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.mobile-step-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  flex: 1;
+  padding: 0 8px;
+}
+
+/* =========================
+   Comprehensive Mobile
+   (max-width: 768px)
+   ========================= */
+@media (max-width: 768px) {
+  /* 1. Navbar: hamburger menu */
+  .hamburger-btn {
+    display: flex;
+  }
+  .navbar-actions {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 280px;
+    height: 100vh;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 80px 20px 24px;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border);
+    box-shadow: -4px 0 24px rgba(0,0,0,0.4);
+    z-index: 55;
+    transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
+    overflow-y: auto;
+  }
+  .navbar-actions.open {
+    right: 0;
+  }
+  .navbar-actions .nav-link {
+    padding: 12px 14px;
+    font-size: 1rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+  }
+  .navbar-actions .theme-toggle-mobile {
+    margin-top: 8px;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 1rem;
+    text-align: left;
+    border-radius: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    width: 100%;
+  }
+
+  /* 2. Progress bar: hide full stepper, show mobile stepper */
+  .stepper {
+    display: none !important;
+  }
+  .mobile-stepper {
+    display: flex;
+  }
+
+  /* 3. Language grid: 2 columns */
+  .lang-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 0 4px;
+  }
+  .lang-card {
+    padding: 16px 10px;
+    min-height: 48px;
+  }
+  .lang-native {
+    font-size: 1.15rem;
+  }
+
+  /* 4. All cards/panels: full width, proper padding */
+  .hero-card {
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+    max-width: 100% !important;
+    padding: 16px;
+  }
+  .results-block {
+    padding: 16px;
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+  .format-grid {
+    padding: 0 12px;
+    gap: 12px;
+  }
+  .format-card {
+    padding: 20px 16px;
+    min-height: 48px;
+  }
+
+  /* 5. API key settings: stacked layout */
+  .modal-body div[style*="display:flex"][style*="gap:6px"] {
+    flex-direction: column;
+  }
+
+  /* 6. Font sizes */
+  .hero-title {
+    font-size: clamp(1.6rem, 6vw, 2rem) !important;
+    max-width: 100%;
+  }
+  .hero-sub {
+    font-size: 1rem;
+  }
+  .section {
+    padding: 32px 16px;
+  }
+  .hero {
+    padding: 48px 16px 32px;
+  }
+
+  /* 7. Video canvas and scene editor: full width */
+  .video-frame {
+    max-width: 100%;
+    margin: 0 12px;
+  }
+  .video-progress {
+    max-width: calc(100% - 24px);
+    margin: 0 12px;
+  }
+  .editor-scene {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .editor-scene-preview {
+    width: 100%;
+    height: 180px;
+    max-width: 100%;
+  }
+  .editor-scene-actions {
+    flex-direction: row;
+  }
+  .editor-scene-actions button {
+    width: 40px;
+    height: 40px;
+  }
+  .bg-style-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* 8. Footer: center-aligned, stacked */
+  footer > div {
+    flex-direction: column;
+    align-items: center !important;
+    text-align: center;
+    gap: 10px !important;
+  }
+  footer div[style*="display:flex"] {
+    justify-content: center !important;
+    gap: 16px !important;
+  }
+
+  /* 9. Modals: max-width 95vw */
+  .modal {
+    max-width: 95vw !important;
+    max-height: 90vh;
+  }
+  .modal-lg {
+    max-width: 95vw !important;
+  }
+  .modal-header {
+    padding: 16px 18px;
+  }
+  .modal-body {
+    padding: 16px 18px 20px;
+  }
+
+  /* 10. Touch targets: min 44x44 */
+  .btn-primary,
+  .btn-ghost {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 18px;
+    font-size: 0.95rem;
+  }
+  .chip-suggest {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 14px;
+  }
+  .idea-use-btn {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Upload areas */
+  .upload-row {
+    flex-direction: column;
+  }
+  .upload-box {
+    min-height: 120px;
+  }
+
+  /* Script CTA buttons */
+  .script-cta {
+    flex-direction: column;
+  }
+  .script-cta .btn-ghost,
+  .script-cta .btn-primary {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  /* Results header */
+  .results-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .results-header h2 {
+    font-size: 1.15rem;
+  }
+
+  /* Music items */
+  .music-item {
+    flex-wrap: wrap;
+  }
+
+  /* Time card */
+  .time-card {
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+    max-width: calc(100% - 24px) !important;
+  }
+
+  /* Format hint */
+  #formatHint {
+    padding: 0 16px;
+  }
+
+  /* Voice model grid */
+  .voice-model-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .voice-model-card {
+    padding: 8px 10px;
+  }
+
+  /* Page content (docs/policy) */
+  .page {
+    padding: 24px 16px 60px;
+  }
+  .page-hero {
+    padding: 24px 16px 28px;
+  }
+  .page-hero h1 {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+}
+
+/* =========================
+   Extra small (max-width: 480px)
+   ========================= */
+@media (max-width: 480px) {
+  .lang-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .lang-card {
+    padding: 14px 8px;
+  }
+  .lang-native {
+    font-size: 1.05rem;
+  }
+  .lang-name {
+    font-size: 0.78rem;
+  }
+  .bg-style-row {
+    grid-template-columns: 1fr;
+  }
+  .voice-model-grid {
+    grid-template-columns: 1fr;
+  }
+  .format-grid {
+    grid-template-columns: 1fr;
+  }
+  .scenes-list {
+    grid-template-columns: 1fr;
+  }
+  .results h2 {
+    font-size: 1.05rem;
+  }
+  .chip-row {
+    gap: 6px;
+  }
+  .chip-suggest {
+    font-size: 0.8rem;
+    padding: 8px 10px;
+  }
+}

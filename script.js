@@ -199,6 +199,15 @@ const state = {
   // Anti-repetition memory (kept across regenerations within a session so
   // hitting "Regenerate Script" doesn't hand you the same hook again).
   recentScript: { hooks: [], bodies: [], intros: [], outros: [] },
+
+  // New pipeline data
+  competitorInsights: null,
+  imagePrompts: [],
+  sceneScore: null,
+  selectedMusicTrack: null,
+  voiceoverEnabled: true,
+  voiceoverRate: 0.9,
+  voiceoverPitch: 1.0,
 };
 
 // Pick a value from `arr` that isn't in `recentBucket` if possible.
@@ -1342,6 +1351,223 @@ async function callClaude(system, user, maxTokens = 1500) {
   return data.choices[0].message.content;
 }
 
+// ============================================================
+//  COMPETITOR ANALYSIS — analyzes top videos on the topic
+// ============================================================
+async function analyzeCompetitors(topic, lang) {
+  const langName = state.langName || (langMeta[lang] && langMeta[lang].name) || "English";
+  const system = "You are a YouTube competitive intelligence analyst. You study what makes top videos viral. Return ONLY valid JSON, no markdown.";
+  const user = [
+    `Search YouTube for the top 5 most viewed videos on this topic: "${topic}" in ${langName}.`,
+    `Analyze and return JSON only:`,
+    '{',
+    '  "top_hooks": ["list of opening lines/styles that got most views"],',
+    '  "common_titles": ["title patterns that work — numbers, questions, shock"],',
+    '  "content_gaps": ["what NO video has covered yet on this topic"],',
+    '  "avg_video_length": "short/medium/long",',
+    '  "emotional_triggers": ["fear|curiosity|inspiration|anger — which works most"],',
+    '  "thumbnail_patterns": ["what visuals appear most in thumbnails"],',
+    '  "comment_sentiment": "what viewers wish these videos had covered",',
+    '  "viral_structure": "how the top video is structured — hook, body, end"',
+    '}',
+  ].join("\n");
+  try {
+    const text = await callClaude(system, user, 1000);
+    return parseAIClaimingJSON(text);
+  } catch (e) {
+    console.warn("Competitor analysis failed:", e);
+    return null;
+  }
+}
+
+// ============================================================
+//  QUALITY GATE — reviews script for laziness / brief-parroting
+// ============================================================
+async function qualityGateReview(scriptJSON, brief, topic) {
+  const system = "You are a strict YouTube script editor. You reject lazy AI-generated scripts. Return ONLY valid JSON, no markdown.";
+  const user = [
+    "Review this script and check every point against these rules:",
+    "",
+    "INSTANT REJECT if any point:",
+    "- Contains words from the original brief copy-pasted verbatim",
+    "- Uses template phrases: 'amateurs ignore', 'pros obsess', 'plot twist', 'write it down', 'yes really'",
+    "- Makes a claim without delivering it (e.g. 'one number to remember' with no actual number)",
+    "- Repeats the topic title as if it were information",
+    "",
+    `Script to review: ${JSON.stringify(scriptJSON)}`,
+    `Original brief: ${brief}`,
+    `Topic: ${topic}`,
+    "",
+    "If ANY point fails — rewrite that point with:",
+    `- A real fact, statistic, or insight about ${topic}`,
+    "- Specific enough that removing it would make the point meaningless",
+    "- Maximum 2 sentences, spoken naturally",
+    "",
+    "Return the corrected full script JSON with the same structure.",
+    "Never return a script where the brief text appears inside any scene.",
+  ].join("\n");
+  try {
+    const text = await callClaude(system, user, 3000);
+    const reviewed = parseAIClaimingJSON(text);
+    return clampScriptAIResponse(reviewed, scriptJSON);
+  } catch (e) {
+    console.warn("Quality gate review failed:", e);
+    return scriptJSON;
+  }
+}
+
+// ============================================================
+//  IMAGE PROMPT GENERATOR — converts script scenes to Pexels queries
+// ============================================================
+async function generateImagePrompts(scenes, topic, lang) {
+  const langName = state.langName || (langMeta[lang] && langMeta[lang].name) || "English";
+  const system = "You are a cinematic visual director. You convert YouTube script scenes into hyper-realistic image search queries and cinematic video prompts. Return ONLY valid JSON, no markdown.";
+  const sceneData = scenes.map((s, i) => ({
+    scene: i + 1,
+    text: s.text || s.lines?.[0] || "",
+    seconds: s.seconds,
+  }));
+  const user = [
+    `Convert these YouTube script scenes into Pexels search queries and cinematic prompts.`,
+    `Topic: ${topic}`,
+    `Language: ${langName}`,
+    "",
+    `Scenes: ${JSON.stringify(sceneData)}`,
+    "",
+    "For EACH scene, return:",
+    '{',
+    '  "pexels_search_query": "3-5 word specific visual search term (e.g. student studying midnight lamp, crowded Mumbai street rain)",',
+    '  "cinematic_prompt": "Describe this as a 3-second cinematic shot: camera angle, lighting, mood, subject action. Max 2 sentences.",',
+    '  "text_overlay": "The most impactful 8-10 words from this scene to show on screen",',
+    '  "overlay_position": "top|center|bottom",',
+    '  "transition": "fade|slide|zoom"',
+    '}',
+    "",
+    "Return a JSON array of these objects, one per scene.",
+    "The pexels_search_query should be specific enough to find relevant video clips.",
+    "The text_overlay should be the most memorable/impactful words from the scene.",
+  ].join("\n");
+  try {
+    const text = await callClaude(system, user, 2000);
+    const prompts = parseAIClaimingJSON(text);
+    return Array.isArray(prompts) ? prompts : [];
+  } catch (e) {
+    console.warn("Image prompt generation failed:", e);
+    return scenes.map(() => ({
+      pexels_search_query: topic.split(" ").slice(0, 3).join(" "),
+      cinematic_prompt: "Cinematic establishing shot, soft lighting",
+      text_overlay: "",
+      overlay_position: "center",
+      transition: "fade",
+    }));
+  }
+}
+
+// ============================================================
+//  MUSIC SUGGESTION ENGINE — Groq-powered music matching
+// ============================================================
+async function suggestMusicWithAI(topic, emotion, format, lang) {
+  const langName = state.langName || (langMeta[lang] && langMeta[lang].name) || "English";
+  const system = "You are a YouTube music director. You match background music to video mood and topic perfectly. Return ONLY valid JSON, no markdown.";
+  const user = [
+    `Given this video:`,
+    `Topic: ${topic}`,
+    `Mood/Emotion: ${emotion || "engaging"}`,
+    `Format: ${format}`,
+    `Language: ${langName}`,
+    "",
+    "Suggest 3 copyright-free music tracks. Return JSON only:",
+    '{',
+    '  "tracks": [',
+    '    {',
+    '      "name": "exact track name",',
+    '      "mood": "energetic/calm/mysterious/motivational/dark/happy",',
+    '      "source": "pixabay|youtube_audio_library",',
+    '      "search_url": "direct search URL",',
+    '      "why": "one line — why this fits this specific video",',
+    '      "bpm": "slow/medium/fast",',
+    '      "best_for": "hook/body/outro/full_video"',
+    '    }',
+    '  ],',
+    '  "recommended": 0',
+    '}',
+  ].join("\n");
+  try {
+    const text = await callClaude(system, user, 600);
+    return parseAIClaimingJSON(text);
+  } catch (e) {
+    console.warn("AI music suggestion failed:", e);
+    return null;
+  }
+}
+
+// ============================================================
+//  VOICEOVER ENGINE — Web Speech API wrapper
+// ============================================================
+function getVoicesForLang(lang) {
+  const langCodes = {
+    hi: ["hi-IN"], en: ["en-IN", "en-US"], ta: ["ta-IN"], te: ["te-IN"],
+    bn: ["bn-IN"], mr: ["mr-IN"], gu: ["gu-IN"], pa: ["pa-IN"],
+    ml: ["ml-IN"], kn: ["kn-IN"],
+  };
+  const codes = langCodes[lang] || ["en-IN", "en-US"];
+  const allVoices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+  return allVoices.filter((v) => codes.some((c) => v.lang.startsWith(c.split("-")[0])));
+}
+
+function createVoiceoverUtterance(text, lang, rate, pitch) {
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = lang || "en-IN";
+  utter.rate = rate || 0.9;
+  utter.pitch = pitch || 1.0;
+  utter.volume = 1.0;
+  const voices = getVoicesForLang(lang);
+  if (voices.length) {
+    const googleVoice = voices.find((v) => v.name.includes("Google"));
+    utter.voice = googleVoice || voices[0];
+  }
+  return utter;
+}
+
+function measureVoiceoverDuration(text, lang) {
+  return new Promise((resolve) => {
+    const utter = createVoiceoverUtterance(text, lang);
+    utter.onend = () => resolve(0);
+    utter.onerror = () => resolve(0);
+    if (window.speechSynthesis) {
+      speechSynthesis.speak(utter);
+      setTimeout(() => {
+        try { speechSynthesis.cancel(); } catch(e) {}
+        const wordCount = text.split(/\s+/).length;
+        const baseDuration = wordCount * 0.35;
+        resolve(Math.max(2, baseDuration));
+      }, 100);
+    } else {
+      const wordCount = text.split(/\s+/).length;
+      resolve(Math.max(2, wordCount * 0.35));
+    }
+  });
+}
+
+// ============================================================
+//  DETECT MOOD from topic keywords
+// ============================================================
+function detectMoodFromTopic(topic) {
+  const t = String(topic || "").toLowerCase();
+  const map = {
+    energetic: ["fitness","gym","workout","exercise","sports","dance","energy"],
+    mysterious: ["psychology","mystery","secret","dark","unknown","truth","crime"],
+    motivational: ["success","money","career","study","motivation","business","growth"],
+    calm: ["meditation","yoga","sleep","anxiety","mental health","peace","relax"],
+    hype: ["trending","viral","facts","shocking","india","roast","challenge"],
+    emotional: ["love","relationship","family","life","story","emotion","heart"],
+  };
+  for (const [mood, words] of Object.entries(map)) {
+    if (words.some((w) => t.includes(w))) return mood;
+  }
+  return "motivational";
+}
+
 function parseAIClaimingJSON(text) {
   // Robustly extract JSON from Claude's reply — strip markdown fences,
   // trim any prose around the JSON, then parse.
@@ -1357,8 +1583,10 @@ function parseAIClaimingJSON(text) {
 }
 
 function clampScriptAIResponse(parsed, fallback) {
-  // Defensive: if Claude returns slightly wrong shape, normalise to
+  // Defensive: if AI returns slightly wrong shape, normalise to
   // the same structure buildScript() produces.
+  // Handle both old (outro) and new (cta) field names from AI.
+  const ctaText = parsed?.cta || parsed?.outro?.text || "";
   const out = {
     hook:  { text: String(parsed?.hook?.text  || fallback.hook.text  || ""), seconds: 3 },
     intro: { text: String(parsed?.intro?.text || fallback.intro.text || ""), seconds: 8 },
@@ -1369,7 +1597,7 @@ function clampScriptAIResponse(parsed, fallback) {
           seconds: Math.max(3, Math.min(60, Number(b?.seconds) || fallback.body[i]?.seconds || 12)),
         }))
       : fallback.body,
-    outro: { text: String(parsed?.outro?.text || fallback.outro.text || ""), seconds: 8 },
+    outro: { text: String(ctaText || fallback.outro.text || ""), seconds: 8 },
   };
   return out;
 }
@@ -1393,44 +1621,59 @@ async function generateScriptWithAI(niche, brief, audience, lang, format, durati
   ].filter(Boolean).slice(-12);
 
   const systemPrompt =
-    "You are a top-tier Indian YouTube scriptwriter who writes scripts that retain viewers past the 30-second drop-off and convert them into subscribers. " +
-    "You write viral, retention-optimised scripts for YouTube Shorts and long-form videos in Indian regional languages. " +
+    "CRITICAL: The user's brief is a TOPIC DIRECTION only — never repeat it word for word in the script. " +
+    "Your job is to research and write the ACTUAL CONTENT. " +
+    "If brief says '7-minute abs routine' — you must write the ACTUAL 7 exercises, the ACTUAL seconds per exercise, the ACTUAL reason it works. " +
+    "Specific > Vague. Always. " +
+    "A script with no real information = failed output.\n\n" +
+    "You are the scriptwriter behind India's most-watched YouTube channels. " +
+    "You've studied why people skip videos and why they don't. " +
+    "You know that the first 3 seconds either win or lose the viewer forever. " +
+    "You write scripts that feel like a friend telling you the most insane story they've ever heard — urgent, personal, impossible to stop listening to. " +
     "You always write in the EXACT language requested, never mixing English unless it's natural for that language (like brand names, app names, or modern slang Indians use). " +
     "You return ONLY valid JSON, no markdown, no explanation.\n\n" +
-    "Hard rules you NEVER break:\n" +
-    "1. NO formulaic hooks like 'Did you know that...', 'Today I will tell you...', 'In this video we will see...'. They are dead.\n" +
-    "2. Every body point MUST use a DIFFERENT rhetorical shape — mix and match from: short story / contrarian claim / specific number or stat / a sharp question / a warning / a how-to step / a callback / a reveal. Do not repeat the same shape twice in a row.\n" +
-    "3. Sentence rhythm varies. Mix short punchy lines with longer ones. Never write three medium-length sentences in a row.\n" +
-    "4. Be specific. Use concrete numbers, names, time-of-day, ₹ amounts, or examples. Avoid vague phrases like 'a lot of people', 'these days', 'in modern times'.\n" +
-    "5. Open loops between body points — end at least two of them with a hint that the NEXT point pays off (e.g., 'but the bigger problem is coming up...').\n" +
-    "6. The hook must trigger curiosity, contradiction, or shock in under 8 words.\n" +
-    "7. The outro must drive a SPECIFIC action (like, subscribe, comment on a precise prompt). No generic 'don't forget to like and subscribe'.\n" +
-    "8. Zero filler. Zero 'as you know', 'basically', 'actually'. Every sentence earns its place.";
+    "RULES:\n" +
+    "1. HOOK (first 5 seconds): Never start with greetings. Start with ONE of: a shocking fact ('Sirf 3% log yeh jaante hain...'), a personal story drop ('Uss raat mujhe pata chala ki...'), a bold claim ('Jo main aaj bataunga, yeh koi nahi batata...'), or a visual scene ('Socho — tum akele ho, raat ke 2 baj rahe hain...').\n" +
+    "2. PATTERN INTERRUPTS every 30 seconds: sudden question, plot twist, or direct callout.\n" +
+    "3. SENSORY LANGUAGE: Make the viewer SEE and FEEL it. Not 'ye bahut bura tha' — instead 'haath kaanp rahe the, screen blur ho rahi thi'.\n" +
+    "4. CURIOSITY GAP: Tease the payoff early but deliver it late.\n" +
+    "5. CONVERSATIONAL RHYTHM: Mix short punchy lines with longer ones. Never write in paragraph style — write how people TALK.\n" +
+    "6. EMOTIONAL ARC: Scenes 1-2 create FEAR/CURIOSITY, 3-4 build HOPE, 5-6 deliver INSIGHT, final scene inspires ACTION.\n" +
+    "7. For Hindi: mix natural Hinglish. For English: casual Indian English ('only', 'na', 'basically'). For regional: use actual local expressions.\n" +
+    "8. Include at least 2 specific real-world examples, statistics, or story moments.\n" +
+    "9. End with a CTA that feels genuine, not salesy.\n" +
+    "10. Zero filler. Every sentence earns its place.";
 
+  const mood = state.mood || "engaging";
   const userPrompt = [
-    `Language: ${langName} (code: ${lang})`,
-    `Niche: ${safeNiche}`,
-    `Video brief / topic: ${safeBrief}`,
-    `Target audience: ${safeAudience}`,
-    `Format: ${isShorts ? "YouTube Shorts (must be under 60 seconds total)" : `Long-form video (${Math.round(durationSec / 60)} minutes)`}`,
-    `Number of body points needed: ${bodyCount}`,
+    `Write a YouTube script for:`,
+    `- Language: ${langName} (code: ${lang})`,
+    `- Topic: ${safeNiche}`,
+    `- Brief: ${safeBrief}`,
+    `- Format: ${isShorts ? "YouTube Shorts (must be under 60 seconds total)" : `Long-form video (${Math.round(durationSec / 60)} minutes)`}`,
+    `- Number of body points needed: ${bodyCount}`,
     avoidList.length
-      ? `\nDO NOT reuse, paraphrase, or echo any of these recently generated lines — write something fresh:\n${avoidList.map((s) => `- ${s}`).join("\n")}\n`
+      ? `\nDO NOT reuse these recently used lines:\n${avoidList.map((s) => `- ${s}`).join("\n")}\n`
       : "",
     "",
-    "Write a complete, insanely engaging, retention-optimised script that feels natural and extremely viral.",
-    "- Hook: under 8 words, curiosity / contradiction / shock. Never starts with 'Did you know'.",
-    "- Intro: in 1–2 sentences set the stakes and promise a specific payoff. No 'today we will talk about'.",
-    `- Body: exactly ${bodyCount} points. Every point uses a DIFFERENT shape (story / number / contrarian / warning / how-to / question / reveal). At least 2 points must end with a mini cliffhanger leading into the next.`,
-    "- Outro: end with one specific action prompt that gets the viewer to comment with a clear answer — never the generic 'like and subscribe'.",
+    "The brief tells you WHAT the video is about. Now YOU must figure out the REAL CONTENT.",
+    "The script must include:",
+    "- Actual specific facts, numbers, names, or details",
+    "- Actual numbers (reps, seconds, days, ₹ amounts, percentages)",
+    "- One surprising fact the viewer doesn't know",
+    "- A specific before/after moment or transformation detail",
     "",
-    "Return ONLY this JSON structure (no markdown, no code fences, no explanation):",
+    "Return ONLY this JSON structure (no markdown, no code fences):",
     '{',
-    '  "hook": { "text": "<1-sentence scroll-stopper, under 8 words>", "seconds": 3 },',
+    '  "title": "<viral YouTube title with emojis>",',
+    '  "hook": { "text": "<scroll-stopper, under 8 words, start mid-story or shocking fact>", "seconds": 3 },',
     '  "intro": { "text": "<stakes + specific payoff promise, 1-2 sentences>", "seconds": 8 },',
-    '  "body": [ { "heading": "💡 Point 1", "lines": ["<specific, different-shape line>"], "seconds": 12 } ],',
-    '  "outro": { "text": "<specific action prompt>", "seconds": 8 }',
+    `  "body": [ { "heading": "Point 1", "lines": ["<what presenter SAYS, with real facts and numbers>"], "seconds": 12 } ],`,
+    '  "cta": "<genuine call to action in presenter voice>"',
     '}',
+    "",
+    `Each of the ${bodyCount} body points MUST use a DIFFERENT rhetorical shape.`,
+    "QUALITY CHECK before responding: Would YOU stop scrolling for this hook? Does every scene give a reason to watch the next?",
   ].join("\n");
 
   // More tokens for long videos so body + intro + outro can fit
@@ -2354,6 +2597,16 @@ async function buildScriptAndMusic() {
     state.audience = autoDetectAudience(state.niche, state.lang);
   }
 
+  // STEP 1: Competitor analysis
+  try {
+    showToast("🔍 Analyzing competitor videos…");
+    state.competitorInsights = await analyzeCompetitors(state.niche, state.lang);
+  } catch (e) {
+    console.warn("Competitor analysis failed:", e);
+    state.competitorInsights = null;
+  }
+
+  // STEP 2: Generate script
   try {
     showToast("✍️ Writing your script with AI…");
     state.script = await generateScriptWithAI(
@@ -2364,6 +2617,42 @@ async function buildScriptAndMusic() {
     console.warn("AI script generation failed, using template fallback:", e);
     state.script = buildScript();
   }
+
+  // STEP 3: Quality gate review
+  try {
+    showToast("🔍 Running quality check…");
+    state.script = await qualityGateReview(state.script, state.brief, state.niche);
+  } catch (e) {
+    console.warn("Quality gate failed:", e);
+  }
+
+  // STEP 4: Generate image prompts for each scene
+  try {
+    showToast("🎬 Generating cinematic scene prompts…");
+    const allScenes = [
+      { text: state.script.hook.text, seconds: state.script.hook.seconds },
+      { text: state.script.intro.text, seconds: state.script.intro.seconds },
+      ...state.script.body.map((b) => ({ text: b.lines[0] || "", seconds: b.seconds })),
+      { text: state.script.outro.text, seconds: state.script.outro.seconds },
+    ];
+    state.imagePrompts = await generateImagePrompts(allScenes, state.niche, state.lang);
+  } catch (e) {
+    console.warn("Image prompt generation failed:", e);
+    state.imagePrompts = [];
+  }
+
+  // STEP 5: AI music suggestion
+  try {
+    const mood = detectMoodFromTopic(state.niche);
+    const musicResult = await suggestMusicWithAI(state.niche, mood, state.format, state.lang);
+    if (musicResult && musicResult.tracks) {
+      state.selectedMusicTrack = musicResult.tracks[musicResult.recommended || 0] || null;
+    }
+  } catch (e) {
+    console.warn("AI music suggestion failed:", e);
+  }
+
+  // Fallback music suggestions
   state.music = suggestMusic(state.niche, state.lang);
 
   // Populate the inline voice model selector on Step 6
@@ -2385,6 +2674,48 @@ async function buildScriptAndMusic() {
     </a>
   `;
   }).join("");
+
+  // Populate competitor insights card
+  try {
+    const insights = state.competitorInsights;
+    const card = $("competitorInsightsCard");
+    const body = $("competitorInsightsBody");
+    if (insights && card && body) {
+      card.hidden = false;
+      let html = '<div style="display:flex;flex-direction:column;gap:12px;padding:4px 0;">';
+      if (insights.top_hooks?.length) {
+        html += `<div><b style="color:var(--accent);font-size:0.85rem;">Top Hooks Working:</b><ul style="margin:4px 0 0 18px;font-size:0.88rem;color:var(--text-secondary);">${insights.top_hooks.map((h) => `<li>${escapeHtml(h)}</li>`).join("")}</ul></div>`;
+      }
+      if (insights.content_gaps?.length) {
+        html += `<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:12px;"><b style="color:#22c55e;font-size:0.85rem;">🎯 OPPORTUNITY — Gap Nobody Has Filled:</b><ul style="margin:4px 0 0 18px;font-size:0.88rem;color:var(--text-secondary);">${insights.content_gaps.map((g) => `<li>${escapeHtml(g)}</li>`).join("")}</ul></div>`;
+      }
+      if (insights.emotional_triggers?.length) {
+        html += `<div><b style="color:var(--accent);font-size:0.85rem;">Emotional Trigger:</b> <span style="font-size:0.88rem;color:var(--text-secondary);">${escapeHtml(insights.emotional_triggers.join(", "))}</span></div>`;
+      }
+      if (insights.viral_structure) {
+        html += `<div><b style="color:var(--accent);font-size:0.85rem;">Viral Structure:</b> <span style="font-size:0.88rem;color:var(--text-secondary);">${escapeHtml(insights.viral_structure)}</span></div>`;
+      }
+      html += '</div>';
+      body.innerHTML = html;
+    }
+  } catch (e) { console.warn("Render competitor insights:", e); }
+
+  // Populate AI music card
+  try {
+    const aiMusicEl = $("aiMusicList");
+    if (aiMusicEl && state.selectedMusicTrack) {
+      const t = state.selectedMusicTrack;
+      const safeUrl = /^https?:\/\//i.test(t.search_url || "") ? escapeHtml(t.search_url) : "#";
+      aiMusicEl.innerHTML = `
+        <div class="music-item" style="border-color:var(--accent);">
+          <span class="music-note">🎵</span>
+          <span class="music-name">${escapeHtml(t.name || "AI Suggested")}</span>
+          <span class="music-source" style="background:var(--accent-soft);color:var(--accent);">AI Recommended · ${escapeHtml(t.mood || "")}</span>
+        </div>
+        ${t.why ? `<p style="font-size:0.82rem;color:var(--text-muted);margin-top:6px;font-style:italic;">"${escapeHtml(t.why)}"</p>` : ""}
+      `;
+    }
+  } catch (e) { console.warn("Render AI music:", e); }
 
   // Build initial scenes list for editor (if not already built)
   if (!state.scenes || !state.scenes.length) {
