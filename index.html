@@ -1,14 +1,22 @@
 <!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="refresh" content="0; url=landing.html" />
+  <title>Redirecting...</title>
+</head>
+<body>
+  <p>Redirecting to <a href="landing.html">landing page</a>...</p>
+</body>
+</html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🐯 ScriptSpark.in | AI YouTube Video Generator</title>
-  <meta name="description" content="Free, browser-based YouTube video generator. Your data never leaves your device." />
+  <title>Turn Any Idea Into a YouTube Video — In Minutes | ScriptSpark</title>
+  <meta name="description" content="Free AI-powered YouTube video generator for Indian creators. No login required." />
   <meta name="referrer" content="no-referrer" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <meta http-equiv="Permissions-Policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()" />
-  <!-- Content Security Policy: allow only the resources this app needs -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src 'self' 'unsafe-inline';
@@ -27,598 +35,169 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="wallpaper.css" />
-
+  <style>
+    /* Landing page specific styles */
+    .landing-hero {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 100vh;
+      padding: 80px 24px;
+      background: linear-gradient(135deg, #0a0a2a, #340078, #0a0a2a);
+      background-size: 600% 600%;
+      animation: gradientShift 12s ease infinite;
+      color: var(--text-primary);
+    }
+    @keyframes gradientShift {
+      0% {background-position:0% 50%;}
+      50% {background-position:100% 50%;}
+      100% {background-position:0% 50%;}
+    }
+    .landing-hero h1 {font-size: clamp(2rem, 6vw, 3.5rem);font-weight: 800;margin-bottom: 16px;}
+    .landing-hero p {font-size: 1.15rem;color: var(--text-muted);margin-bottom: 32px;max-width: 720px;}
+    .how-it-works, .features, .social-proof {padding: 80px 24px;background: var(--bg-primary);}
+    .section-title {font-size: 2rem;margin-bottom: 40px;text-align: center;}
+    .steps {display: grid;grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));gap: 24px;}
+    .step {background: var(--bg-card);border: 1px solid var(--border);border-radius: 14px;padding: 24px;text-align: left;transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;}
+    .step:hover {transform: translateY(-4px);border-color: var(--accent);box-shadow: var(--shadow);}
+    .step-icon {width: 48px;height: 48px;margin-bottom: 12px;background: var(--accent-soft);color: var(--accent);font-size: 1.5rem;display: flex;align-items: center;justify-content: center;border-radius: 12px;}
+    .features .feature-grid {display: grid;grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));gap: 24px;}
+    .feature-card {background: var(--bg-card);border: 1px solid var(--border);border-radius: 14px;padding: 24px;transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;}
+    .feature-card:hover {transform: translateY(-4px);border-color: var(--accent);box-shadow: var(--shadow);}
+    .feature-icon {width: 48px;height: 48px;margin-bottom: 12px;background: var(--accent-soft);color: var(--accent);font-size: 1.5rem;display: flex;align-items: center;justify-content: center;border-radius: 12px;}
+    .social-proof .testimonials {display: grid;grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));gap: 24px;}
+    .testimonial-card {background: var(--bg-card);border: 1px solid var(--border);border-radius: 14px;padding: 24px;}
+    .testimonial-card strong {display: block;margin-top: 12px;color: var(--text-primary);}
+    .footer {text-align: center;padding: 32px 24px;border-top: 1px solid var(--border);background: var(--bg-secondary);color: var(--text-muted);}
+    .footer a {color: var(--text-secondary);margin: 0 8px;text-decoration: none;}
+    .landing-demo-wrap {margin-top: 48px;display: flex;justify-content: center;}
+    .demo-phone {width: 220px;background: var(--bg-card);border: 2px solid var(--border);border-radius: 24px;padding: 12px;box-shadow: var(--shadow-lg);}
+    .demo-screen {background: var(--bg-primary);border-radius: 16px;padding: 20px 14px;display: flex;flex-direction: column;gap: 10px;}
+    .demo-step {background: var(--accent-soft);color: var(--accent);padding: 10px 12px;border-radius: 8px;font-size: 0.82rem;font-weight: 600;text-align: left;animation: demoFade 2s ease infinite;}
+    .demo-step:nth-child(2) {animation-delay: 0.5s;}
+    .demo-step:nth-child(3) {animation-delay: 1s;}
+    .demo-step:nth-child(4) {animation-delay: 1.5s;}
+    @keyframes demoFade {0%,100% {opacity: 0.5;transform: scale(0.98);}50% {opacity: 1;transform: scale(1);}}
+    @media (max-width: 768px) {
+      .landing-hero {padding: 60px 16px;min-height: auto;}
+      .landing-hero h1 {font-size: 1.7rem;}
+      .landing-hero p {font-size: 1rem;margin-bottom: 24px;}
+      .landing-hero > div:last-of-type {display: flex;flex-direction: column;gap: 12px;width: 100%;}
+      .landing-hero .btn-primary,.landing-hero .btn-ghost {width: 100%;}
+      .how-it-works, .features, .social-proof {padding: 48px 16px;}
+      .section-title {font-size: 1.5rem;margin-bottom: 28px;}
+      .steps {grid-template-columns: 1fr;gap: 16px;}
+      .features .feature-grid {grid-template-columns: 1fr;gap: 16px;}
+      .social-proof .testimonials {grid-template-columns: 1fr;gap: 16px;}
+      .demo-phone {width: 180px;}
+      .testimonial-card {padding: 18px;}
+      .testimonial-card p {font-size: 0.92rem;}
+      footer {padding: 24px 16px;}
+    }
+    @media (max-width: 480px) {
+      .landing-hero h1 {font-size: 1.5rem;}
+      .step-icon, .feature-icon {width: 40px;height: 40px;font-size: 1.2rem;}
+    }
+  </style>
 </head>
 <body class="light" data-theme="light">
-
-  <!-- Navbar -->
-  <header class="navbar">
-    <a href="landing.html" id="brandHome" class="logo" title="Back to landing">
-      <span class="logo-icon">🐯</span>
-      <span class="logo-text">ScriptSpark</span>
-      <span class="logo-badge">.in</span>
-    </a>
-    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
-      <span class="hamburger-line"></span>
-      <span class="hamburger-line"></span>
-      <span class="hamburger-line"></span>
-    </button>
-    <nav class="navbar-actions" id="navbarActions">
-      <a href="app.html" class="nav-link active">🚀 App</a>
-      <a href="#" class="nav-link" id="myProjectsLink">📁 Projects</a>
-      <a href="#" class="nav-link" id="settingsLink">⚙️ Settings</a>
-      <a href="docs.html" class="nav-link">📖 Docs</a>
-      <a href="policy.html" class="nav-link">🛡️ Policy</a>
-      <a href="#" class="nav-link" data-open-wallpaper title="Pick a cinematic wallpaper">🪐 Themes</a>
-      <button id="theme-toggle-btn" class="theme-toggle-mobile" aria-label="Toggle theme">🌙</button>
-    </nav>
-  </header>
-
-  <main>
-    <!-- Stepper -->
-    <nav class="stepper" id="stepper" aria-label="Progress">
-      <ol>
-        <li class="step-item active" data-step="1"><span class="step-num">1</span><span class="step-name">Language</span></li>
-        <li class="step-item" data-step="2"><span class="step-num">2</span><span class="step-name">Topic</span></li>
-        <li class="step-item" data-step="3"><span class="step-num">3</span><span class="step-name">Brief</span></li>
-        <li class="step-item" data-step="4"><span class="step-num">4</span><span class="step-name">Format</span></li>
-        <li class="step-item" data-step="5"><span class="step-num">5</span><span class="step-name">Ideas</span></li>
-        <li class="step-item" data-step="6"><span class="step-num">6</span><span class="step-name">Script</span></li>
-        <li class="step-item" data-step="7"><span class="step-num">7</span><span class="step-name">Editor</span></li>
-        <li class="step-item" data-step="8"><span class="step-num">8</span><span class="step-name">Video</span></li>
-      </ol>
-    </nav>
-    <!-- Mobile Stepper -->
-    <nav class="mobile-stepper" id="mobileStepper" aria-label="Progress">
-      <button class="mobile-step-prev" id="mobileStepPrev" aria-label="Previous step" disabled>←</button>
-      <span class="mobile-step-label" id="mobileStepLabel">Step 1 of 8 · Language</span>
-      <button class="mobile-step-next" id="mobileStepNext" aria-label="Next step">→</button>
-    </nav>
-
-    <!-- STEP 1: Language -->
-    <section class="section step-view active" id="step-1" aria-labelledby="step1Title">
-      <div class="hero">
-        <h1 class="hero-title" id="step1Title">🇮🇳 Pick Your Language</h1>
-        <p class="hero-sub">We'll generate viral scripts, titles, and videos in your preferred language.</p>
-      </div>
-      <div class="lang-grid" id="langGrid" role="list">
-        <button class="lang-card" data-lang="hi" role="listitem">
-          <span class="lang-native">हिन्दी</span>
-          <span class="lang-name">Hindi</span>
-        </button>
-        <button class="lang-card" data-lang="en" role="listitem">
-          <span class="lang-native">English</span>
-          <span class="lang-name">English</span>
-        </button>
-        <button class="lang-card" data-lang="ta" role="listitem">
-          <span class="lang-native">தமிழ்</span>
-          <span class="lang-name">Tamil</span>
-        </button>
-        <button class="lang-card" data-lang="te" role="listitem">
-          <span class="lang-native">తెలుగు</span>
-          <span class="lang-name">Telugu</span>
-        </button>
-        <button class="lang-card" data-lang="bn" role="listitem">
-          <span class="lang-native">বাংলা</span>
-          <span class="lang-name">Bengali</span>
-        </button>
-        <button class="lang-card" data-lang="mr" role="listitem">
-          <span class="lang-native">मराठी</span>
-          <span class="lang-name">Marathi</span>
-        </button>
-        <button class="lang-card" data-lang="gu" role="listitem">
-          <span class="lang-native">ગુજરાતી</span>
-          <span class="lang-name">Gujarati</span>
-        </button>
-        <button class="lang-card" data-lang="pa" role="listitem">
-          <span class="lang-native">ਪੰਜਾਬੀ</span>
-          <span class="lang-name">Punjabi</span>
-        </button>
-        <button class="lang-card" data-lang="ml" role="listitem">
-          <span class="lang-native">മലയാളം</span>
-          <span class="lang-name">Malayalam</span>
-        </button>
-        <button class="lang-card" data-lang="kn" role="listitem">
-          <span class="lang-native">ಕನ್ನಡ</span>
-          <span class="lang-name">Kannada</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- STEP 2: Topic / Niche -->
-    <section class="section step-view" id="step-2" aria-labelledby="step2Title" hidden>
-      <div class="hero">
-        <h1 class="hero-title" id="step2Title">🎯 What's Your Video About?</h1>
-        <p class="hero-sub" id="langHint">Enter a niche or topic. Be specific for better viral ideas.</p>
-      </div>
-      <div class="hero-card" style="max-width: 720px; margin: 0 auto;">
-        <input type="text" id="nicheInput" placeholder="e.g., Dark Psychology, Indian Stock Market, Street Food, AI Tools" autocomplete="off" maxlength="120" />
-        <div class="chip-row" id="nicheChips">
-          <span class="chip-suggest">💰 Finance</span>
-          <span class="chip-suggest">🧠 Psychology</span>
-          <span class="chip-suggest">🍳 Cooking</span>
-          <span class="chip-suggest">💪 Fitness</span>
-          <span class="chip-suggest">📱 Tech</span>
-          <span class="chip-suggest">🎮 Gaming</span>
-          <span class="chip-suggest">✈️ Travel</span>
-          <span class="chip-suggest">📚 Education</span>
-        </div>
-        <button class="btn-primary" id="toBriefBtn">
-          <span class="btn-label">Next: Add Brief →</span>
-          <span class="btn-spinner" aria-hidden="true"></span>
-        </button>
-      </div>
-    </section>
-
-    <!-- STEP 3: Brief (specific topic detail for better scripts) -->
-    <section class="section step-view" id="step-3" aria-labelledby="step3Title" hidden>
-      <div class="hero">
-        <h1 class="hero-title" id="step3Title">📝 Tell Us More</h1>
-        <p class="hero-sub">The more specific you are, the better the script. <b>This is the #1 reason videos go viral.</b></p>
-      </div>
-      <div class="hero-card" style="max-width: 760px; margin: 0 auto;">
-        <label class="field-label" for="topicBrief">💡 Briefly describe what this video should cover</label>
-        <div id="briefSuggestions" class="brief-suggestions" hidden></div>
-        <textarea id="topicBrief" rows="5" maxlength="2000" placeholder="Example: 3 dark psychology tricks that marketers use to make you buy things you don't need. Include the 'foot-in-the-door' technique, scarcity bias, and social proof."></textarea>
-
-        <label class="field-label" for="userTitle" style="margin-top:14px;">🎯 Your own title <span class="badge-inline">Optional</span></label>
-        <input type="text" id="userTitle" placeholder="e.g., 3 Tricks Marketers Use to Make You Buy Anything" maxlength="120" autocomplete="off" />
-        <p class="modal-hint">If you provide a title, we'll generate a script specifically about it. If empty, AI will pick a viral angle for you.</p>
-
-        <label class="field-label" for="targetAudience" style="margin-top:14px;">👥 Who's the audience? <span class="badge-inline">Optional</span></label>
-        <input type="text" id="targetAudience" placeholder="e.g., Indian teens 16-22, working professionals, housewives" maxlength="200" autocomplete="off" />
-
-        <div style="display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; align-items:center;">
-          <button class="btn-primary" id="toFormatBtn" style="flex:1; min-width:160px;">
-            <span class="btn-label">Next: Pick Format →</span>
-            <span class="btn-spinner" aria-hidden="true"></span>
-          </button>
-          <span class="modal-hint" style="margin:0;">Tip: a longer brief = a better script</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- STEP 4: Format + Time -->
-    <section class="section step-view" id="step-4" aria-labelledby="step4Title" hidden>
-      <div class="hero">
-        <h1 class="hero-title" id="step4Title">🎬 Choose Video Format</h1>
-        <p class="hero-sub">Shorts are capped at 60 seconds. Long videos can be any length.</p>
-      </div>
-      <div class="format-grid" role="radiogroup" aria-label="Video format">
-        <button class="format-card" data-format="shorts" role="radio" aria-checked="false">
-          <div class="format-icon">📱</div>
-          <h3>YouTube Shorts</h3>
-          <p>Vertical • Up to 60 sec • Max virality</p>
-          <span class="format-tag">9:16</span>
-        </button>
-        <button class="format-card" data-format="long" role="radio" aria-checked="false">
-          <div class="format-icon">🎥</div>
-          <h3>Long Video</h3>
-          <p>Horizontal • Custom length • Deep content</p>
-          <span class="format-tag">16:9</span>
-        </button>
-      </div>
-      <div class="hero-card time-card" id="timeCard" hidden style="max-width: 480px; margin: 24px auto 0;">
-        <label for="timeLimit">⏱️ Video Length (minutes)</label>
-        <input type="number" id="timeLimit" min="1" max="60" value="8" inputmode="numeric" />
-        <p class="modal-hint">We'll create scenes and a script to match this exact duration.</p>
-        <button class="btn-primary" id="toIdeasBtn">
-          <span class="btn-label">Generate Viral Ideas ✨</span>
-          <span class="btn-spinner" aria-hidden="true"></span>
-        </button>
-      </div>
-      <p id="formatHint" class="modal-hint" style="text-align:center; margin: 18px auto 0; max-width: 480px;">
-        👆 Pick <b>Shorts</b> for a 60-second vertical video, or <b>Long</b> for a horizontal video with custom length.
-        Your choice is auto-saved — you can change it later.
-      </p>
-    </section>
-
-    <!-- STEP 5: Ideas -->
-    <section class="section step-view results" id="step-5" hidden aria-labelledby="step5Title">
-      <div class="results-block">
-        <div class="results-header">
-          <h2>🔥 5 Viral Video Ideas</h2>
-          <button class="btn-ghost" id="regenIdeasBtn">🔄 Regenerate Ideas</button>
-        </div>
-        <div class="ideas-list" id="ideasGrid"></div>
-      </div>
-
-      <!-- Premium / locked area for dev -->
-      <div class="results-block idea-locked" id="analyticsBlock" hidden>
-        <div class="lock-overlay">
-          <div class="lock-icon">🔒</div>
-          <div class="lock-text">Trending Analytics — Coming Soon</div>
-        </div>
-        <div class="results-header">
-          <h2>📈 Trending in Your Niche</h2>
-        </div>
-        <div class="ideas-list">
-          <div class="idea-item"><div class="idea-content"><div class="idea-title">Top performing tags & topics</div><div class="idea-hook">Unlock with Pro to see what is trending right now</div></div></div>
-          <div class="idea-item"><div class="idea-content"><div class="idea-title">Best upload time for your audience</div><div class="idea-hook">Personalized to your niche and language</div></div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- STEP 6: Script + Music + Customization -->
-    <section class="section step-view results" id="step-6" hidden aria-labelledby="step6Title">
-      <!-- Competitor Insights (collapsible) -->
-      <div class="results-block" id="competitorInsightsCard" hidden>
-        <div class="results-header" style="cursor:pointer;" onclick="document.getElementById('competitorInsightsBody').classList.toggle('hidden'); this.querySelector('.expand-icon').textContent = this.querySelector('.expand-icon').textContent === '▼' ? '▶' : '▼';">
-          <h2>🔍 Competitor Insights</h2>
-          <span class="expand-icon" style="font-size:0.8rem; color:var(--text-muted);">▼</span>
-        </div>
-        <div id="competitorInsightsBody"></div>
-      </div>
-
-      <div class="results-block">
-        <div class="results-header">
-          <h2 id="step6Title">📝 Viral Script & 🎵 Copyright-Free Music</h2>
-          <button class="btn-ghost" id="regenScriptBtn">🔄 Regenerate Script</button>
-        </div>
-
-        <!-- Title -->
-        <div class="script-section">
-          <span class="script-label">🎯 YouTube Title (with emojis)</span>
-          <div class="script-text" id="finalTitle"></div>
-          <div class="script-cta">
-            <button class="btn-ghost" id="regenTitleBtn">🔄 New Title</button>
-            <button class="btn-ghost" id="copyTitleBtn">📋 Copy</button>
-          </div>
-        </div>
-
-        <!-- Script -->
-        <div class="script-section" style="margin-top:14px;">
-          <span class="script-label">🎬 Retention-Optimized Script</span>
-          <div class="script-text" id="finalScript"></div>
-          <div class="script-cta">
-            <button class="btn-ghost" id="copyScriptBtn">📋 Copy Script</button>
-            <button class="btn-ghost" id="toEditorBtn">✂️ Edit Scenes</button>
-            <button class="btn-primary" id="toVideoBtn">
-              <span class="btn-label">🎥 Render Video</span>
-              <span class="btn-spinner" aria-hidden="true"></span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Script Score -->
-        <div class="script-section" style="margin-top:14px;" id="scriptScoreCard" hidden>
-          <span class="script-label">📊 Script Quality Score</span>
-          <div id="scriptScoreBody"></div>
-        </div>
-
-        <!-- AI Music Suggestions -->
-        <div class="script-section" style="margin-top:14px;" id="aiMusicCard">
-          <span class="script-label">🎵 AI-Matched Music</span>
-          <p class="music-warning">Curated tracks matched to your video's mood and topic.</p>
-          <div class="music-list" id="aiMusicList"></div>
-        </div>
-
-        <!-- Fallback Music -->
-        <div class="script-section" style="margin-top:14px;">
-          <span class="script-label">🎵 More Copyright-Free Music</span>
-          <p class="music-warning">Additional free tracks from Pixabay / YouTube Audio Library.</p>
-          <div class="music-list" id="musicList"></div>
-        </div>
-      </div>
-
-      <!-- Customisation (optional) -->
-      <div class="results-block">
-        <div class="results-header">
-          <h2>🎨 Customise Your Video <span class="badge-inline">Optional</span></h2>
-        </div>
-        <p class="modal-hint" style="margin-bottom:14px;">All fields below are <b>optional</b>. Skip them to use the default visuals + Web Speech voiceover.</p>
-
-        <!-- Background style -->
-        <div class="script-section">
-          <span class="script-label">🖼️ Background Style</span>
-          <div class="bg-style-row" id="bgStyleRow">
-            <button class="bg-style-card selected" data-bg="videos">
-              <div class="bg-style-icon">🎬</div>
-              <div class="bg-style-name">Real Videos <span class="badge-inline">Pexels</span></div>
-              <div class="bg-style-sub">Real motion clips — needs free API key in Settings</div>
-            </button>
-            <button class="bg-style-card" data-bg="photos">
-              <div class="bg-style-icon">📷</div>
-              <div class="bg-style-name">Photos</div>
-              <div class="bg-style-sub">Free stock from Picsum + Ken Burns</div>
-            </button>
-            <button class="bg-style-card" data-bg="animated">
-              <div class="bg-style-icon">✨</div>
-              <div class="bg-style-name">Animated</div>
-              <div class="bg-style-sub">Particles + colour flow</div>
-            </button>
-            <button class="bg-style-card" data-bg="solid">
-              <div class="bg-style-icon">🎨</div>
-              <div class="bg-style-name">Solid</div>
-              <div class="bg-style-sub">Clean brand colour</div>
-            </button>
-          </div>
-        </div>
-
-        <!-- Face upload -->
-        <div class="script-section" style="margin-top:14px;">
-          <span class="script-label">🙂 Your Face <span class="badge-inline">Optional</span></span>
-          <div class="upload-row">
-            <div class="upload-box" id="faceDrop">
-              <input type="file" id="faceInput" accept="image/*" hidden />
-              <div class="upload-empty" id="faceEmpty">
-                <div class="upload-icon">📸</div>
-                <div>Click or drop a clear front-facing photo</div>
-                <div class="upload-hint">JPG / PNG · Will appear in a circle on the video</div>
-              </div>
-              <img id="facePreview" class="upload-preview" hidden alt="Face preview" />
-            </div>
-            <button class="btn-ghost" id="clearFaceBtn" hidden>✕ Remove</button>
-          </div>
-        </div>
-
-        <!-- Voice upload -->
-        <div class="script-section" style="margin-top:14px;">
-          <span class="script-label">🎙️ Your Voice Sample <span class="badge-inline">Optional</span></span>
-          <div class="upload-row">
-            <div class="upload-box" id="voiceDrop">
-              <input type="file" id="voiceInput" accept="audio/*" hidden />
-              <div class="upload-empty" id="voiceEmpty">
-                <div class="upload-icon">🎤</div>
-                <div>Click or drop 30–60 sec of your voice</div>
-                <div class="upload-hint">MP3 / WAV / M4A · Plays softly as your "voice signature"</div>
-              </div>
-              <div class="voice-loaded" id="voiceLoaded" hidden>
-                <div class="voice-icon">🎵</div>
-                <div class="voice-info">
-                  <div class="voice-name" id="voiceName">voice.mp3</div>
-                  <div class="voice-meta" id="voiceMeta">—</div>
-                </div>
-                <button class="btn-ghost" id="playVoiceBtn">▶ Play sample</button>
-              </div>
-            </div>
-            <button class="btn-ghost" id="clearVoiceBtn" hidden>✕ Remove</button>
-          </div>
-          <p class="modal-hint" style="margin-top:8px;">💡 Tip: If you don't upload a voice, the video will use the browser's built-in <b>Web Speech</b> voice (free, in your language) for the voiceover.</p>
-        </div>
-
-        <!-- Inline Voice Model Selector -->
-        <div class="voice-model-section">
-          <div class="section-label">🎙️ Voiceover Model</div>
-          <p class="section-hint">Choose the AI voice that will narrate your video. Your uploaded voice overrides this.</p>
-          <div id="inlineVoiceSelect" class="voice-model-grid"></div>
-          <div class="voice-preview-row">
-            <button id="inlineTestVoiceBtn" class="btn-ghost btn-sm" type="button">▶ Preview Selected Voice</button>
-            <span id="inlineVoiceLabel" class="voice-preview-label">No voice selected</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- STEP 7: Scene Editor -->
-    <section class="section step-view results" id="step-7" hidden aria-labelledby="step7Title">
-      <div class="results-block">
-        <div class="results-header">
-          <h2 id="step7Title">✂️ Edit Your Video Scene-by-Scene</h2>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn-ghost" id="addSceneBtn">➕ Add Scene</button>
-            <button class="btn-primary" id="toRenderBtn">
-              <span class="btn-label">🎥 Render Video →</span>
-              <span class="btn-spinner" aria-hidden="true"></span>
-            </button>
-          </div>
-        </div>
-        <p class="modal-hint" style="margin-bottom:14px;">Edit any scene's text, regenerate visuals, reorder, or delete. Your changes are <b>auto-saved</b>.</p>
-
-        <!-- Voiceover Settings -->
-        <div class="script-section" style="margin-bottom:16px;">
-          <span class="script-label">🎙️ Voiceover Settings</span>
-          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:8px;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:0.88rem;cursor:pointer;">
-              <input type="checkbox" id="voiceoverToggle" checked style="width:18px;height:18px;accent-color:var(--accent);" />
-              Enable voiceover
-            </label>
-            <label style="font-size:0.85rem;color:var(--text-muted);">Speed:
-              <input type="range" id="voiceoverRate" min="0.7" max="1.3" step="0.1" value="0.9" style="width:100px;accent-color:var(--accent);" />
-              <span id="voiceoverRateLabel">0.9x</span>
-            </label>
-            <button class="btn-ghost btn-sm" id="previewVoiceBtn" type="button">▶ Preview Voice</button>
-          </div>
-          <p class="modal-hint" style="margin-top:6px;">Uses Web Speech API (Chrome/Edge recommended). Install language packs in your OS for best quality.</p>
-        </div>
-        <div class="editor-list" id="editorList"></div>
-      </div>
-    </section>
-
-    <!-- STEP 8: Video generation -->
-    <section class="section step-view results" id="step-8" hidden aria-labelledby="step8Title">
-      <div class="results-block">
-        <div class="results-header">
-          <h2 id="step8Title">🎥 Your AI-Generated Video</h2>
-          <div id="videoMeta" class="api-hint"></div>
-        </div>
-
-        <div class="tts-banner" role="note">
-          <span class="tts-banner-icon">🎙️</span>
-          <div class="tts-banner-text">
-            <b>Voiceover gets baked INTO the file.</b>
-            When you click <b>Render</b>, your browser will ask to share this tab.
-            Pick <b>This tab</b> and tick <b>“Also share tab audio”</b> — the narration
-            then ends up inside the downloaded .mp4 instead of only playing in the website.
-            Upload a voice sample above to skip this prompt entirely.
-          </div>
-        </div>
-
-        <div class="video-stage" id="videoStage">
-          <div class="video-frame">
-            <canvas id="videoCanvas" width="1080" height="1920" aria-label="Generated video preview"></canvas>
-            <div class="video-overlay" id="videoOverlay">
-              <button class="btn-primary" id="playVideoBtn">▶ Render Video</button>
-            </div>
-          </div>
-          <div class="video-progress" id="videoProgress" hidden>
-            <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
-            <div class="progress-text" id="progressText">Preparing…</div>
-          </div>
-        </div>
-
-        <div class="script-cta" id="videoActions" hidden>
-          <button class="btn-primary" id="playWithVoiceBtn">🔊 Play with Voiceover</button>
-          <button class="btn-ghost" id="regenVideoBtn">🔄 Regenerate Video</button>
-          <button class="btn-ghost" id="downloadScriptBtn">📄 Download Script</button>
-          <button class="btn-ghost" id="downloadVideoBtn">⬇️ Download .mp4</button>
-        </div>
-
-        <div class="storyboard" id="storyboard" hidden>
-          <h3 class="storyboard-title">📋 Scene-by-Scene Storyboard</h3>
-          <div class="scenes-list" id="scenesList"></div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer style="margin-top:60px; border-top:1px solid var(--border); background:var(--bg-secondary); padding:20px 24px;">
-  <div style="max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-    <span style="font-size:13px; color:var(--text-muted);">Made with 🐯 in India · <strong style="background:var(--accent-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">ScriptSpark.in</strong></span>
-    <div style="display:flex; gap:20px;">
-      <a href="docs.html" style="font-size:13px; color:var(--text-secondary); text-decoration:none; font-weight:500;">Docs</a>
-      <a href="policy.html" style="font-size:13px; color:var(--text-secondary); text-decoration:none; font-weight:500;">Privacy</a>
-      <a href="mailto:hello@scriptspark.in" style="font-size:13px; color:var(--text-secondary); text-decoration:none; font-weight:500;">Contact</a>
+  <!-- Hero Section -->
+  <section class="landing-hero">
+    <h1>Turn Any Idea Into a YouTube Video — In Minutes</h1>
+    <p>AI writes your script, generates scenes, and renders a real video. Free. No login. Made for Indian creators.</p>
+    <div>
+      <a href="app.html" class="btn-primary" style="min-height:48px; padding:14px 28px; font-size:1.05rem;">▶ Try Free Now</a>
+      <a href="#how-it-works" class="btn-ghost" style="min-height:48px; padding:14px 28px; font-size:1.05rem;">See How It Works</a>
     </div>
-  </div>
-</footer>
-
-  <!-- Toast -->
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <!-- Settings Modal -->
-  <div class="modal-backdrop" id="settingsModal" hidden>
-    <div class="modal modal-lg" role="dialog" aria-labelledby="settingsTitle" aria-modal="true">
-      <div class="modal-header">
-        <h2 id="settingsTitle">⚙️ Settings</h2>
-        <button class="icon-btn" id="closeSettings" aria-label="Close">✕</button>
-      </div>
-      <div class="modal-body">
-        <h3>🔑 API Keys <span class="badge-inline">Optional</span></h3>
-        <p class="modal-hint">Add free API keys to unlock higher-quality content. <b>All keys are stored only in your browser (IndexedDB), never sent to any server.</b></p>
-
-        <label class="field-label" for="pexelsKey">🎬 Pexels API Key <span class="badge-inline">Free · 200 req/hr</span></label>
-        <div style="display:flex; gap:6px;">
-          <input type="password" id="pexelsKey" placeholder="Paste your free Pexels API key here" autocomplete="off" />
-        </div>
-        <label class="field-label" for="groqKey" style="margin-top:14px;">🧠 Groq API Key <span class="badge-inline">Required for AI</span></label>
-        <div style="display:flex; gap:6px;">
-          <input type="password" id="groqKey" placeholder="Paste your Groq API key here" autocomplete="off" />
-          <button class="btn-ghost" id="toggleGroqKey" title="Show/hide key">👁</button>
-          <button class="btn-ghost" id="togglePexelsKey" title="Show/hide key">👁</button>
-        </div>
-        <p class="modal-hint">Get your free key in 30 seconds at <a href="https://www.pexels.com/api/" target="_blank" rel="noopener">pexels.com/api</a> · Sign up → Dashboard → API Keys. We use this to fetch <b>real stock videos</b> matching your topic as backgrounds.</p>
-
-        <hr style="margin: 18px 0; border: none; border-top: 1px solid var(--border);" />
-
-        <h3>🎤 Voice (Text-to-Speech)</h3>
-        <p class="modal-hint">Pick the voice that will read your script. Voices depend on your browser & OS. <b>Install more voices:</b> Windows: Settings → Time & Language → Language → Add Hindi/Tamil/etc → Speech. macOS: System Settings → Accessibility → Spoken Content → System Voice → Customize.</p>
-        <label class="field-label" for="voiceSelect">Available voice for your selected language</label>
-        <select id="voiceSelect"></select>
-        <button class="btn-ghost" id="testVoiceBtn" style="margin-top:8px;">▶ Test Voice</button>
-
-        <hr style="margin: 18px 0; border: none; border-top: 1px solid var(--border);" />
-
-        <h3>💾 Data</h3>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn-ghost" id="exportDataBtn">⬇️ Export All My Data</button>
-          <button class="btn-ghost" id="clearDataBtn" style="color:#ff5e5e;">🗑️ Clear All My Data</button>
-        </div>
-        <p class="modal-hint">All your data is stored locally in your browser using IndexedDB. Nothing is sent to any server.</p>
-
-        <div class="modal-actions">
-          <button class="btn-primary" id="saveSettingsBtn">Save Settings</button>
+    <div class="landing-demo-wrap">
+      <div class="landing-demo-placeholder">
+        <div class="demo-phone">
+          <div class="demo-screen">
+            <div class="demo-step">1. Pick Language</div>
+            <div class="demo-step">2. Enter Topic</div>
+            <div class="demo-step">3. AI Script</div>
+            <div class="demo-step">4. Download Video</div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- My Projects Modal -->
-  <div class="modal-backdrop" id="projectsModal" hidden>
-    <div class="modal modal-lg" role="dialog" aria-labelledby="projectsTitle" aria-modal="true">
-      <div class="modal-header">
-        <h2 id="projectsTitle">📁 My Projects</h2>
-        <button class="icon-btn" id="closeProjects" aria-label="Close">✕</button>
+  <!-- How It Works -->
+  <section id="how-it-works" class="how-it-works">
+    <h2 class="section-title">How It Works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">📝</div>
+        <h3>Enter your topic</h3>
+        <p>Tell us what you want the video about – a niche, a trend, or a simple idea.</p>
       </div>
-      <div class="modal-body">
-        <p class="modal-hint">All your projects are <b>auto-saved</b> in your browser. Click any project to reload it.</p>
-        <div id="projectsList" class="projects-list"></div>
-        <div class="modal-actions">
-          <button class="btn-ghost" id="newProjectBtn">➕ Start New Project</button>
-        </div>
+      <div class="step">
+        <div class="step-icon">🤖</div>
+        <h3>AI writes your script</h3>
+        <p>Our local AI creates a viral‑ready script, titles, and scene breakdowns.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">⬇️</div>
+        <h3>Download your video</h3>
+        <p>Render in the browser and download an MP4 ready to publish.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Help Modal -->
-  <div class="modal-backdrop" id="helpModal" hidden>
-    <div class="modal" role="dialog" aria-labelledby="helpTitle" aria-modal="true">
-      <div class="modal-header">
-        <h2 id="helpTitle">How to use ScriptSpark 🚀</h2>
-        <button class="icon-btn" id="closeHelp" aria-label="Close">✕</button>
+  <!-- Features -->
+  <section class="features">
+    <h2 class="section-title">Features</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>10 Indian languages</h3>
+        <p>Support for Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, Punjabi, Malayalam, Kannada, and English.</p>
       </div>
-      <div class="modal-body">
-        <p><b>1.</b> Pick your language (10 Indian languages supported).</p>
-        <p><b>2.</b> Tell us your video topic/niche.</p>
-        <p><b>3.</b> Write a brief about what the video should cover (this is the secret to great scripts).</p>
-        <p><b>4.</b> Choose Shorts (≤60s) or Long Video + duration.</p>
-        <p><b>5.</b> Pick a viral idea from 5 generated options.</p>
-        <p><b>6.</b> Get a retention-optimized script + copyright-free music.</p>
-        <p><b>7.</b> <b>Edit scenes scene-by-scene</b> — text, order, add, delete.</p>
-        <p><b>8.</b> Render & download the video. Your project is auto-saved.</p>
-        <p class="modal-hint">💡 Tip: <a href="docs.html">Read the full docs</a> · Get free <a href="https://www.pexels.com/api/" target="_blank" rel="noopener">Pexels API key</a> for real video backgrounds.</p>
+      <div class="feature-card">
+        <div class="feature-icon">🖋️</div>
+        <h3>AI script writing</h3>
+        <p>Context‑aware, retention‑optimised scripts generated locally in your browser.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎞️</div>
+        <h3>Scene editor</h3>
+        <p>Fine‑tune each scene – text, visuals, background, and music.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📹</div>
+        <h3>Real stock videos</h3>
+        <p>Free Pexels footage automatically matched to your script.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎵</div>
+        <h3>Copyright‑free music</h3>
+        <p>Curated royalty‑free tracks from Pixabay and YouTube Audio Library.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Runs in browser</h3>
+        <p>No server, no installation – everything stays on your device.</p>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div>
+      <span>Made with 🐯 in India · <strong style="background:var(--accent-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">ScriptSpark.in</strong></span>
+    </div>
+    <div>
+      <a href="docs.html">Docs</a>
+      <a href="policy.html">Privacy</a>
+      <a href="mailto:hello@scriptspark.in">Contact</a>
+    </div>
+  </footer>
 
   <script src="script.js"></script>
   <script src="wallpaper.js"></script>
-  <script>
-    (function(){
-      var btn = document.getElementById('hamburgerBtn');
-      var nav = document.getElementById('navbarActions');
-      if(btn && nav){
-        btn.addEventListener('click', function(){
-          var open = nav.classList.toggle('open');
-          btn.classList.toggle('open');
-          btn.setAttribute('aria-expanded', open);
-        });
-        nav.querySelectorAll('a, button').forEach(function(el){
-          el.addEventListener('click', function(){
-            nav.classList.remove('open');
-            btn.classList.remove('open');
-            btn.setAttribute('aria-expanded','false');
-          });
-        });
-      }
-      var stepNames=['Language','Topic','Brief','Format','Ideas','Script','Editor','Video'];
-      var label=document.getElementById('mobileStepLabel');
-      var prev=document.getElementById('mobileStepPrev');
-      var next=document.getElementById('mobileStepNext');
-      function getCurrentStep(){
-        var items=document.querySelectorAll('.stepper .step-item');
-        for(var i=0;i<items.length;i++){if(items[i].classList.contains('active'))return i+1;}
-        return 1;
-      }
-      function updateMobileStepper(){
-        var s=getCurrentStep();
-        if(label) label.textContent='Step '+s+' of 8 · '+stepNames[s-1];
-        if(prev) prev.disabled=(s<=1);
-        if(next) next.disabled=(s>=8);
-      }
-      updateMobileStepper();
-      if(prev) prev.addEventListener('click',function(){
-        var s=getCurrentStep();
-        if(s>1){var item=document.querySelector('.stepper .step-item[data-step="'+(s-1)+'"]');if(item) item.click();}
-      });
-      if(next) next.addEventListener('click',function(){
-        var s=getCurrentStep();
-        if(s<8){var item=document.querySelector('.stepper .step-item[data-step="'+(s+1)+'"]');if(item) item.click();}
-      });
-      var observer=new MutationObserver(updateMobileStepper);
-      var stepper=document.querySelector('.stepper');
-      if(stepper) observer.observe(stepper,{attributes:true,subtree:true,attributeFilter:['class']});
-    })();
-  </script>
 </body>
 </html>

@@ -3,7 +3,6 @@
     { "source": "/", "destination": "/landing.html", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/", "destination": "/landing.html" },
     { "source": "/(.*)", "destination": "/$1" }
   ],
   "outputDirectory": "./"
