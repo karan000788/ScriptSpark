@@ -348,12 +348,18 @@
 
   // ---------------------------------------------------------------- boot
   function boot() {
+  if (isMobile() || prefersReduced()) {
+    // Skip wallpaper on mobile or reduced motion; apply static background.
+    document.body.classList.add("wallpaper-static");
+  } else {
     ensureCanvas();
     setTheme(getStored() || DEFAULT_THEME, { silent: true });
     state.last = performance.now();
     loop();
     wireInteractions();
     document.body.classList.add("wallpaper-active");
+  }
+}
 
     // Public API on window
     window.WallpaperEngine = {

@@ -522,3 +522,8 @@ body.wpg-open { overflow: hidden; }
   .wpg-grid { grid-template-columns: 1fr 1fr; }
   .wpg-modal { padding: 18px; }
 }
+/* ---------------------------------------------------------------- static fallback for mobile / reduced motion */
+.wallpaper-static {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
