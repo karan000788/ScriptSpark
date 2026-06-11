@@ -15,8 +15,13 @@
       <span class="logo-text">ScriptSpark</span>
       <span class="logo-badge">.in</span>
     </a>
-    <nav class="navbar-actions">
-      <a href="index.html" class="nav-link">🚀 App</a>
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    <nav class="navbar-actions" id="navbarActions">
+      <a href="app.html" class="nav-link">🚀 App</a>
       <a href="docs.html" class="nav-link active">📖 Docs</a>
       <a href="policy.html" class="nav-link">🛡️ Policy</a>
       <a href="#" class="nav-link" data-open-wallpaper title="Pick a cinematic wallpaper">🪐 Themes</a>
@@ -265,23 +270,50 @@
   </footer>
 
   <script>
-    // Theme
-    const themeButtons = document.querySelectorAll(".theme-toggle .icon-btn");
-    function applyTheme(opt) {
-      let actual = opt;
-      if (opt === "system") {
-        actual = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    /* Hamburger menu toggle for mobile */
+    (function(){
+      var btn = document.getElementById('hamburgerBtn');
+      var nav = document.getElementById('navbarActions');
+      if(btn && nav){
+        btn.addEventListener('click', function(){
+          var open = nav.classList.toggle('open');
+          btn.classList.toggle('open');
+          btn.setAttribute('aria-expanded', open);
+        });
+        nav.querySelectorAll('a, button').forEach(function(el){
+          el.addEventListener('click', function(){
+            nav.classList.remove('open');
+            btn.classList.remove('open');
+            btn.setAttribute('aria-expanded','false');
+          });
+        });
       }
-      document.body.dataset.theme = actual;
-      document.body.classList.toggle("dark", actual === "dark");
-      document.body.classList.toggle("light", actual === "light");
-      themeButtons.forEach((b) => b.classList.toggle("active", b.dataset.themeOption === opt));
-      try { localStorage.setItem("ss-theme", opt); } catch (e) {}
-    }
-    themeButtons.forEach((b) => b.addEventListener("click", () => applyTheme(b.dataset.themeOption)));
-    (() => {
-      let saved = "light";
-      try { saved = localStorage.getItem("ss-theme") || "light"; } catch (e) {}
+    })();
+    /* Theme toggle — mirrors applyTheme from script.js */
+    (function() {
+      var themeButtons = document.querySelectorAll('.theme-toggle .icon-btn');
+      function applyTheme(opt) {
+        var actual = opt;
+        if (opt === 'system') {
+          actual = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', actual);
+        document.body.dataset.theme = actual;
+        document.body.classList.toggle('dark', actual === 'dark');
+        document.body.classList.toggle('light', actual === 'light');
+        themeButtons.forEach(function(b) {
+          b.classList.toggle('active', b.dataset.themeOption === opt);
+        });
+        try { localStorage.setItem('ss-theme', opt); } catch (e) {}
+        document.dispatchEvent(new CustomEvent('appThemeChanged', { detail: { theme: actual } }));
+      }
+      themeButtons.forEach(function(b) {
+        b.addEventListener('click', function() {
+          applyTheme(b.dataset.themeOption);
+        });
+      });
+      var saved = 'light';
+      try { saved = localStorage.getItem('ss-theme') || 'light'; } catch (e) {}
       applyTheme(saved);
     })();
   </script>

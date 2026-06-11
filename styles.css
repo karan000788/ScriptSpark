@@ -977,68 +977,8 @@ textarea {
   margin-top: 8px;
 }
 
-@media (max-width: 768px) {
-  .navbar {
-    padding: 12px 16px;
-  }
-
-  .hero {
-    padding: 48px 20px 40px;
-  }
-
-  .section {
-    padding: 40px 20px;
-  }
-
-  .steps {
-    grid-template-columns: 1fr;
-  }
-
-  .feature-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .pricing-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .results-block {
-    padding: 20px;
-  }
-
-  .idea-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .idea-use-btn {
-    align-self: stretch;
-    width: 100%;
-  }
-
-  .music-item {
-    flex-wrap: wrap;
-  }
-
-  .music-source {
-    margin-left: 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .theme-toggle .icon-btn {
-    width: 30px;
-    height: 30px;
-  }
-
-  .logo-text {
-    font-size: 1.05rem;
-  }
-
-  .results h2 {
-    font-size: 1.2rem;
-  }
-}
+/* Note: Tablet and mobile breakpoints are consolidated in the
+   comprehensive responsive section at the end of this file. */
 
 /* =========================
    Multi-step flow additions
@@ -1812,15 +1752,8 @@ textarea {
   min-width: 180px;
 }
 
-@media (max-width: 640px) {
-  .nav-link {
-    padding: 6px 8px;
-    font-size: 0.8rem;
-  }
-  .page-hero { padding: 24px 16px 32px; }
-  .step-doc { padding: 18px; }
-  .toc { position: static; }
-}
+/* Note: Docs/policy responsive rules are in the comprehensive
+   responsive section at the end of this file. */
 
 /* =========================
    Scene Editor (Step 7)
@@ -2299,10 +2232,61 @@ textarea {
   padding: 0 8px;
 }
 
-/* =========================
-   Comprehensive Mobile
-   (max-width: 768px)
-   ========================= */
+/* ============================================================
+   RESPONSIVE DESIGN — Mobile-First Approach
+   Breakpoints:
+     320px–480px  : Small phones
+     481px–768px  : Large phones / small tablets
+     769px–1024px : Tablets
+     1025px+      : Laptops & desktops (default)
+   ============================================================ */
+
+/* --- Global: prevent horizontal overflow on all devices --- */
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ============================================================
+   TABLETS (max-width: 1024px)
+   ============================================================ */
+@media (max-width: 1024px) {
+  .hero {
+    padding: 60px 24px 48px;
+  }
+  .section {
+    padding: 48px 20px;
+  }
+  .stepper ol {
+    gap: 4px;
+  }
+  .step-item {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+  .step-item::after {
+    width: 14px;
+    margin-left: 4px;
+  }
+  .step-num {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+  }
+}
+
+/* ============================================================
+   LARGE PHONES / SMALL TABLETS (max-width: 768px)
+   ============================================================ */
 @media (max-width: 768px) {
   /* 1. Navbar: hamburger menu */
   .hamburger-btn {
@@ -2314,6 +2298,7 @@ textarea {
     right: -100%;
     width: 280px;
     height: 100vh;
+    height: 100dvh;
     flex-direction: column;
     align-items: stretch;
     gap: 4px;
@@ -2324,6 +2309,7 @@ textarea {
     z-index: 55;
     transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .navbar-actions.open {
     right: 0;
@@ -2397,19 +2383,23 @@ textarea {
     flex-direction: column;
   }
 
-  /* 6. Font sizes */
+  /* 6. Responsive font sizes with clamp() */
   .hero-title {
-    font-size: clamp(1.6rem, 6vw, 2rem) !important;
+    font-size: clamp(1.5rem, 5vw, 2rem) !important;
     max-width: 100%;
   }
   .hero-sub {
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 3vw, 1rem);
   }
   .section {
     padding: 32px 16px;
   }
   .hero {
     padding: 48px 16px 32px;
+  }
+  .section-title {
+    font-size: clamp(1.3rem, 4vw, 1.75rem);
+    margin-bottom: 28px;
   }
 
   /* 7. Video canvas and scene editor: full width */
@@ -2458,6 +2448,7 @@ textarea {
   .modal {
     max-width: 95vw !important;
     max-height: 90vh;
+    max-height: 90dvh;
   }
   .modal-lg {
     max-width: 95vw !important;
@@ -2469,7 +2460,7 @@ textarea {
     padding: 16px 18px 20px;
   }
 
-  /* 10. Touch targets: min 44x44 */
+  /* 10. Touch targets: min 44x44 for finger taps */
   .btn-primary,
   .btn-ghost {
     min-height: 44px;
@@ -2516,7 +2507,7 @@ textarea {
     align-items: flex-start;
   }
   .results-header h2 {
-    font-size: 1.15rem;
+    font-size: clamp(1rem, 3.5vw, 1.15rem);
   }
 
   /* Music items */
@@ -2545,6 +2536,16 @@ textarea {
     padding: 8px 10px;
   }
 
+  /* Theme toggle group on docs/policy */
+  .theme-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+  .theme-toggle .icon-btn {
+    flex: 1;
+    max-width: 44px;
+  }
+
   /* Page content (docs/policy) */
   .page {
     padding: 24px 16px 60px;
@@ -2553,14 +2554,157 @@ textarea {
     padding: 24px 16px 28px;
   }
   .page-hero h1 {
-    font-size: clamp(1.5rem, 6vw, 2rem);
+    font-size: clamp(1.4rem, 5vw, 2rem);
+  }
+  .page-hero p {
+    font-size: clamp(0.88rem, 2.5vw, 1.05rem);
+  }
+  .page-section h2 {
+    font-size: clamp(1.2rem, 4vw, 1.5rem);
+  }
+  .page-section h3 {
+    font-size: clamp(0.95rem, 3vw, 1.1rem);
+  }
+  .page-cta {
+    flex-direction: column;
+    padding: 24px 16px;
+  }
+  .page-cta .btn-primary,
+  .page-cta .btn-ghost {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  /* Tip list single column */
+  .tip-list {
+    grid-template-columns: 1fr;
+  }
+
+  /* Steps grid single column */
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
+  /* Feature grid single column */
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Pricing grid single column */
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Price card */
+  .price-card {
+    padding: 24px 18px;
+  }
+
+  /* Idea items stack */
+  .idea-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .idea-use-btn {
+    align-self: stretch;
+    width: 100%;
+  }
+
+  /* Toast */
+  .toast {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    max-width: none;
+    transform: translateY(120%);
+    width: auto;
+  }
+  .toast.show {
+    transform: translateY(0);
+  }
+
+  /* Modal backdrop */
+  .modal-backdrop {
+    padding: 8px;
+    align-items: flex-end;
+  }
+
+  /* TTS banner */
+  .tts-banner {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  /* Script section padding */
+  .script-section {
+    padding: 12px 14px;
+  }
+
+  /* Brief suggestions */
+  .brief-chip {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  /* FAQ items */
+  .faq-item summary {
+    padding: 12px 14px;
+    font-size: 0.92rem;
+  }
+  .faq-item summary::after {
+    right: 14px;
+  }
+
+  /* Step doc cards */
+  .step-doc {
+    padding: 16px 14px;
+  }
+
+  /* TOC */
+  .toc {
+    padding: 16px 18px;
+  }
+
+  /* Voice preview row */
+  .voice-preview-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Project items */
+  .project-item {
+    padding: 10px 12px;
+  }
+
+  /* Scene items */
+  .scenes-list {
+    grid-template-columns: 1fr;
   }
 }
 
-/* =========================
-   Extra small (max-width: 480px)
-   ========================= */
+/* ============================================================
+   SMALL PHONES (max-width: 480px)
+   ============================================================ */
 @media (max-width: 480px) {
+  /* Navbar tighter padding */
+  .navbar {
+    padding: 10px 12px;
+  }
+  .logo-text {
+    font-size: 1rem;
+  }
+  .logo-badge {
+    font-size: 0.65rem;
+  }
+
+  /* Theme toggle */
+  .theme-toggle .icon-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Language grid */
   .lang-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
@@ -2574,26 +2718,229 @@ textarea {
   .lang-name {
     font-size: 0.78rem;
   }
+
+  /* Hero */
+  .hero {
+    padding: 36px 12px 24px;
+  }
+  .hero-title {
+    font-size: clamp(1.3rem, 6vw, 1.7rem) !important;
+    margin-bottom: 10px;
+  }
+  .hero-sub {
+    font-size: 0.88rem;
+    margin-bottom: 24px;
+  }
+
+  /* Section */
+  .section {
+    padding: 24px 12px;
+  }
+
+  /* Format grid */
+  .format-grid {
+    grid-template-columns: 1fr;
+    padding: 0 8px;
+  }
+  .format-card {
+    padding: 16px 14px;
+  }
+  .format-icon {
+    font-size: 1.5rem;
+  }
+
+  /* Background style grid */
   .bg-style-row {
     grid-template-columns: 1fr;
   }
+
+  /* Voice model grid */
   .voice-model-grid {
     grid-template-columns: 1fr;
   }
-  .format-grid {
-    grid-template-columns: 1fr;
-  }
+
+  /* Scenes list */
   .scenes-list {
     grid-template-columns: 1fr;
   }
+
+  /* Results */
   .results h2 {
-    font-size: 1.05rem;
+    font-size: 1rem;
   }
+
+  /* Chips */
   .chip-row {
     gap: 6px;
   }
   .chip-suggest {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     padding: 8px 10px;
+  }
+
+  /* Cards padding */
+  .hero-card {
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+    padding: 14px;
+  }
+  .results-block {
+    margin-left: 8px;
+    margin-right: 8px;
+    padding: 14px;
+  }
+
+  /* Buttons */
+  .btn-primary,
+  .btn-ghost {
+    padding: 10px 14px;
+    font-size: 0.88rem;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    padding: 4px;
+  }
+  .modal-body {
+    padding: 14px 14px 16px;
+  }
+  .modal-header {
+    padding: 14px;
+  }
+
+  /* Page content */
+  .page {
+    padding: 16px 12px 48px;
+  }
+  .page-hero {
+    padding: 20px 12px 24px;
+  }
+  .page-hero h1 {
+    font-size: clamp(1.2rem, 5vw, 1.6rem);
+  }
+  .page-hero p {
+    font-size: 0.85rem;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 24px 12px;
+    font-size: 0.82rem;
+  }
+
+  /* Upload box */
+  .upload-box {
+    min-height: 100px;
+    padding: 14px;
+  }
+  .upload-icon {
+    font-size: 1.4rem;
+  }
+
+  /* Scene editor preview */
+  .editor-scene-preview {
+    height: 140px;
+  }
+
+  /* Video frame */
+  .video-frame {
+    border-radius: 12px;
+  }
+
+  /* Storyboard */
+  .storyboard-title {
+    font-size: 0.95rem;
+  }
+
+  /* Brief suggestions */
+  .brief-suggestions-label {
+    font-size: 12px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    padding: 28px 12px;
+  }
+
+  /* Step doc */
+  .step-doc h3 {
+    font-size: 0.98rem;
+    flex-wrap: wrap;
+  }
+  .step-num-badge {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+
+  /* Callout */
+  .callout {
+    font-size: 0.88rem;
+    padding: 10px 12px;
+  }
+
+  /* Price card */
+  .price {
+    font-size: 1.8rem;
+  }
+
+  /* Demo phone on landing */
+  .demo-phone {
+    width: 170px;
+  }
+}
+
+/* ============================================================
+   EXTRA SMALL PHONES (max-width: 360px)
+   For devices like Samsung Galaxy A01, J2, etc.
+   ============================================================ */
+@media (max-width: 360px) {
+  .navbar {
+    padding: 8px 10px;
+  }
+  .logo-text {
+    font-size: 0.92rem;
+  }
+  .logo-icon {
+    font-size: 1.1rem;
+  }
+  .hero-title {
+    font-size: clamp(1.15rem, 7vw, 1.5rem) !important;
+  }
+  .hero-sub {
+    font-size: 0.82rem;
+  }
+  .section {
+    padding: 20px 10px;
+  }
+  .hero {
+    padding: 28px 10px 20px;
+  }
+  .lang-card {
+    padding: 12px 6px;
+  }
+  .lang-native {
+    font-size: 0.95rem;
+  }
+  .lang-name {
+    font-size: 0.72rem;
+  }
+  .btn-primary,
+  .btn-ghost {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+  .format-card {
+    padding: 14px 12px;
+  }
+  .chip-suggest {
+    font-size: 0.75rem;
+    padding: 7px 8px;
+  }
+  .modal-body {
+    padding: 12px;
+  }
+  .page {
+    padding: 12px 10px 40px;
   }
 }

@@ -27,7 +27,14 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="wallpaper.css" />
   <style>
-    /* Landing page specific styles */
+    /* ============================================================
+       LANDING PAGE — Responsive Styles
+       Mobile-first approach with breakpoints:
+         320px–480px  : Small phones
+         481px–768px  : Large phones / small tablets
+         769px–1024px : Tablets
+         1025px+      : Desktops (default)
+       ============================================================ */
     .landing-hero {
       position: relative;
       display: flex;
@@ -36,11 +43,13 @@
       justify-content: center;
       text-align: center;
       min-height: 100vh;
+      min-height: 100dvh;
       padding: 80px 24px;
       background: linear-gradient(135deg, #0a0a2a, #340078, #0a0a2a);
       background-size: 600% 600%;
       animation: gradientShift 12s ease infinite;
       color: var(--text-primary);
+      overflow-x: hidden;
     }
     @keyframes gradientShift {
       0% {background-position:0% 50%;}
@@ -48,22 +57,30 @@
       100% {background-position:0% 50%;}
     }
     .landing-hero h1 {
-      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-size: clamp(1.8rem, 5vw, 3.5rem);
       font-weight: 800;
       margin-bottom: 16px;
+      line-height: 1.15;
     }
     .landing-hero p {
-      font-size: 1.15rem;
+      font-size: clamp(0.95rem, 2.5vw, 1.15rem);
       color: var(--text-muted);
       margin-bottom: 32px;
       max-width: 720px;
+      line-height: 1.6;
+    }
+    .landing-hero > div:last-of-type {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     .how-it-works, .features, .social-proof {
       padding: 80px 24px;
       background: var(--bg-primary);
     }
     .section-title {
-      font-size: 2rem;
+      font-size: clamp(1.5rem, 4vw, 2rem);
       margin-bottom: 40px;
       text-align: center;
     }
@@ -193,27 +210,124 @@
       0%, 100% { opacity: 0.5; transform: scale(0.98); }
       50% { opacity: 1; transform: scale(1); }
     }
-    /* Landing page responsive */
+
+    /* --- Tablets (max-width: 1024px) --- */
+    @media (max-width: 1024px) {
+      .landing-hero { padding: 70px 20px; }
+      .how-it-works, .features, .social-proof { padding: 60px 20px; }
+    }
+
+    /* --- Large phones / small tablets (max-width: 768px) --- */
     @media (max-width: 768px) {
-      .landing-hero { padding: 60px 16px; min-height: auto; }
-      .landing-hero h1 { font-size: 1.7rem; }
-      .landing-hero p { font-size: 1rem; margin-bottom: 24px; }
-      .landing-hero > div:last-of-type { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+      .landing-hero {
+        padding: 60px 16px;
+        min-height: auto;
+        min-height: auto;
+      }
+      .landing-hero h1 {
+        font-size: clamp(1.5rem, 6vw, 2rem);
+        margin-bottom: 12px;
+      }
+      .landing-hero p {
+        font-size: clamp(0.88rem, 3vw, 1rem);
+        margin-bottom: 24px;
+      }
+      .landing-hero > div:last-of-type {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        max-width: 360px;
+      }
       .landing-hero .btn-primary,
-      .landing-hero .btn-ghost { width: 100%; }
-      .how-it-works, .features, .social-proof { padding: 48px 16px; }
-      .section-title { font-size: 1.5rem; margin-bottom: 28px; }
-      .steps { grid-template-columns: 1fr; gap: 16px; }
-      .features .feature-grid { grid-template-columns: 1fr; gap: 16px; }
-      .social-proof .testimonials { grid-template-columns: 1fr; gap: 16px; }
+      .landing-hero .btn-ghost {
+        width: 100%;
+        min-height: 48px;
+        padding: 14px 24px;
+      }
+      .how-it-works, .features, .social-proof {
+        padding: 48px 16px;
+      }
+      .section-title {
+        font-size: clamp(1.2rem, 4vw, 1.5rem);
+        margin-bottom: 28px;
+      }
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .step {
+        padding: 20px;
+      }
+      .features .feature-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .feature-card {
+        padding: 20px;
+      }
+      .social-proof .testimonials {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
       .demo-phone { width: 180px; }
       .testimonial-card { padding: 18px; }
       .testimonial-card p { font-size: 0.92rem; }
       footer { padding: 24px 16px; }
     }
+
+    /* --- Small phones (max-width: 480px) --- */
     @media (max-width: 480px) {
-      .landing-hero h1 { font-size: 1.5rem; }
+      .landing-hero {
+        padding: 48px 12px;
+      }
+      .landing-hero h1 {
+        font-size: clamp(1.3rem, 7vw, 1.7rem);
+      }
+      .landing-hero p {
+        font-size: 0.85rem;
+        margin-bottom: 20px;
+      }
+      .landing-hero > div:last-of-type {
+        max-width: 100%;
+      }
+      .landing-hero .btn-primary,
+      .landing-hero .btn-ghost {
+        padding: 12px 20px;
+        font-size: 0.95rem;
+      }
+      .how-it-works, .features, .social-proof {
+        padding: 36px 12px;
+      }
+      .section-title {
+        font-size: 1.15rem;
+        margin-bottom: 22px;
+      }
       .step-icon, .feature-icon { width: 40px; height: 40px; font-size: 1.2rem; }
+      .step { padding: 16px; }
+      .feature-card { padding: 16px; }
+      .landing-demo-wrap { margin-top: 32px; }
+      .demo-phone { width: 160px; border-radius: 20px; }
+      .demo-screen { padding: 14px 10px; }
+      .demo-step { font-size: 0.75rem; padding: 8px 10px; }
+      footer { padding: 20px 12px; font-size: 0.82rem; }
+    }
+
+    /* --- Extra small (max-width: 360px) --- */
+    @media (max-width: 360px) {
+      .landing-hero {
+        padding: 36px 10px;
+      }
+      .landing-hero h1 {
+        font-size: 1.2rem;
+      }
+      .landing-hero p {
+        font-size: 0.8rem;
+      }
+      .how-it-works, .features, .social-proof {
+        padding: 28px 10px;
+      }
+      .demo-phone { width: 140px; }
     }
   </style>
 </head>
