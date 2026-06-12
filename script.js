@@ -1063,12 +1063,265 @@ if (_generateBtn) {
     btn.classList.add("loading");
     btn.disabled = true;
     try {
-      await runFullPipeline();
+      await runScriptPipeline();
     } finally {
       btn.classList.remove("loading");
       btn.disabled = false;
     }
   }));
+
+  // Category chip click → show topic suggestions
+  document.querySelectorAll("#nicheChips .chip-suggest").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const niche = chip.dataset.niche || chip.textContent.replace(/[^\w\s]/g, "").trim();
+      state.nicheCategory = niche;
+      $("nicheInput").value = niche;
+      showTopicSuggestions(niche);
+    });
+  });
+
+  // Refresh suggestions button
+  if ($("refreshSuggestions")) $("refreshSuggestions").addEventListener("click", () => {
+    if (state.nicheCategory) showTopicSuggestions(state.nicheCategory);
+  });
+}
+
+// ============================================================
+//  TOPIC SUGGESTION SYSTEM — YouTube-style trending topics
+// ============================================================
+async function showTopicSuggestions(category) {
+  const container = $("topicSuggestions");
+  const list = $("suggestionList");
+  const label = $("suggestionCategory");
+  if (!container || !list) return;
+
+  container.hidden = false;
+  label.textContent = category;
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">🤖 Analyzing trending topics...</div>';
+
+  try {
+    const groqKey = state.groqKey || localStorage.getItem("groqKey") || "";
+    if (!groqKey) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Add a Groq API key in Settings for AI suggestions</div>';
+      return;
+    }
+
+    const prompt = `You are a YouTube content strategist specializing in viral faceless videos.
+
+Category: "${category}"
+
+Generate 6 viral video topic ideas that would perform well on YouTube. Each topic should:
+- Be specific and curiosity-driven
+- Follow successful YouTube title patterns
+- Create a knowledge gap that makes people want to click
+- Be suitable for a faceless documentary-style video
+
+Return ONLY a JSON array of objects (no markdown, no explanation):
+[
+  {"title": "specific viral video title", "description": "1-2 sentence hook description", "search_volume": "high|medium|low", "competition": "low|medium|high"},
+  ...
+]
+
+Examples of good topics:
+- "The Lost City Found Under Antarctic Ice"
+- "Why This Math Problem Took 300 Years to Solve"
+- "The Company That Almost Controlled the Internet"`;
+
+    const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${groqKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.8,
+        max_tokens: 1500
+      })
+    });
+
+    if (!resp.ok) throw new Error("API request failed");
+    const data = await resp.json();
+    const content = data.choices?.[0]?.message?.content || "[]";
+
+    let topics;
+    try {
+      topics = JSON.parse(content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim());
+    } catch {
+      // Fallback topics
+      topics = [
+        { title: `The Untold Story of ${category}`, description: "Discover what they never told you", search_volume: "high", competition: "low" },
+        { title: `Why ${category} Changed Everything`, description: "The moment that changed history", search_volume: "high", competition: "medium" },
+        { title: `The Dark Secret Behind ${category}`, description: "Nobody talks about this", search_volume: "medium", competition: "low" },
+      ];
+    }
+
+    // Render suggestion cards
+    list.innerHTML = topics.map((t, i) => `
+      <div class="suggestion-card" style="padding:12px 16px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-weight:600;font-size:0.95rem;margin-bottom:4px;">${escapeHtml(t.title)}</div>
+        <div style="font-size:0.82rem;color:var(--text-muted);">${escapeHtml(t.description || "")}</div>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <span style="font-size:0.75rem;padding:2px 8px;border-radius:6px;background:${t.search_volume === 'high' ? 'rgba(46,213,115,0.15)' : 'rgba(255,255,255,0.05)'};color:${t.search_volume === 'high' ? '#2ED573' : 'var(--text-muted)'};">${t.search_volume || 'medium'} search</span>
+          <span style="font-size:0.75rem;padding:2px 8px;border-radius:6px;background:${t.competition === 'low' ? 'rgba(46,213,115,0.15)' : 'rgba(255,255,255,0.05)'};color:${t.competition === 'low' ? '#2ED573' : 'var(--text-muted)'};">${t.competition || 'medium'} competition</span>
+        </div>
+      </div>
+    `).join("");
+
+    // Add click handlers to suggestion cards
+    list.querySelectorAll(".suggestion-card").forEach((card, i) => {
+      card.addEventListener("click", () => {
+        const topic = topics[i];
+        $("nicheInput").value = topic.title;
+        state.niche = topic.title;
+        // Auto-click generate
+        $("generateBtn").click();
+      });
+    });
+
+  } catch (e) {
+    console.warn("[TopicSuggestions] Failed:", e);
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Could not load suggestions. Type your topic above.</div>';
+  }
+}
+
+// ============================================================
+//  SCRIPT PIPELINE — generates script and shows it to user
+// ============================================================
+async function runScriptPipeline() {
+  state.brief = state.niche;
+  if ($("topicBrief")) $("topicBrief").value = state.brief;
+
+  // Auto-fill format
+  const selectedLength = document.querySelector("#lengthChips .opt-chip.selected");
+  const lengthVal = selectedLength ? selectedLength.dataset.length : "medium";
+  if (lengthVal === "short") {
+    state.format = "shorts";
+    state.duration = 60;
+  } else if (lengthVal === "long") {
+    state.format = "long";
+    state.duration = 20 * 60;
+  } else {
+    state.format = "long";
+    state.duration = 8 * 60;
+  }
+
+  if (!state.audience || !state.audience.trim()) {
+    state.audience = autoDetectAudience(state.niche, state.lang);
+  }
+
+  // Show generation screen
+  $("genTopicLabel").textContent = `Creating script about "${state.niche}"...`;
+  goToStep(5);
+  startGenerationAnimation();
+
+  try {
+    // Run pipeline steps 1-7 (up to script generation)
+    const groqKey = state.groqKey || localStorage.getItem("groqKey") || "";
+    if (!groqKey) throw new Error("Please add a Groq API key in Settings");
+
+    // Step 1: Analyze topic
+    updateGenerationProgress(0.07, "Step 1/7: Analyzing topic...");
+    const analysis = await PIPELINE.analyzeTopic(state.niche, state.lang);
+
+    // Step 2: Research
+    updateGenerationProgress(0.14, "Step 2/7: Researching topic...");
+    const research = await PIPELINE.researchTopic(state.niche, analysis.niche, analysis.recommended_angle);
+
+    // Step 3: Find angle
+    updateGenerationProgress(0.28, "Step 3/7: Finding best angle...");
+    const angle = await PIPELINE.findBestAngle(state.niche, research, analysis.niche);
+
+    // Step 4: Create title
+    updateGenerationProgress(0.42, "Step 4/7: Creating viral title...");
+    const titles = await PIPELINE.createViralTitle(state.niche, angle, analysis.niche);
+
+    // Step 5: Story structure
+    updateGenerationProgress(0.56, "Step 5/7: Building story structure...");
+    const storyStructure = await PIPELINE.createStoryStructure(state.niche, research, angle, analysis.niche);
+
+    // Step 6: Write script
+    updateGenerationProgress(0.70, "Step 6/7: Writing high-retention script...");
+    const script = await PIPELINE.writeScript(titles, research, angle, storyStructure, analysis.niche, state.lang, state.duration);
+
+    // Step 7: Scene breakdown
+    updateGenerationProgress(0.85, "Step 7/7: Creating scene breakdown...");
+    const scenes = await PIPELINE.createSceneBreakdown(script.script, titles, analysis.niche, state.duration);
+
+    // Store results
+    state.nicheAnalysis = analysis;
+    state.researchNotes = research;
+    state.videoAngle = angle;
+    state.title = titles.recommended_title || state.niche;
+    state.titleThumbnailData = titles;
+    state.storyStructure = storyStructure;
+    state.fullScript = script.script;
+    state.script = {
+      hook: { text: script.hook || "", seconds: 5 },
+      intro: { text: script.script?.slice(0, 200) || "", seconds: 10 },
+      body: [{ heading: "Main Content", lines: [script.script || ""], seconds: Math.max(30, (script.estimated_duration_sec || 120) - 15) }],
+      outro: { text: "Thanks for watching.", seconds: 10 }
+    };
+
+    // Map scenes
+    if (scenes.scenes && scenes.scenes.length > 0) {
+      state.scenes = scenes.scenes.map((s, i) => ({
+        heading: `Scene ${i + 1}`,
+        text: s.narration || "",
+        seconds: s.duration_sec || 8,
+        kind: i === 0 ? "hook" : i === scenes.scenes.length - 1 ? "outro" : "body",
+        bg: null,
+        visual_prompt: s.visual_prompt,
+        camera_angle: s.camera_angle,
+        camera_movement: s.camera_movement,
+        mood: s.mood,
+        transition: s.transition,
+        music_mood: s.music_mood
+      }));
+    } else {
+      state.scenes = generateFallbackScenes(script.script, state.format, state.duration);
+    }
+    state.storyboard = state.scenes;
+
+    // Store scene data for later video generation
+    state.pipelineSceneData = scenes;
+    state.pipelineResearch = research;
+    state.pipelineAngle = angle;
+    state.pipelineTitles = titles;
+    state.pipelineStory = storyStructure;
+    state.pipelineScript = script;
+
+    updateGenerationProgress(1.0, "Script complete!");
+    stopGenerationAnimation();
+    await new Promise(r => setTimeout(r, 400));
+
+    // Show script to user
+    renderScriptPreview();
+    goToStep(7);
+    showToast("✅ Script ready! Review it below.");
+
+  } catch (err) {
+    stopGenerationAnimation();
+    console.error("Script pipeline failed:", err);
+    showToast("❌ " + (err.message || "Generation failed"), 5000);
+    goToStep(2);
+  }
+}
+
+// Render script preview in step-7
+function renderScriptPreview() {
+  const titleEl = $("finalTitle");
+  const scriptEl = $("finalScript");
+  if (titleEl) titleEl.textContent = state.title || state.niche;
+  if (scriptEl) scriptEl.innerHTML = formatFullScript(state.fullScript || "");
+}
+
+function formatFullScript(text) {
+  if (!text) return '<span style="color:var(--text-muted);">No script generated yet.</span>';
+  // Split into paragraphs and format nicely
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+  return paragraphs.map(p => `<p style="margin-bottom:12px;line-height:1.7;">${escapeHtml(p.trim())}</p>`).join("");
 }
 
 // ============================================================
@@ -3184,6 +3437,32 @@ async function buildScriptAndMusic() {
   saveProjectDebounced();
 }
 
+// Generate fallback scenes from raw script text when pipeline scene breakdown fails
+function generateFallbackScenes(scriptText, format, totalDuration) {
+  const text = scriptText || "No script available";
+  // Split into sentences
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  const sceneCount = Math.max(3, Math.min(12, Math.ceil(totalDuration / 10)));
+  const secPerScene = Math.max(4, Math.round(totalDuration / sceneCount));
+  const scenes = [];
+  const perScene = Math.ceil(sentences.length / sceneCount);
+
+  for (let i = 0; i < sceneCount; i++) {
+    const chunk = sentences.slice(i * perScene, (i + 1) * perScene).join(" ").trim();
+    const kind = i === 0 ? "hook" : i === sceneCount - 1 ? "outro" : "body";
+    scenes.push({
+      kind,
+      heading: kind === "hook" ? "🪝 HOOK" : kind === "outro" ? "🎯 CTA" : `Scene ${i + 1}`,
+      text: chunk || `Scene ${i + 1}`,
+      seconds: secPerScene,
+      hue: (i * 45) % 360,
+      bg: null,
+      transition: i > 0 ? "fade" : "none"
+    });
+  }
+  return scenes;
+}
+
 function buildScenesFromScript() {
   const s = state.script;
   const out = [];
@@ -3196,19 +3475,24 @@ function buildScenesFromScript() {
   return out;
 }
 
+
 // ============================================================
 //  GENERATION SCREEN — animated progress while AI works
 // ============================================================
 const genStages = [
-  { id: "analyze",  label: "Analyzing Topic & Competitors", duration: 1000 },
-  { id: "audience", label: "Understanding Audience", duration: 800 },
-  { id: "angle",    label: "Finding Viral Angle", duration: 900 },
-  { id: "script",   label: "Writing Elite Script", duration: 2200 },
-  { id: "quality",  label: "Quality Review", duration: 1000 },
-  { id: "visuals",  label: "Creating Cinematic Prompts", duration: 900 },
-  { id: "titles",   label: "Generating Viral Titles", duration: 800 },
-  { id: "voice",    label: "Voice Direction", duration: 600 },
-  { id: "music",    label: "Curating Music", duration: 500 },
+  { id: "analyze",       label: "Analyzing Topic", duration: 1000 },
+  { id: "research",      label: "Researching Topic", duration: 1200 },
+  { id: "angle",         label: "Finding Best Angle", duration: 800 },
+  { id: "title",         label: "Creating Viral Title", duration: 700 },
+  { id: "thumbnail",     label: "Thumbnail Concepts", duration: 600 },
+  { id: "story",         label: "Building Story Structure", duration: 800 },
+  { id: "script",        label: "Writing High-Retention Script", duration: 1500 },
+  { id: "scenes",        label: "Creating Scene Breakdown", duration: 900 },
+  { id: "visualprompts", label: "Creating Visual Prompts", duration: 800 },
+  { id: "visualassets",  label: "Generating Visual Assets", duration: 3000 },
+  { id: "voiceover",     label: "Generating Voiceover", duration: 1200 },
+  { id: "music",         label: "Selecting Background Music", duration: 600 },
+  { id: "assembly",      label: "Assembling Video", duration: 2000 },
 ];
 
 let _genAnimFrame = null;
@@ -3296,64 +3580,28 @@ function stopGenerationAnimation() {
   });
 }
 
-// Full pipeline: generation screen → ideas → script → navigate to script page
-async function runFullPipeline() {
-  // Auto-fill brief from topic
-  state.brief = state.niche;
-  if ($("topicBrief")) $("topicBrief").value = state.brief;
+// Update generation progress from the new pipeline
+function updateGenerationProgress(progress, message) {
+  const bar = $("genProgressBar");
+  const pctEl = $("genProgressPct");
+  const etaEl = $("genProgressEta");
+  const stages = document.querySelectorAll("#genStages .gen-stage");
 
-  // Auto-fill format from advanced options or default to long
-  const selectedLength = document.querySelector("#lengthChips .opt-chip.selected");
-  const lengthVal = selectedLength ? selectedLength.dataset.length : "medium";
-  if (lengthVal === "short") {
-    state.format = "shorts";
-    state.duration = 60;
-  } else if (lengthVal === "long") {
-    state.format = "long";
-    state.duration = 20 * 60;
-  } else {
-    state.format = "long";
-    state.duration = 8 * 60;
-  }
-  if ($("timeLimit")) $("timeLimit").value = Math.round(state.duration / 60);
+  const pct = Math.min(100, Math.round(progress * 100));
+  if (bar) bar.style.width = pct + "%";
+  if (pctEl) pctEl.textContent = pct + "%";
+  if (etaEl) etaEl.textContent = message || "";
 
-  // Auto-fill audience
-  if (!state.audience || !state.audience.trim()) {
-    state.audience = autoDetectAudience(state.niche, state.lang);
-  }
-
-  // Show generation screen
-  $("genTopicLabel").textContent = `Creating content about "${state.niche}"...`;
-  goToStep(5);
-  startGenerationAnimation();
-
-  try {
-    // Step 1: Generate ideas
-    state.ideas = await generateIdeas(state.niche, state.lang, state.format, state.duration);
-
-    // Step 2: Auto-pick the first idea (best one)
-    if (state.ideas && state.ideas.length > 0) {
-      state.pickedIdea = state.ideas[0];
-    } else {
-      throw new Error("No ideas generated");
-    }
-
-    // Step 3: Build script and music (the heavy lifting)
-    await buildScriptAndMusic();
-
-    // Done — stop animation and go to script page
-    stopGenerationAnimation();
-    await new Promise((r) => setTimeout(r, 400)); // Brief pause so user sees 100%
-    goToStep(7);
-    showToast("✅ Your script is ready!");
-  } catch (err) {
-    stopGenerationAnimation();
-    console.error("Pipeline failed:", err);
-    showToast("❌ " + (err.message || "Generation failed"), 5000);
-    goToStep(2); // Go back to topic page on error
-  }
+  // Map progress to stage highlighting
+  const stageIdx = Math.min(Math.floor(progress * stages.length), stages.length - 1);
+  stages.forEach((el, i) => {
+    el.classList.remove("active", "done");
+    if (i < stageIdx) el.classList.add("done");
+    else if (i === stageIdx) el.classList.add("active");
+  });
 }
 
+// Full pipeline: generation screen → ideas → script → navigate to script page
 function formatScriptForDisplay(s) {
   const out = [];
   out.push(`<b>${s.hook.seconds}s · ${escapeHtml(s.hook.text)}</b>`);
@@ -3404,7 +3652,7 @@ $("copyScriptBtn").addEventListener("click", async () => {
   catch (e) { showToast("❌ Copy failed"); }
 });
 
-$("downloadScriptBtn").addEventListener("click", () => {
+if ($("downloadScriptBtn")) $("downloadScriptBtn").addEventListener("click", () => {
   if (!state.script) return;
   const text = [
     `TITLE: ${state.title}`,
@@ -3440,10 +3688,72 @@ $("toEditorBtn").addEventListener("click", () => {
 });
 
 // "Make My Video" button on script step → goes straight to render (step 9)
-$("toVideoBtn").addEventListener("click", safe(async (e) => {
+// Back/Next navigation for step-7 (customization)
+if ($("customBackBtn")) $("customBackBtn").addEventListener("click", () => {
+  goToStep(7);
+});
+if ($("customNextBtn")) $("customNextBtn").addEventListener("click", () => {
   if (!state.scenes || !state.scenes.length) state.scenes = buildScenesFromScript();
-  goToStep(9);
-  await renderVideo();
+  renderEditor();
+  goToStep(8);
+});
+
+// Back navigation for step-8 (editor)
+if ($("editorBackBtn")) $("editorBackBtn").addEventListener("click", () => {
+  goToStep(7);
+});
+
+// Script review navigation (step-7)
+if ($("scriptBackBtn")) $("scriptBackBtn").addEventListener("click", () => {
+  goToStep(2);
+});
+if ($("scriptNextBtn")) $("scriptNextBtn").addEventListener("click", safe(async (e) => {
+  // Generate visual assets in background while user customizes
+  showToast("🎨 Generating visual assets...");
+  try {
+    if (state.pipelineSceneData && state.pipelineSceneData.scenes) {
+      const niche = state.nicheAnalysis?.niche || "general";
+      const visualPrompts = await PIPELINE.createVisualPrompts(state.pipelineSceneData.scenes, niche);
+      state.imagePrompts = visualPrompts.visual_prompts;
+
+      // Generate images
+      state.visualAssets = await PIPELINE.generateVisualAssets(
+        visualPrompts.visual_prompts,
+        state.pipelineSceneData.scenes,
+        state.format
+      );
+
+      // Attach assets to scenes
+      if (state.visualAssets && state.scenes) {
+        state.scenes.forEach((scene, i) => {
+          const asset = state.visualAssets[i];
+          if (asset && asset.el) {
+            scene.bg = { type: "image", el: asset.el };
+          }
+        });
+      }
+
+      // Generate voiceover
+      state.voiceovers = await PIPELINE.generateVoiceover(
+        state.pipelineSceneData.scenes,
+        state.lang,
+        niche
+      );
+
+      // Select music
+      state.selectedMusicTrack = await PIPELINE.selectBackgroundMusic(
+        niche,
+        state.pipelineSceneData.scenes[0]?.music_mood || "ambient",
+        state.duration
+      );
+
+      showToast("✅ Visuals ready! Customize your video.");
+    }
+  } catch (e) {
+    console.warn("[ScriptNext] Asset generation failed:", e);
+    showToast("⚠️ Some assets failed, video will use fallbacks");
+  }
+  goToStep(8);
 }));
 
 // ============================================================
@@ -3793,10 +4103,13 @@ function setCanvasOrientation() {
 }
 
 async function loadPicsum(seed, w, h) {
-  // Try multiple URL formats
+  // Deterministic seed from string
+  const seedNum = Math.abs(seed.split('').reduce((a,c) => a + c.charCodeAt(0), 0)) % 10000;
+  // Try multiple URL formats with increasing timeouts
   const urls = [
-    `https://picsum.photos/${w}/${h}?random=${Math.abs(seed.split('').reduce((a,c) => a + c.charCodeAt(0), 0)) % 1000}`,
-    `https://picsum.photos/seed/${encodeURIComponent(seed.slice(0,20))}/${w}/${h}`,
+    `https://picsum.photos/seed/${encodeURIComponent(seed.slice(0,16))}/${w}/${h}`,
+    `https://picsum.photos/${w}/${h}?random=${seedNum}`,
+    `https://picsum.photos/id/${seedNum % 1084}/${w}/${h}`,
   ];
   for (const url of urls) {
     try {
@@ -3804,14 +4117,37 @@ async function loadPicsum(seed, w, h) {
         const i = new Image();
         i.crossOrigin = "anonymous";
         i.onload = () => resolve(i);
-        i.onerror = reject;
-        setTimeout(() => reject(new Error('timeout')), 5000);
+        i.onerror = () => reject(new Error('load error'));
+        setTimeout(() => reject(new Error('timeout')), 8000);
         i.src = url;
       });
-      if (img.naturalWidth > 0) return img;
-    } catch (e) {}
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) return img;
+    } catch (e) {
+      console.warn("[loadPicsum] failed:", url, e.message);
+    }
   }
-  throw new Error("Picsum failed");
+  // Canvas fallback: generate a beautiful gradient based on seed
+  console.log("[loadPicsum] All URLs failed, generating canvas gradient for:", seed);
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const ctx = c.getContext("2d");
+  const hue1 = seedNum % 360;
+  const hue2 = (hue1 + 60) % 360;
+  const g = ctx.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, `hsl(${hue1}, 65%, 35%)`);
+  g.addColorStop(1, `hsl(${hue2}, 75%, 22%)`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+  // Add subtle radial highlight
+  const rg = ctx.createRadialGradient(w*0.3, h*0.3, 0, w*0.5, h*0.5, Math.max(w,h)*0.6);
+  rg.addColorStop(0, "rgba(255,255,255,0.08)");
+  rg.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = rg;
+  ctx.fillRect(0, 0, w, h);
+  const img = new Image();
+  img.src = c.toDataURL();
+  await new Promise(r => img.onload = r);
+  return img;
 }
 
 // Detect WebCodecs support
@@ -3905,8 +4241,13 @@ async function fastEncode({ frames, audioStream, width, height, fps, onProgress,
 }
 
 async function renderVideo() {
+  // Auto-generate scenes if missing
   if (!state.scenes || !state.scenes.length) {
-    showToast("⚠️ No scenes yet — go back to Step 6 first");
+    console.warn("[renderVideo] No scenes found, generating fallback");
+    state.scenes = generateFallbackScenes(state.fullScript || state.niche || "video", state.format || "long", state.duration || 120);
+  }
+  if (!state.scenes || !state.scenes.length) {
+    showToast("⚠️ No scenes — please go back and regenerate");
     return;
   }
 
@@ -3955,11 +4296,24 @@ async function renderVideoInner() {
     `BG: ${state.bgStyle}${state.userFace ? " · Face ✓" : ""}${state.userVoice ? " · Voice ✓" : ""}` +
     `${state.pexelsKey ? " · Pexels ✓" : ""}`;
 
-  // Pre-fetch backgrounds
+  // Pre-fetch backgrounds — use pipeline visual assets if available, else fetch fresh
   const W = canvas().width, H = canvas().height;
-  showToast(state.pexelsKey ? "🎬 Fetching Pexels videos…" : "📷 Loading backgrounds…");
+  const hasPipelineAssets = state.visualAssets && state.visualAssets.length > 0;
+  showToast(hasPipelineAssets ? "🎬 Using AI-generated visuals…" : (state.pexelsKey ? "🎬 Fetching Pexels videos…" : "📷 Loading backgrounds…"));
 
   const scenesWithBG = await Promise.all(state.scenes.map(async (s, i) => {
+    // Priority 1: Pipeline visual assets (AI-generated images)
+    if (s.bg && s.bg.el) {
+      console.log(`[BG] Scene ${i}: Using pipeline asset`);
+      return { ...s, bg: s.bg };
+    }
+    // Priority 2: Pipeline visual assets from state.visualAssets
+    if (hasPipelineAssets && state.visualAssets[i] && state.visualAssets[i].el) {
+      console.log(`[BG] Scene ${i}: Using pipeline visual asset`);
+      return { ...s, bg: { type: "image", el: state.visualAssets[i].el } };
+    }
+
+    // Priority 3: Fetch from Pexels/Picsum
     let bg = null;
     if (state.bgStyle === "videos" && state.pexelsKey) {
       try {
@@ -3970,10 +4324,11 @@ async function renderVideoInner() {
             const blobUrl = await loadVideoFile(file.link);
             const v = await loadVideoElement(blobUrl);
             bg = { type: "video", el: v, url: blobUrl };
+            console.log(`[BG] Scene ${i}: Pexels video loaded`);
           }
         }
       } catch (e) {
-        console.warn("Pexels failed for scene", i, e);
+        console.warn("[BG] Pexels failed for scene", i, e);
       }
     }
     if (!bg && state.bgStyle !== "solid") {
@@ -3981,7 +4336,13 @@ async function renderVideoInner() {
         const seed = `${state.niche}-${state.lang}-${i}-${state.title.length}`;
         const img = await loadPicsum(seed, W, H);
         bg = { type: "image", el: img };
-      } catch (e) {}
+        console.log(`[BG] Scene ${i}: Picsum image loaded`);
+      } catch (e) {
+        console.warn("[BG] Picsum failed for scene", i, e.message);
+      }
+    }
+    if (!bg) {
+      console.log(`[BG] Scene ${i}: Using ${state.bgStyle} fallback`);
     }
     return { ...s, bg };
   }));
@@ -4425,9 +4786,22 @@ $("regenVideoBtn").addEventListener("click", safe(async (e) => {
 
 $("downloadVideoBtn").addEventListener("click", () => {
   if (!state.videoBlob) return showToast("⚠️ Render the video first");
-  // Most browsers record as webm/vp9 under the hood; .mp4 container is widely
-  // accepted by players, social media and editors that auto-detect the codec.
   downloadFile(state.videoBlob, `${slug(state.title)}.mp4`, "video/mp4");
+});
+
+// Back button — go to editor (step 8)
+if ($("videoBackBtn")) $("videoBackBtn").addEventListener("click", () => {
+  goToStep(8);
+});
+
+// Next button — download or finish
+if ($("videoNextBtn")) $("videoNextBtn").addEventListener("click", () => {
+  if (state.videoBlob) {
+    downloadFile(state.videoBlob, `${slug(state.title)}.mp4`, "video/mp4");
+    showToast("✅ Video downloaded! You can now upload it to YouTube.");
+  } else {
+    showToast("⚠️ Render the video first, then download.");
+  }
 });
 
 $("playVideoBtn").addEventListener("click", safe(async (e) => {
@@ -4454,7 +4828,7 @@ async function playRenderedVideo() {
 // Legacy export kept for any external callers.
 async function playWithVoiceover() { return playRenderedVideo(); }
 
-$("playWithVoiceBtn").addEventListener("click", playRenderedVideo);
+if ($("playWithVoiceBtn")) $("playWithVoiceBtn").addEventListener("click", playRenderedVideo);
 
 function renderStoryboardList() {
   const list = $("scenesList");
@@ -4483,7 +4857,7 @@ async function buildAudioTrack(durationSec, sceneBoundaries, voiceCaptureStream)
   comp.attack.value = 0.005; comp.release.value = 0.1;
   comp.connect(dest);
   const music = ctxAudio.createGain();
-  music.gain.value = 0.42;
+  music.gain.value = 0.7;
   music.connect(comp);
   const voice = ctxAudio.createGain();
   voice.gain.value = 0.0;
@@ -4514,21 +4888,21 @@ async function buildAudioTrack(durationSec, sceneBoundaries, voiceCaptureStream)
   const bpm = 96;
   const beat = 60 / bpm;
 
-  // Kick
+  // Kick — punchy low-end
   for (let t = 0; t < durationSec; t += beat) {
     const osc = ctxAudio.createOscillator();
     const g = ctxAudio.createGain();
-    osc.frequency.setValueAtTime(140, startTime + t);
-    osc.frequency.exponentialRampToValueAtTime(40, startTime + t + 0.12);
+    osc.frequency.setValueAtTime(150, startTime + t);
+    osc.frequency.exponentialRampToValueAtTime(35, startTime + t + 0.12);
     g.gain.setValueAtTime(0.001, startTime + t);
-    g.gain.exponentialRampToValueAtTime(0.5, startTime + t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.6, startTime + t + 0.005);
     g.gain.exponentialRampToValueAtTime(0.001, startTime + t + 0.18);
     osc.connect(g).connect(music);
     osc.start(startTime + t);
     osc.stop(startTime + t + 0.2);
   }
 
-  // Hi-hat
+  // Hi-hat — crisp top end
   for (let t = 0; t < durationSec; t += beat / 2) {
     const bs = ctxAudio.sampleRate * 0.05;
     const buffer = ctxAudio.createBuffer(1, bs, ctxAudio.sampleRate);
@@ -4540,14 +4914,14 @@ async function buildAudioTrack(durationSec, sceneBoundaries, voiceCaptureStream)
     hp.type = "highpass"; hp.frequency.value = 7000;
     const g = ctxAudio.createGain();
     g.gain.setValueAtTime(0.001, startTime + t);
-    g.gain.exponentialRampToValueAtTime(0.06, startTime + t + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.08, startTime + t + 0.003);
     g.gain.exponentialRampToValueAtTime(0.001, startTime + t + 0.04);
     noise.connect(hp).connect(g).connect(music);
     noise.start(startTime + t);
     noise.stop(startTime + t + 0.05);
   }
 
-  // Bass
+  // Bass — deep sub
   const bassNotes = [55, 55, 73.42, 65.41];
   for (let i = 0, t = 0; t < durationSec; i++, t += beat * 2) {
     const osc = ctxAudio.createOscillator();
@@ -4555,16 +4929,16 @@ async function buildAudioTrack(durationSec, sceneBoundaries, voiceCaptureStream)
     osc.type = "sawtooth";
     osc.frequency.value = bassNotes[i % bassNotes.length];
     const lp = ctxAudio.createBiquadFilter();
-    lp.type = "lowpass"; lp.frequency.value = 400;
+    lp.type = "lowpass"; lp.frequency.value = 350;
     g.gain.setValueAtTime(0.001, startTime + t);
-    g.gain.exponentialRampToValueAtTime(0.16, startTime + t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.22, startTime + t + 0.02);
     g.gain.exponentialRampToValueAtTime(0.001, startTime + t + beat * 1.6);
     osc.connect(lp).connect(g).connect(music);
     osc.start(startTime + t);
     osc.stop(startTime + t + beat * 2);
   }
 
-  // Pad
+  // Pad — warm atmosphere
   const padChords = [
     [130.81, 164.81, 196.00],
     [146.83, 174.61, 220.00],
@@ -4579,8 +4953,8 @@ async function buildAudioTrack(durationSec, sceneBoundaries, voiceCaptureStream)
       osc.type = "sine";
       osc.frequency.value = freq;
       g.gain.setValueAtTime(0.001, startTime + t);
-      g.gain.linearRampToValueAtTime(0.045, startTime + t + 0.8);
-      g.gain.setValueAtTime(0.045, startTime + t + beat * 6);
+      g.gain.linearRampToValueAtTime(0.06, startTime + t + 0.8);
+      g.gain.setValueAtTime(0.06, startTime + t + beat * 6);
       g.gain.linearRampToValueAtTime(0.0, startTime + t + beat * 8);
       osc.connect(g).connect(music);
       osc.start(startTime + t);
@@ -4588,7 +4962,7 @@ async function buildAudioTrack(durationSec, sceneBoundaries, voiceCaptureStream)
     });
   }
 
-  // Pluck
+  // Pluck — melodic texture
   const scale = [261.63, 311.13, 349.23, 392.00, 466.16, 523.25];
   for (let i = 0, t = beat * 2; t < durationSec - beat; i++, t += beat * 1.5) {
     const osc = ctxAudio.createOscillator();
@@ -4596,14 +4970,14 @@ async function buildAudioTrack(durationSec, sceneBoundaries, voiceCaptureStream)
     osc.type = "triangle";
     osc.frequency.value = scale[(i * 2) % scale.length];
     g.gain.setValueAtTime(0.001, startTime + t);
-    g.gain.exponentialRampToValueAtTime(0.12, startTime + t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.15, startTime + t + 0.01);
     g.gain.exponentialRampToValueAtTime(0.001, startTime + t + 0.4);
     osc.connect(g).connect(music);
     osc.start(startTime + t);
     osc.stop(startTime + t + 0.45);
   }
 
-  // SFX
+  // SFX — scene transitions
   function sfxWhoosh(at) {
     const bs = ctxAudio.sampleRate * 0.4;
     const buffer = ctxAudio.createBuffer(1, bs, ctxAudio.sampleRate);
@@ -4617,7 +4991,7 @@ async function buildAudioTrack(durationSec, sceneBoundaries, voiceCaptureStream)
     bp.frequency.exponentialRampToValueAtTime(300, startTime + at + 0.35);
     const g = ctxAudio.createGain();
     g.gain.setValueAtTime(0.001, startTime + at);
-    g.gain.exponentialRampToValueAtTime(0.35, startTime + at + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.45, startTime + at + 0.05);
     g.gain.exponentialRampToValueAtTime(0.001, startTime + at + 0.4);
     noise.connect(bp).connect(g).connect(music);
     noise.start(startTime + at);
@@ -4629,7 +5003,7 @@ async function buildAudioTrack(durationSec, sceneBoundaries, voiceCaptureStream)
     osc.frequency.setValueAtTime(900, startTime + at);
     osc.frequency.exponentialRampToValueAtTime(300, startTime + at + 0.08);
     g.gain.setValueAtTime(0.001, startTime + at);
-    g.gain.exponentialRampToValueAtTime(0.4, startTime + at + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.5, startTime + at + 0.005);
     g.gain.exponentialRampToValueAtTime(0.001, startTime + at + 0.12);
     osc.connect(g).connect(music);
     osc.start(startTime + at);
@@ -4642,7 +5016,7 @@ async function buildAudioTrack(durationSec, sceneBoundaries, voiceCaptureStream)
       osc.type = "sine";
       osc.frequency.value = f;
       g.gain.setValueAtTime(0.001, startTime + at + i * 0.05);
-      g.gain.exponentialRampToValueAtTime(0.18, startTime + at + i * 0.05 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.25, startTime + at + i * 0.05 + 0.01);
       g.gain.exponentialRampToValueAtTime(0.001, startTime + at + i * 0.05 + 0.6);
       osc.connect(g).connect(music);
       osc.start(startTime + at + i * 0.05);

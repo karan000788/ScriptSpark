@@ -307,20 +307,28 @@
         <p class="hero-sub">Enter any topic, story, event, person, technology, mystery, business, place, or idea. Our AI will handle the research, scripting, and video planning.</p>
       </div>
       <div class="hero-card" style="max-width: 720px; margin: 0 auto;">
-        <input type="text" id="nicheInput" placeholder="Enter your topic..." autocomplete="off" maxlength="120" />
+        <input type="text" id="nicheInput" placeholder="Enter your topic or pick a category below..." autocomplete="off" maxlength="120" />
         <div class="chip-row" id="nicheChips">
-          <span class="chip-suggest">📜 History</span>
-          <span class="chip-suggest">💼 Business</span>
-          <span class="chip-suggest">🔍 Mystery</span>
-          <span class="chip-suggest">🔬 Science</span>
-          <span class="chip-suggest">📱 Technology</span>
-          <span class="chip-suggest">💰 Finance</span>
-          <span class="chip-suggest">📚 Education</span>
-          <span class="chip-suggest">✈️ Travel</span>
-          <span class="chip-suggest">🎮 Gaming</span>
-          <span class="chip-suggest">🧠 Psychology</span>
-          <span class="chip-suggest">🕵️ Crime</span>
-          <span class="chip-suggest">🎬 Documentary</span>
+          <span class="chip-suggest" data-niche="history">📜 History</span>
+          <span class="chip-suggest" data-niche="business">💼 Business</span>
+          <span class="chip-suggest" data-niche="mystery">🔍 Mystery</span>
+          <span class="chip-suggest" data-niche="science">🔬 Science</span>
+          <span class="chip-suggest" data-niche="technology">📱 Technology</span>
+          <span class="chip-suggest" data-niche="finance">💰 Finance</span>
+          <span class="chip-suggest" data-niche="education">📚 Education</span>
+          <span class="chip-suggest" data-niche="travel">✈️ Travel</span>
+          <span class="chip-suggest" data-niche="gaming">🎮 Gaming</span>
+          <span class="chip-suggest" data-niche="psychology">🧠 Psychology</span>
+          <span class="chip-suggest" data-niche="crime">🕵️ Crime</span>
+          <span class="chip-suggest" data-niche="documentary">🎬 Documentary</span>
+        </div>
+
+        <!-- Topic Suggestions (hidden until category is picked) -->
+        <div id="topicSuggestions" hidden style="margin-top:16px;">
+          <div class="script-label">🎯 Suggested Video Topics</div>
+          <p class="modal-hint" style="margin-bottom:10px;">AI-analyzed trending topics based on <b id="suggestionCategory">your category</b></p>
+          <div id="suggestionList" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <button class="btn-ghost" id="refreshSuggestions" style="margin-top:10px;">🔄 Show More Ideas</button>
         </div>
 
         <!-- Advanced Options (collapsed by default) -->
@@ -379,39 +387,55 @@
         <div class="gen-stages" id="genStages">
           <div class="gen-stage" data-stage="analyze">
             <div class="gen-stage-icon">🔍</div>
-            <span>Analyzing Topic & Competitors</span>
+            <span>Analyzing Topic</span>
           </div>
-          <div class="gen-stage" data-stage="audience">
-            <div class="gen-stage-icon">👥</div>
-            <span>Understanding Audience</span>
+          <div class="gen-stage" data-stage="research">
+            <div class="gen-stage-icon">📚</div>
+            <span>Researching Topic</span>
           </div>
           <div class="gen-stage" data-stage="angle">
             <div class="gen-stage-icon">🎯</div>
-            <span>Finding Viral Angle</span>
+            <span>Finding Best Angle</span>
+          </div>
+          <div class="gen-stage" data-stage="title">
+            <div class="gen-stage-icon">🏷️</div>
+            <span>Creating Viral Title</span>
+          </div>
+          <div class="gen-stage" data-stage="thumbnail">
+            <div class="gen-stage-icon">🖼️</div>
+            <span>Thumbnail Concepts</span>
+          </div>
+          <div class="gen-stage" data-stage="story">
+            <div class="gen-stage-icon">📖</div>
+            <span>Building Story Structure</span>
           </div>
           <div class="gen-stage" data-stage="script">
             <div class="gen-stage-icon">✍️</div>
-            <span>Writing Elite Script</span>
+            <span>Writing High-Retention Script</span>
           </div>
-          <div class="gen-stage" data-stage="quality">
-            <div class="gen-stage-icon">🔍</div>
-            <span>Quality Review</span>
-          </div>
-          <div class="gen-stage" data-stage="visuals">
+          <div class="gen-stage" data-stage="scenes">
             <div class="gen-stage-icon">🎬</div>
-            <span>Creating Cinematic Prompts</span>
+            <span>Creating Scene Breakdown</span>
           </div>
-          <div class="gen-stage" data-stage="titles">
-            <div class="gen-stage-icon">🏷️</div>
-            <span>Generating Viral Titles</span>
+          <div class="gen-stage" data-stage="visualprompts">
+            <div class="gen-stage-icon">🎨</div>
+            <span>Creating Visual Prompts</span>
           </div>
-          <div class="gen-stage" data-stage="voice">
+          <div class="gen-stage" data-stage="visualassets">
+            <div class="gen-stage-icon">🖼️</div>
+            <span>Generating Visual Assets</span>
+          </div>
+          <div class="gen-stage" data-stage="voiceover">
             <div class="gen-stage-icon">🎙️</div>
-            <span>Voice Direction</span>
+            <span>Generating Voiceover</span>
           </div>
           <div class="gen-stage" data-stage="music">
             <div class="gen-stage-icon">🎵</div>
-            <span>Curating Music</span>
+            <span>Selecting Background Music</span>
+          </div>
+          <div class="gen-stage" data-stage="assembly">
+            <div class="gen-stage-icon">⚡</div>
+            <span>Assembling Video</span>
           </div>
         </div>
         <div class="gen-progress">
@@ -434,7 +458,7 @@
       </div>
     </section>
 
-    <!-- ═══════════════ STEP 7 (was 6): Script + Music ═══════════════ -->
+    <!-- ═══════════════ STEP 7 (was 6): Script Review ═══════════════ -->
     <section class="section step-view results" id="step-7" hidden aria-labelledby="step7Title">
       <div class="results-block" id="competitorInsightsCard" hidden>
         <div class="results-header" style="cursor:pointer;" onclick="document.getElementById('competitorInsightsBody').classList.toggle('hidden'); this.querySelector('.expand-icon').textContent = this.querySelector('.expand-icon').textContent === '▼' ? '▶' : '▼';">
@@ -445,32 +469,18 @@
       </div>
 
       <div class="results-block">
-        <div class="results-header"><h2 id="step7Title">📝 Viral Script & 🎵 Copyright-Free Music</h2><button class="btn-ghost" id="regenScriptBtn">🔄 Regenerate Script</button></div>
-        <div class="script-section"><span class="script-label">🎯 YouTube Title (with emojis)</span><div class="script-text" id="finalTitle"></div><div class="script-cta"><button class="btn-ghost" id="regenTitleBtn">🔄 New Title</button><button class="btn-ghost" id="copyTitleBtn">📋 Copy</button></div></div>
-        <div class="script-section" style="margin-top:14px;"><span class="script-label">🎬 Retention-Optimized Script</span><div class="script-text" id="finalScript"></div><div class="script-cta"><button class="btn-ghost" id="copyScriptBtn">📋 Copy Script</button><button class="btn-ghost" id="toEditorBtn">✂️ Edit Scenes</button><button class="btn-primary" id="toVideoBtn"><span class="btn-label">🎥 Render Video</span><span class="btn-spinner" aria-hidden="true"></span></button></div></div>
+        <div class="results-header"><h2 id="step7Title">📝 Your Video Script</h2><div style="display:flex;gap:8px;"><button class="btn-ghost" id="regenScriptBtn">🔄 Regenerate</button></div></div>
+        <div class="script-section"><span class="script-label">🎯 YouTube Title</span><div class="script-text" id="finalTitle"></div><div class="script-cta"><button class="btn-ghost" id="regenTitleBtn">🔄 New Title</button><button class="btn-ghost" id="copyTitleBtn">📋 Copy</button></div></div>
+        <div class="script-section" style="margin-top:14px;"><span class="script-label">🎬 Full Script</span><div class="script-text" id="finalScript" style="max-height:400px;overflow-y:auto;"></div><div class="script-cta"><button class="btn-ghost" id="copyScriptBtn">📋 Copy Script</button><button class="btn-ghost" id="toEditorBtn">✂️ Edit Scenes</button></div></div>
         <div class="script-section" style="margin-top:14px;" id="scriptScoreCard" hidden>
           <span class="script-label">📊 Script Quality Score</span>
           <div id="scriptScoreBody"></div>
         </div>
-        <div class="script-section" style="margin-top:14px;" id="aiMusicCard">
-          <span class="script-label">🎵 AI-Matched Music</span>
-          <p class="music-warning">Curated tracks matched to your video's mood and topic.</p>
-          <div class="music-list" id="aiMusicList"></div>
+        <div class="script-section" style="margin-top:14px;" id="aiMusicCard"></div>
+        <div style="display:flex;gap:12px;margin-top:20px;justify-content:space-between;">
+          <button class="btn-ghost" id="scriptBackBtn">← Back to Topic</button>
+          <button class="btn-primary" id="scriptNextBtn">Next: Customize Video →</button>
         </div>
-        <div class="script-section" style="margin-top:14px;"><span class="script-label">🎵 More Copyright-Free Music</span><p class="music-warning">Additional free tracks from Pixabay / YouTube Audio Library.</p><div class="music-list" id="musicList"></div></div>
-      </div>
-      <div class="results-block">
-        <div class="results-header"><h2>🎨 Customise Your Video <span class="badge-inline">Optional</span></h2></div>
-        <p class="modal-hint" style="margin-bottom:14px;">All fields below are <b>optional</b>. Skip them to use the default visuals + Web Speech voiceover.</p>
-        <div class="script-section"><span class="script-label">🖼️ Background Style</span><div class="bg-style-row" id="bgStyleRow">
-          <button class="bg-style-card selected" data-bg="videos"><div class="bg-style-icon">🎬</div><div class="bg-style-name">Real Videos <span class="badge-inline">Pexels</span></div><div class="bg-style-sub">Real motion clips — needs free API key in Settings</div></button>
-          <button class="bg-style-card" data-bg="photos"><div class="bg-style-icon">📷</div><div class="bg-style-name">Photos</div><div class="bg-style-sub">Free stock from Picsum + Ken Burns</div></button>
-          <button class="bg-style-card" data-bg="animated"><div class="bg-style-icon">✨</div><div class="bg-style-name">Animated</div><div class="bg-style-sub">Particles + colour flow</div></button>
-          <button class="bg-style-card" data-bg="solid"><div class="bg-style-icon">🎨</div><div class="bg-style-name">Solid</div><div class="bg-style-sub">Clean brand colour</div></button>
-        </div></div>
-        <div class="script-section" style="margin-top:14px;"><span class="script-label">🙂 Your Face <span class="badge-inline">Optional</span></span><div class="upload-row"><div class="upload-box" id="faceDrop"><input type="file" id="faceInput" accept="image/*" hidden /><div class="upload-empty" id="faceEmpty"><div class="upload-icon">📸</div><div>Click or drop a clear front-facing photo</div><div class="upload-hint">JPG / PNG · Will appear in a circle on the video</div></div><img id="facePreview" class="upload-preview" hidden alt="Face preview" /></div><button class="btn-ghost" id="clearFaceBtn" hidden>✕ Remove</button></div></div>
-        <div class="script-section" style="margin-top:14px;"><span class="script-label">🎙️ Your Voice Sample <span class="badge-inline">Optional</span></span><div class="upload-row"><div class="upload-box" id="voiceDrop"><input type="file" id="voiceInput" accept="audio/*" hidden /><div class="upload-empty" id="voiceEmpty"><div class="upload-icon">🎤</div><div>Click or drop 30–60 sec of your voice</div><div class="upload-hint">MP3 / WAV / M4A · Plays softly as your "voice signature"</div></div><div class="voice-loaded" id="voiceLoaded" hidden><div class="voice-icon">🎵</div><div class="voice-info"><div class="voice-name" id="voiceName">voice.mp3</div><div class="voice-meta" id="voiceMeta">—</div></div><button class="btn-ghost" id="playVoiceBtn">▶ Play sample</button></div></div><button class="btn-ghost" id="clearVoiceBtn" hidden>✕ Remove</button></div><p class="modal-hint" style="margin-top:8px;">💡 Tip: If you don't upload a voice, the video will use the browser's built-in <b>Web Speech</b> voice (free, in your language) for the voiceover.</p></div>
-        <div class="voice-model-section"><div class="section-label">🎙️ Voiceover Model</div><p class="section-hint">Choose the AI voice that will narrate your script. Your uploaded voice overrides this.</p><div id="inlineVoiceSelect" class="voice-model-grid"></div><div class="voice-preview-row"><button id="inlineTestVoiceBtn" class="btn-ghost btn-sm" type="button">▶ Preview Selected Voice</button><span id="inlineVoiceLabel" class="voice-preview-label">No voice selected</span></div></div>
       </div>
     </section>
 
@@ -489,6 +499,10 @@
           <p class="modal-hint" style="margin-top:6px;">Uses Web Speech API (Chrome/Edge recommended). Install language packs in your OS for best quality.</p>
         </div>
         <div class="editor-list" id="editorList"></div>
+        <div style="display:flex;gap:12px;margin-top:20px;justify-content:space-between;">
+          <button class="btn-ghost" id="editorBackBtn">← Back to Customization</button>
+          <span></span>
+        </div>
       </div>
     </section>
 
@@ -496,10 +510,13 @@
     <section class="section step-view results" id="step-9" hidden aria-labelledby="step9Title">
       <div class="results-block">
         <div class="results-header"><h2 id="step9Title">🎥 Your AI-Generated Video</h2><div id="videoMeta" class="api-hint"></div></div>
-        <div class="tts-banner" role="note"><span class="tts-banner-icon">🎙️</span><div class="tts-banner-text"><b>Voiceover gets baked INTO the file.</b> When you click <b>Render</b>, your browser will ask to share this tab. Pick <b>This tab</b> and tick <b>"Also share tab audio"</b> — the narration then ends up inside the downloaded .webm instead of only playing in the website. Upload a voice sample above to skip this prompt entirely.</div></div>
         <div class="video-stage" id="videoStage"><div class="video-frame"><canvas id="videoCanvas" width="1080" height="1920" aria-label="Generated video preview"></canvas><div class="video-overlay" id="videoOverlay"><button class="btn-primary" id="playVideoBtn">▶ Render Video</button></div></div><div class="video-progress" id="videoProgress" hidden><div class="progress-track"><div class="progress-bar" id="progressBar"></div></div><div class="progress-text" id="progressText">Preparing…</div></div></div>
-        <div class="script-cta" id="videoActions" hidden><button class="btn-primary" id="playWithVoiceBtn">🔊 Play with Voiceover</button><button class="btn-ghost" id="regenVideoBtn">🔄 Regenerate Video</button><button class="btn-ghost" id="downloadScriptBtn">📄 Download Script</button><button class="btn-ghost" id="downloadVideoBtn">⬇️ Download .webm</button></div>
+        <div class="script-cta" id="videoActions" hidden><button class="btn-primary" id="downloadVideoBtn">⬇️ Download Video</button><button class="btn-ghost" id="regenVideoBtn">🔄 Re-render</button></div>
         <div class="storyboard" id="storyboard" hidden><h3 class="storyboard-title">📋 Scene-by-Scene Storyboard</h3><div class="scenes-list" id="scenesList"></div></div>
+        <div style="display:flex;gap:12px;margin-top:20px;justify-content:space-between;">
+          <button class="btn-ghost" id="videoBackBtn">← Back to Editor</button>
+          <button class="btn-primary" id="videoNextBtn">Download & Finish →</button>
+        </div>
       </div>
     </section>
   </main>
@@ -561,6 +578,7 @@
     </div>
   </div>
 
+  <script src="pipeline.js"></script>
   <script src="script.js"></script>
   <script src="wallpaper.js"></script>
   <script>

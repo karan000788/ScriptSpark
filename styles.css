@@ -1342,6 +1342,21 @@ img, video, canvas {
   background: var(--accent-soft);
 }
 
+.suggestion-card {
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.suggestion-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+}
+
 /* ── Format Cards ──────────────────────────────────────────────── */
 .format-grid {
   display: grid;
