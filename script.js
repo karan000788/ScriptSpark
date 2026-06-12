@@ -451,9 +451,11 @@ const saveProjectDebounced = debounce(async () => {
 
 async function saveSettings() {
   try {
-    // Encrypt Pexels key at rest with AES-GCM (key in localStorage)
-    const encKey = await security.encryptString(state.pexelsKey || "");
-    await dbPut("settings", { key: "pexelsKey", value: encKey });
+    // Encrypt API keys at rest with AES-GCM (key in localStorage)
+    const encPexels = await security.encryptString(state.pexelsKey || "");
+    await dbPut("settings", { key: "pexelsKey", value: encPexels });
+    const encGroq = await security.encryptString(state.groqKey || "");
+    await dbPut("settings", { key: "groqKey", value: encGroq });
     await dbPut("settings", { key: "selectedVoiceURI", value: state.selectedVoiceURI });
   } catch (e) {
     console.warn("Settings save failed:", e);
@@ -463,6 +465,8 @@ async function loadSettings() {
   try {
     const pk = await dbGet("settings", "pexelsKey");
     if (pk) state.pexelsKey = await security.decryptString(pk.value);
+    const gk = await dbGet("settings", "groqKey");
+    if (gk) state.groqKey = await security.decryptString(gk.value);
     const sv = await dbGet("settings", "selectedVoiceURI");
     if (sv) state.selectedVoiceURI = sv.value;
   } catch (e) {
@@ -558,12 +562,15 @@ $("saveSettingsBtn").addEventListener("click", safe(async (e) => {
   btn.classList.add("loading"); btn.disabled = true;
   try {
     state.pexelsKey = $("pexelsKey").value.trim();
+    state.groqKey = $("groqKey") ? $("groqKey").value.trim() : "";
     state.selectedVoiceURI = $("voiceSelect").value || null;
+    // Also persist to localStorage as fallback
+    localStorage.setItem("groqKey", state.groqKey);
+    localStorage.setItem("pexelsKey", state.pexelsKey);
     await saveSettings();
     showToast("✅ Settings saved");
     $("settingsModal").hidden = true;
     saveProjectDebounced();
-    // Keep the inline Step-6 voice selector in sync if visible
     populateInlineVoiceSelector();
   } finally {
     btn.classList.remove("loading");
