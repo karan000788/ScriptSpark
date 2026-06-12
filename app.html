@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🐯 ScriptSpark.in | AI YouTube Video Generator</title>
+  <title>ScriptSpark — AI YouTube Video Generator</title>
   <meta name="description" content="Free, browser-based YouTube video generator. Your data never leaves your device." />
   <meta name="referrer" content="no-referrer" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
@@ -23,11 +23,11 @@
   " />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="wallpaper.css" />
 </head>
-<body class="light" data-theme="light">
+<body data-theme="dark">
   <!-- Navbar -->
   <header class="navbar">
     <a href="landing.html" id="brandHome" class="logo" title="Back to landing">
@@ -170,7 +170,6 @@
 
     <!-- STEP 6: Script + Music -->
     <section class="section step-view results" id="step-6" hidden aria-labelledby="step6Title">
-      <!-- Competitor Insights (collapsible) -->
       <div class="results-block" id="competitorInsightsCard" hidden>
         <div class="results-header" style="cursor:pointer;" onclick="document.getElementById('competitorInsightsBody').classList.toggle('hidden'); this.querySelector('.expand-icon').textContent = this.querySelector('.expand-icon').textContent === '▼' ? '▶' : '▼';">
           <h2>🔍 Competitor Insights</h2>
@@ -183,18 +182,15 @@
         <div class="results-header"><h2 id="step6Title">📝 Viral Script & 🎵 Copyright-Free Music</h2><button class="btn-ghost" id="regenScriptBtn">🔄 Regenerate Script</button></div>
         <div class="script-section"><span class="script-label">🎯 YouTube Title (with emojis)</span><div class="script-text" id="finalTitle"></div><div class="script-cta"><button class="btn-ghost" id="regenTitleBtn">🔄 New Title</button><button class="btn-ghost" id="copyTitleBtn">📋 Copy</button></div></div>
         <div class="script-section" style="margin-top:14px;"><span class="script-label">🎬 Retention-Optimized Script</span><div class="script-text" id="finalScript"></div><div class="script-cta"><button class="btn-ghost" id="copyScriptBtn">📋 Copy Script</button><button class="btn-ghost" id="toEditorBtn">✂️ Edit Scenes</button><button class="btn-primary" id="toVideoBtn"><span class="btn-label">🎥 Render Video</span><span class="btn-spinner" aria-hidden="true"></span></button></div></div>
-        <!-- Script Score -->
         <div class="script-section" style="margin-top:14px;" id="scriptScoreCard" hidden>
           <span class="script-label">📊 Script Quality Score</span>
           <div id="scriptScoreBody"></div>
         </div>
-        <!-- AI Music Suggestions -->
         <div class="script-section" style="margin-top:14px;" id="aiMusicCard">
           <span class="script-label">🎵 AI-Matched Music</span>
           <p class="music-warning">Curated tracks matched to your video's mood and topic.</p>
           <div class="music-list" id="aiMusicList"></div>
         </div>
-        <!-- Fallback Music -->
         <div class="script-section" style="margin-top:14px;"><span class="script-label">🎵 More Copyright-Free Music</span><p class="music-warning">Additional free tracks from Pixabay / YouTube Audio Library.</p><div class="music-list" id="musicList"></div></div>
       </div>
       <div class="results-block">
@@ -217,7 +213,6 @@
       <div class="results-block">
         <div class="results-header"><h2 id="step7Title">✂️ Edit Your Video Scene-by-Scene</h2><div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn-ghost" id="addSceneBtn">➕ Add Scene</button><button class="btn-primary" id="toRenderBtn"><span class="btn-label">🎥 Render Video →</span><span class="btn-spinner" aria-hidden="true"></span></button></div></div>
         <p class="modal-hint" style="margin-bottom:14px;">Edit any scene's text, regenerate visuals, reorder, or delete. Your changes are <b>auto-saved</b>.</p>
-        <!-- Voiceover Settings -->
         <div class="script-section" style="margin-bottom:16px;">
           <span class="script-label">🎙️ Voiceover Settings</span>
           <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:8px;">
@@ -235,15 +230,15 @@
     <section class="section step-view results" id="step-8" hidden aria-labelledby="step8Title">
       <div class="results-block">
         <div class="results-header"><h2 id="step8Title">🎥 Your AI-Generated Video</h2><div id="videoMeta" class="api-hint"></div></div>
-        <div class="tts-banner" role="note"><span class="tts-banner-icon">🎙️</span><div class="tts-banner-text"><b>Voiceover gets baked INTO the file.</b> When you click <b>Render</b>, your browser will ask to share this tab. Pick <b>This tab</b> and tick <b>“Also share tab audio”</b> — the narration then ends up inside the downloaded .mp4 instead of only playing in the website. Upload a voice sample above to skip this prompt entirely.</div></div>
+        <div class="tts-banner" role="note"><span class="tts-banner-icon">🎙️</span><div class="tts-banner-text"><b>Voiceover gets baked INTO the file.</b> When you click <b>Render</b>, your browser will ask to share this tab. Pick <b>This tab</b> and tick <b>"Also share tab audio"</b> — the narration then ends up inside the downloaded .webm instead of only playing in the website. Upload a voice sample above to skip this prompt entirely.</div></div>
         <div class="video-stage" id="videoStage"><div class="video-frame"><canvas id="videoCanvas" width="1080" height="1920" aria-label="Generated video preview"></canvas><div class="video-overlay" id="videoOverlay"><button class="btn-primary" id="playVideoBtn">▶ Render Video</button></div></div><div class="video-progress" id="videoProgress" hidden><div class="progress-track"><div class="progress-bar" id="progressBar"></div></div><div class="progress-text" id="progressText">Preparing…</div></div></div>
-        <div class="script-cta" id="videoActions" hidden><button class="btn-primary" id="playWithVoiceBtn">🔊 Play with Voiceover</button><button class="btn-ghost" id="regenVideoBtn">🔄 Regenerate Video</button><button class="btn-ghost" id="downloadScriptBtn">📄 Download Script</button><button class="btn-ghost" id="downloadVideoBtn">⬇️ Download .mp4</button></div>
+        <div class="script-cta" id="videoActions" hidden><button class="btn-primary" id="playWithVoiceBtn">🔊 Play with Voiceover</button><button class="btn-ghost" id="regenVideoBtn">🔄 Regenerate Video</button><button class="btn-ghost" id="downloadScriptBtn">📄 Download Script</button><button class="btn-ghost" id="downloadVideoBtn">⬇️ Download .webm</button></div>
         <div class="storyboard" id="storyboard" hidden><h3 class="storyboard-title">📋 Scene-by-Scene Storyboard</h3><div class="scenes-list" id="scenesList"></div></div>
       </div>
     </section>
   </main>
 
-  <footer style="margin-top:60px; border-top:1px solid var(--border); background:var(--bg-secondary); padding:20px 24px;">
+  <footer style="margin-top:60px; border-top:1px solid var(--border); background:var(--bg-secondary); padding:24px 24px;">
     <div style="max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
       <span style="font-size:clamp(11px, 2.5vw, 13px); color:var(--text-muted);">Made with 🐯 in India · <strong style="background:var(--accent-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">ScriptSpark.in</strong></span>
       <div style="display:flex; gap:20px;">
@@ -277,7 +272,7 @@
         <button class="btn-ghost" id="testVoiceBtn" style="margin-top:8px;">▶ Test Voice</button>
         <hr style="margin: 18px 0; border: none; border-top: 1px solid var(--border);" />
         <h3>💾 Data</h3>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn-ghost" id="exportDataBtn">⬇️ Export All My Data</button><button class="btn-ghost" id="clearDataBtn" style="color:#ff5e5e;">🗑️ Clear All My Data</button></div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn-ghost" id="exportDataBtn">⬇️ Export All My Data</button><button class="btn-ghost" id="clearDataBtn" style="color:var(--error);">🗑️ Clear All My Data</button></div>
         <p class="modal-hint">All your data is stored locally in your browser using IndexedDB. Nothing is sent to any server.</p>
         <div class="modal-actions"><button class="btn-primary" id="saveSettingsBtn">Save Settings</button></div>
       </div>
@@ -347,6 +342,16 @@
       var observer=new MutationObserver(updateMobileStepper);
       var stepper=document.querySelector('.stepper');
       if(stepper) observer.observe(stepper,{attributes:true,subtree:true,attributeFilter:['class']});
+
+      /* Apply saved theme */
+      var saved = 'dark';
+      try { saved = localStorage.getItem('ss-theme') || 'dark'; } catch (e) {}
+      var actual = saved;
+      if (saved === 'system') {
+        actual = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', actual);
+      document.body.setAttribute('data-theme', actual);
     })();
   </script>
 </body>

@@ -1,16 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📖 Docs — ScriptSpark.in</title>
+  <title>Docs — ScriptSpark.in</title>
+  <meta name="description" content="Complete guide to using ScriptSpark — the free AI YouTube video generator." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="wallpaper.css" />
 </head>
-<body class="light" data-theme="light">
+<body data-theme="dark">
 
   <header class="navbar">
-    <a href="index.html" class="logo">
+    <a href="landing.html" class="logo">
       <span class="logo-icon">🐯</span>
       <span class="logo-text">ScriptSpark</span>
       <span class="logo-badge">.in</span>
@@ -26,10 +30,10 @@
       <a href="policy.html" class="nav-link">🛡️ Policy</a>
       <a href="#" class="nav-link" data-open-wallpaper title="Pick a cinematic wallpaper">🪐 Themes</a>
       <div class="theme-toggle" role="group" aria-label="Theme">
-        <button class="icon-btn active" data-theme-option="light" title="Light" aria-label="Light theme">
+        <button class="icon-btn" data-theme-option="light" title="Light" aria-label="Light theme">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         </button>
-        <button class="icon-btn" data-theme-option="dark" title="Dark" aria-label="Dark theme">
+        <button class="icon-btn active" data-theme-option="dark" title="Dark" aria-label="Dark theme">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
         <button class="icon-btn" data-theme-option="system" title="System" aria-label="System theme">
@@ -43,7 +47,7 @@
     <div class="page-hero">
       <h1>📖 How to Use ScriptSpark</h1>
       <p>A complete guide to generating viral YouTube videos in your language — for free.</p>
-      <a href="index.html" class="btn-primary" style="margin-top: 16px;">🚀 Open the App</a>
+      <a href="app.html" class="btn-primary" style="margin-top: 16px;">🚀 Open the App</a>
     </div>
 
     <article class="page-content">
@@ -59,7 +63,7 @@
           <li>🔊 <b>Voiceover</b> in your language (Web Speech API)</li>
           <li>🙂 <b>Optional</b> face overlay & voice sample</li>
         </ul>
-        <p class="callout">💯 100% free, no signup, no API keys, no watermarks. Everything runs in your browser.</p>
+        <p class="callout">100% free, no signup, no API keys, no watermarks. Everything runs in your browser.</p>
       </section>
 
       <section class="page-section">
@@ -67,7 +71,7 @@
 
         <div class="step-doc">
           <h3><span class="step-num-badge">1</span> Pick Your Language</h3>
-          <p>Choose from 10 Indian languages: <b>English, हिन्दी, தமிழ், తెలుగు, বাংলা, मराठी, ગુજરાતી, ਪੰਜਾਬੀ, മലയാളം, ಕನ್ನಡ</b>.</p>
+          <p>Choose from 10 Indian languages: <b>English, Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, Punjabi, Malayalam, Kannada</b>.</p>
           <p>The script, title, and voiceover will all be generated in the language you pick.</p>
         </div>
 
@@ -83,18 +87,18 @@
         </div>
 
         <div class="step-doc">
-          <h3><span class="step-num-badge">3</span> <b>Tell Us More (the secret to great scripts)</b></h3>
+          <h3><span class="step-num-badge">3</span> Tell Us More (the secret to great scripts)</h3>
           <p>Briefly describe what the video should cover. The more specific, the better the output. You can also:</p>
           <ul>
-            <li>📝 Write a brief (e.g. "3 dark psychology tricks that make people buy things")</li>
-            <li>🎯 Provide your own title (and we'll generate a script around it)</li>
-            <li>👥 Specify the audience (e.g. "Indian teens 16-22")</li>
+            <li>Write a brief (e.g. "3 dark psychology tricks that make people buy things")</li>
+            <li>Provide your own title (and we'll generate a script around it)</li>
+            <li>Specify the audience (e.g. "Indian teens 16-22")</li>
           </ul>
         </div>
 
         <div class="step-doc">
-          <h3><span class="step-num-badge">4</span> Choose Format &amp; Length</h3>
-          <p>📱 <b>YouTube Shorts</b> (≤60s) or 🎥 <b>Long Video</b> (1-60 min).</p>
+          <h3><span class="step-num-badge">4</span> Choose Format & Length</h3>
+          <p><b>YouTube Shorts</b> (60s) or <b>Long Video</b> (1-60 min).</p>
         </div>
 
         <div class="step-doc">
@@ -106,10 +110,10 @@
           <h3><span class="step-num-badge">6</span> Script + Customise</h3>
           <p>Retention-optimised script (built from your brief), copyright-free music, and optional customisation:</p>
           <ul>
-            <li>🎬 <b>Real Videos</b> as background (Pexels API) or Photos / Animated / Solid</li>
-            <li>🙂 <b>Your face</b> overlay</li>
-            <li>🎙️ <b>Your voice sample</b> as ambient voice</li>
-            <li>🎤 <b>Voice picker</b> in Settings</li>
+            <li><b>Real Videos</b> as background (Pexels API) or Photos / Animated / Solid</li>
+            <li><b>Your face</b> overlay</li>
+            <li><b>Your voice sample</b> as ambient voice</li>
+            <li><b>Voice picker</b> in Settings</li>
           </ul>
         </div>
 
@@ -117,53 +121,53 @@
           <h3><span class="step-num-badge">7</span> Edit Scenes <span class="badge-inline">New</span></h3>
           <p>Scene-by-scene editor. You can:</p>
           <ul>
-            <li>✏️ Edit any scene's text</li>
-            <li>🔄 Regenerate a single scene's text</li>
-            <li>↑↓ Reorder scenes (drag with arrows)</li>
-            <li>✕ Delete unwanted scenes</li>
-            <li>➕ Add new scenes</li>
-            <li>⏱️ Adjust each scene's duration in seconds</li>
-            <li>💾 Everything is <b>auto-saved</b> to your browser</li>
+            <li>Edit any scene's text</li>
+            <li>Regenerate a single scene's text</li>
+            <li>Reorder scenes (drag with arrows)</li>
+            <li>Delete unwanted scenes</li>
+            <li>Add new scenes</li>
+            <li>Adjust each scene's duration in seconds</li>
+            <li>Everything is <b>auto-saved</b> to your browser</li>
           </ul>
         </div>
 
         <div class="step-doc">
-          <h3><span class="step-num-badge">8</span> Render &amp; Download Your Video</h3>
-          <p>Click <b>🎥 Render Video</b>. We pre-render all frames (so it's <b>5-10× faster than real-time</b>), then encode to .webm.</p>
+          <h3><span class="step-num-badge">8</span> Render & Download Your Video</h3>
+          <p>Click <b>Render Video</b>. We pre-render all frames (so it's <b>5-10x faster than real-time</b>), then encode to .webm.</p>
           <p>When it's done, you can:</p>
           <ul>
-            <li>▶ <b>Play with Voiceover</b> — watch + hear the script in your language</li>
-            <li>🔄 <b>Regenerate Video</b></li>
-            <li>📄 <b>Download Script</b></li>
-            <li>⬇️ <b>Download .webm</b></li>
+            <li><b>Play with Voiceover</b> — watch + hear the script in your language</li>
+            <li><b>Regenerate Video</b></li>
+            <li><b>Download Script</b></li>
+            <li><b>Download .webm</b></li>
           </ul>
         </div>
       </section>
 
       <section class="page-section">
-        <h2>💡 Tips for Viral Videos</h2>
+        <h2 id="tips">💡 Tips for Viral Videos</h2>
         <ul class="tip-list">
-          <li>🎯 <b>Be specific with your niche.</b> "Dark Psychology" works better than "Psychology".</li>
-          <li>🪝 <b>First 1 second matters most.</b> Our hooks are designed to stop the scroll.</li>
-          <li>😱 <b>Use emotion in titles.</b> Words like "secret", "truth", "shocking", "mistake" boost CTR.</li>
-          <li>🔁 <b>Pattern break every 7–8 sec.</b> Our scripts do this automatically via scene changes.</li>
-          <li>📊 <b>Post 2–3 videos/week.</b> Consistency beats perfection.</li>
-          <li>🔔 <b>Always end with a clear CTA.</b> Like + Subscribe + Comment is the proven formula.</li>
-          <li>🎵 <b>Use the suggested music</b> — they're all copyright-free, safe for monetisation.</li>
-          <li>🌐 <b>Post in your language</b> — India has 500M+ Hindi, 90M+ Tamil, 80M+ Telugu speakers hungry for content.</li>
+          <li><b>Be specific with your niche.</b> "Dark Psychology" works better than "Psychology".</li>
+          <li><b>First 1 second matters most.</b> Our hooks are designed to stop the scroll.</li>
+          <li><b>Use emotion in titles.</b> Words like "secret", "truth", "shocking", "mistake" boost CTR.</li>
+          <li><b>Pattern break every 7-8 sec.</b> Our scripts do this automatically via scene changes.</li>
+          <li><b>Post 2-3 videos/week.</b> Consistency beats perfection.</li>
+          <li><b>Always end with a clear CTA.</b> Like + Subscribe + Comment is the proven formula.</li>
+          <li><b>Use the suggested music</b> — they're all copyright-free, safe for monetisation.</li>
+          <li><b>Post in your language</b> — India has 500M+ Hindi, 90M+ Tamil, 80M+ Telugu speakers hungry for content.</li>
         </ul>
       </section>
 
-      <section class="page-section">
+      <section class="page-section" id="faq">
         <h2>❓ FAQ</h2>
 
         <details class="faq-item">
-          <summary>🤔 Is ScriptSpark really free?</summary>
+          <summary>Is ScriptSpark really free?</summary>
           <p>Yes — 100% free, no signup, no API keys, no hidden costs, no watermarks. You can use the videos you generate commercially.</p>
         </details>
 
         <details class="faq-item">
-          <summary>🔒 Does my data leave my browser?</summary>
+          <summary>Does my data leave my browser?</summary>
           <p>No. Everything runs in your browser. The only network requests are:</p>
           <ul>
             <li>Picsum (background photos) — free image service, no personal data sent</li>
@@ -173,40 +177,40 @@
         </details>
 
         <details class="faq-item">
-          <summary>🎙️ Can it clone my voice?</summary>
+          <summary>Can it clone my voice?</summary>
           <p>Not yet — true neural voice cloning needs paid AI models. The free alternative we use is your browser's <b>Web Speech API</b>, which reads the script in your language using the OS's native voice.</p>
-          <p>If you upload a 30–60 sec voice sample, it plays softly in the background as your "voice signature" (looped at low volume). It gives the video a personal feel without using paid AI.</p>
+          <p>If you upload a 30-60 sec voice sample, it plays softly in the background as your "voice signature" (looped at low volume). It gives the video a personal feel without using paid AI.</p>
         </details>
 
         <details class="faq-item">
-          <summary>🌐 Which browsers are supported?</summary>
+          <summary>Which browsers are supported?</summary>
           <p>Latest <b>Chrome, Edge, Brave, or Firefox</b> on desktop. Mobile Chrome/Safari works too, but desktop is recommended for best video quality.</p>
           <p>Web Speech API voices vary by browser & OS — Windows, macOS, Android, and iOS each have different built-in voices for Indian languages.</p>
         </details>
 
         <details class="faq-item">
-          <summary>📱 Can I make YouTube Shorts with this?</summary>
+          <summary>Can I make YouTube Shorts with this?</summary>
           <p>Yes! Choose <b>YouTube Shorts</b> in Step 3. The video will be rendered in 9:16 vertical format, exactly 60 seconds, perfect for Shorts.</p>
         </details>
 
         <details class="faq-item">
-          <summary>⏱️ How long does video rendering take?</summary>
+          <summary>How long does video rendering take?</summary>
           <p>Roughly equal to the video length:</p>
           <ul>
-            <li>60s Shorts → ~60s to render</li>
-            <li>5 min video → ~5 min to render</li>
-            <li>10 min video → ~10 min to render</li>
+            <li>60s Shorts — ~60s to render</li>
+            <li>5 min video — ~5 min to render</li>
+            <li>10 min video — ~10 min to render</li>
           </ul>
           <p>Rendering speed depends on your device. The progress bar shows real-time status.</p>
         </details>
 
         <details class="faq-item">
-          <summary>🎬 What format is the downloaded video?</summary>
+          <summary>What format is the downloaded video?</summary>
           <p><b>.webm</b> (VP9 + Opus). It plays in all modern browsers, on YouTube, and in most video editors. You can convert to MP4 with free tools like HandBrake if needed.</p>
         </details>
 
         <details class="faq-item">
-          <summary>🎵 Is the music really copyright-free?</summary>
+          <summary>Is the music really copyright-free?</summary>
           <p>Yes. We link to two 100% royalty-free sources:</p>
           <ul>
             <li><b>Pixabay Music</b> — free for commercial use, no attribution required</li>
@@ -216,8 +220,8 @@
         </details>
 
         <details class="faq-item">
-          <summary>🇮🇳 Which Indian languages are supported?</summary>
-          <p>10 languages: <b>English, हिन्दी (Hindi), தமிழ் (Tamil), తెలుగు (Telugu), বাংলা (Bengali), मराठी (Marathi), ગુજરાતી (Gujarati), ਪੰਜਾਬੀ (Punjabi), മലയാളം (Malayalam), ಕನ್ನಡ (Kannada)</b>.</p>
+          <summary>Which Indian languages are supported?</summary>
+          <p>10 languages: <b>English, Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, Punjabi, Malayalam, Kannada</b>.</p>
           <p>Voiceover quality depends on your device — Windows/macOS/Android ship with native voices for most of these.</p>
         </details>
       </section>
@@ -226,31 +230,31 @@
         <h2>🛠️ Free Tools We Use</h2>
         <p>ScriptSpark is built entirely with free, browser-native technology:</p>
         <ul>
-          <li>🖼️ <b>Picsum Photos</b> — free stock photos, no API key needed</li>
-          <li>🎵 <b>Pixabay Music</b> — free royalty-free music</li>
-          <li>🎵 <b>YouTube Audio Library</b> — free music for creators</li>
-          <li>🗣️ <b>Web Speech API</b> — built into every modern browser</li>
-          <li>🎨 <b>HTML5 Canvas</b> — for video frame rendering</li>
-          <li>🎬 <b>MediaRecorder API</b> — for capturing canvas + audio to .webm</li>
-          <li>🔊 <b>Web Audio API</b> — for music synthesis & sound effects</li>
-          <li>🔤 <b>System fonts</b> — no Google Fonts, no paid fonts</li>
+          <li><b>Picsum Photos</b> — free stock photos, no API key needed</li>
+          <li><b>Pixabay Music</b> — free royalty-free music</li>
+          <li><b>YouTube Audio Library</b> — free music for creators</li>
+          <li><b>Web Speech API</b> — built into every modern browser</li>
+          <li><b>HTML5 Canvas</b> — for video frame rendering</li>
+          <li><b>MediaRecorder API</b> — for capturing canvas + audio to .webm</li>
+          <li><b>Web Audio API</b> — for music synthesis & sound effects</li>
+          <li><b>System fonts</b> — no Google Fonts, no paid fonts</li>
         </ul>
-        <p class="callout">🪶 No third-party trackers, no ads, no analytics, no cookies (except your theme preference).</p>
+        <p class="callout">No third-party trackers, no ads, no analytics, no cookies (except your theme preference).</p>
       </section>
 
       <section class="page-section">
-        <h2>🔒 Security &amp; Privacy</h2>
+        <h2>🔒 Security & Privacy</h2>
         <p>ScriptSpark runs entirely in your browser. Here's how your data is protected:</p>
         <ul>
-          <li>🛡️ <b>No server, no tracking</b> — there is no backend; your ideas, scripts and videos stay on your device.</li>
-          <li>🔐 <b>Content Security Policy</b> — strict CSP blocks unauthorized scripts and external resources.</li>
-          <li>🔑 <b>Encrypted Pexels API key</b> — your key is stored in IndexedDB encrypted with AES-GCM (256-bit), and the encryption key never leaves your browser.</li>
-          <li>🧹 <b>EXIF stripped from uploads</b> — face images are re-encoded through canvas, so GPS / camera data is removed before storage.</li>
-          <li>✅ <b>Magic-number file validation</b> — uploaded files are checked by their actual bytes, not just the file extension.</li>
-          <li>🪶 <b>No third-party trackers</b> — no ads, no analytics, no cookies (except your theme preference).</li>
-          <li>🚫 <b>Frame-ancestors none</b> — no other site can embed this app in an iframe (clickjacking protection).</li>
+          <li><b>No server, no tracking</b> — there is no backend; your ideas, scripts and videos stay on your device.</li>
+          <li><b>Content Security Policy</b> — strict CSP blocks unauthorized scripts and external resources.</li>
+          <li><b>Encrypted Pexels API key</b> — your key is stored in IndexedDB encrypted with AES-GCM (256-bit), and the encryption key never leaves your browser.</li>
+          <li><b>EXIF stripped from uploads</b> — face images are re-encoded through canvas, so GPS / camera data is removed before storage.</li>
+          <li><b>Magic-number file validation</b> — uploaded files are checked by their actual bytes, not just the file extension.</li>
+          <li><b>No third-party trackers</b> — no ads, no analytics, no cookies (except your theme preference).</li>
+          <li><b>Frame-ancestors none</b> — no other site can embed this app in an iframe (clickjacking protection).</li>
         </ul>
-        <p class="callout">Read the full <a href="policy.html">Privacy &amp; Policy</a> for details.</p>
+        <p class="callout">Read the full <a href="policy.html">Privacy & Policy</a> for details.</p>
       </section>
 
       <section class="page-section">
@@ -259,7 +263,7 @@
       </section>
 
       <div class="page-cta">
-        <a href="index.html" class="btn-primary">🚀 Start Creating Videos</a>
+        <a href="app.html" class="btn-primary">🚀 Start Creating Videos</a>
         <a href="policy.html" class="btn-ghost">🛡️ Read Policy</a>
       </div>
     </article>
@@ -270,7 +274,6 @@
   </footer>
 
   <script>
-    /* Hamburger menu toggle for mobile */
     (function(){
       var btn = document.getElementById('hamburgerBtn');
       var nav = document.getElementById('navbarActions');
@@ -289,7 +292,6 @@
         });
       }
     })();
-    /* Theme toggle — mirrors applyTheme from script.js */
     (function() {
       var themeButtons = document.querySelectorAll('.theme-toggle .icon-btn');
       function applyTheme(opt) {
@@ -312,8 +314,8 @@
           applyTheme(b.dataset.themeOption);
         });
       });
-      var saved = 'light';
-      try { saved = localStorage.getItem('ss-theme') || 'light'; } catch (e) {}
+      var saved = 'dark';
+      try { saved = localStorage.getItem('ss-theme') || 'dark'; } catch (e) {}
       applyTheme(saved);
     })();
   </script>
