@@ -557,6 +557,18 @@ $("togglePexelsKey").addEventListener("click", () => {
   const inp = $("pexelsKey");
   inp.type = inp.type === "password" ? "text" : "password";
 });
+
+// Auto-save Groq key when user types (debounced)
+if ($("groqKey")) {
+  const debouncedSaveGroq = debounce(() => {
+    const val = $("groqKey").value.trim();
+    if (val) {
+      state.groqKey = val;
+      localStorage.setItem("groqKey", val);
+    }
+  }, 1000);
+  $("groqKey").addEventListener("input", debouncedSaveGroq);
+}
 $("saveSettingsBtn").addEventListener("click", safe(async (e) => {
   const btn = e.currentTarget;
   btn.classList.add("loading"); btn.disabled = true;
@@ -1113,6 +1125,9 @@ async function showTopicSuggestions(category) {
       return;
     }
 
+    console.log("[TopicSuggestions] Using key:", groqKey.slice(0, 8) + "...");
+    console.log("[TopicSuggestions] Category:", category);
+
     const prompt = `You are a YouTube content strategist specializing in viral faceless videos.
 
 Category: "${category}"
@@ -1188,8 +1203,8 @@ Examples of good topics:
     });
 
   } catch (e) {
-    console.warn("[TopicSuggestions] Failed:", e);
-    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Could not load suggestions. Type your topic above.</div>';
+    console.error("[TopicSuggestions] Failed:", e);
+    list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);">Could not load suggestions: ${escapeHtml(e.message || "Unknown error")}. Type your topic above.</div>`;
   }
 }
 
