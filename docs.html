@@ -1,21 +1,56 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Docs — ScriptSpark.in</title>
-  <meta name="description" content="Complete guide to using ScriptSpark — the free AI YouTube video generator." />
+  <meta name="description" content="Complete guide to using ScriptSpark — the free AI script & thumbnail studio for YouTube." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="wallpaper.css" />
+  <style>
+    .page { min-height: 100vh; padding: 0 16px 60px; }
+    .page-hero { text-align: center; padding: 100px 0 40px; }
+    .page-hero h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 800; margin-bottom: 12px; }
+    .page-hero p { color: var(--text-dim); font-size: 1rem; max-width: 480px; margin: 0 auto; }
+    .page-content { max-width: 720px; margin: 0 auto; }
+    .page-section { margin-bottom: 48px; }
+    .page-section h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 16px; }
+    .page-section p { font-size: 0.92rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 12px; }
+    .page-section ul { margin: 8px 0 16px 20px; }
+    .page-section li { font-size: 0.92rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 6px; }
+    .step-doc { padding: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 12px; }
+    .step-doc h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+    .step-num-badge { width: 28px; height: 28px; border-radius: 50%; background: var(--gradient); color: #fff; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .callout { padding: 12px 16px; background: var(--accent-soft); border: 1px solid rgba(139,92,246,0.3); border-radius: var(--r); font-size: 0.85rem; margin-top: 12px; }
+    .faq-item { border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 8px; overflow: hidden; }
+    .faq-item summary { padding: 14px 16px; font-size: 0.92rem; font-weight: 600; cursor: pointer; background: var(--bg-card); }
+    .faq-item p, .faq-item ul { padding: 0 16px 14px; color: var(--text-dim); font-size: 0.9rem; }
+    .page-cta { text-align: center; padding: 40px 0; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .footer { text-align: center; padding: 24px; font-size: 0.82rem; color: var(--text-muted); border-top: 1px solid var(--border); }
+    .navbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--border); background: var(--bg-glass); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 200; }
+    .logo { display: flex; align-items: center; gap: 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--text); text-decoration: none; }
+    .logo-icon { font-size: 1.3rem; }
+    .logo-badge { font-size: 0.65rem; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 2px 6px; border-radius: 8px; }
+    .navbar-actions { display: flex; align-items: center; gap: 4px; }
+    .nav-link { font-size: 0.82rem; font-weight: 500; color: var(--text-muted); text-decoration: none; padding: 6px 10px; border-radius: 8px; transition: all 150ms ease; }
+    .nav-link:hover, .nav-link.active { color: var(--text); background: var(--bg-card); }
+    .hamburger-btn { display: none; background: none; border: none; cursor: pointer; padding: 8px; }
+    .hamburger-line { display: block; width: 20px; height: 2px; background: var(--text); margin: 4px 0; transition: all 150ms ease; }
+    @media (max-width: 768px) {
+      .hamburger-btn { display: flex; flex-direction: column; }
+      .navbar-actions { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-elevated); border-bottom: 1px solid var(--border); flex-direction: column; padding: 12px; gap: 4px; }
+      .navbar-actions.open { display: flex; }
+    }
+  </style>
 </head>
-<body data-theme="dark">
+<body>
 
   <header class="navbar">
     <a href="landing.html" class="logo">
-      <span class="logo-icon">🐯</span>
+      <span class="logo-icon">&#128049;</span>
       <span class="logo-text">ScriptSpark</span>
       <span class="logo-badge">.in</span>
     </a>
@@ -25,252 +60,154 @@
       <span class="hamburger-line"></span>
     </button>
     <nav class="navbar-actions" id="navbarActions">
-      <a href="app.html" class="nav-link">🚀 App</a>
-      <a href="docs.html" class="nav-link active">📖 Docs</a>
-      <a href="policy.html" class="nav-link">🛡️ Policy</a>
-      <a href="#" class="nav-link" data-open-wallpaper title="Pick a cinematic wallpaper">🪐 Themes</a>
-      <div class="theme-toggle" role="group" aria-label="Theme">
-        <button class="icon-btn" data-theme-option="light" title="Light" aria-label="Light theme">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        </button>
-        <button class="icon-btn active" data-theme-option="dark" title="Dark" aria-label="Dark theme">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        </button>
-        <button class="icon-btn" data-theme-option="system" title="System" aria-label="System theme">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        </button>
-      </div>
+      <a href="app.html" class="nav-link">App</a>
+      <a href="docs.html" class="nav-link active">Docs</a>
+      <a href="policy.html" class="nav-link">Policy</a>
     </nav>
   </header>
 
   <main class="page">
     <div class="page-hero">
-      <h1>📖 How to Use ScriptSpark</h1>
-      <p>A complete guide to generating viral YouTube videos in your language — for free.</p>
-      <a href="app.html" class="btn-primary" style="margin-top: 16px;">🚀 Open the App</a>
+      <h1>How to Use ScriptSpark</h1>
+      <p>A complete guide to generating viral YouTube scripts and thumbnails with AI — for free.</p>
+      <a href="app.html" class="btn-primary" style="margin-top: 16px;">Open the App</a>
     </div>
 
     <article class="page-content">
 
       <section class="page-section">
-        <h2>🎯 What is ScriptSpark?</h2>
-        <p><b>ScriptSpark.in</b> is a free AI-powered YouTube video generator built for Indian creators. It creates:</p>
+        <h2>What is ScriptSpark?</h2>
+        <p><b>ScriptSpark.in</b> is a free AI-powered script &amp; thumbnail studio for YouTube creators. It creates:</p>
         <ul>
-          <li>🧠 <b>Viral titles</b> with emojis in 10 Indian languages</li>
-          <li>📝 <b>Retention-optimised scripts</b> with a 1-second hook</li>
-          <li>🎵 <b>Copyright-free music</b> suggestions (Pixabay + YouTube Audio Library)</li>
-          <li>🎥 <b>Downloadable videos</b> (Shorts 60s or Long, custom length)</li>
-          <li>🔊 <b>Voiceover</b> in your language (Web Speech API)</li>
-          <li>🙂 <b>Optional</b> face overlay & voice sample</li>
+          <li><b>Viral video ideas</b> — AI-generated trending topics for your niche</li>
+          <li><b>Retention-optimized scripts</b> — 400-600 words, Hook, Problem, Story, Reveal, CTA</li>
+          <li><b>Custom thumbnails</b> — AI-generated 1280x720 images via Pollinations.ai</li>
+          <li><b>YouTube titles</b> — Click-worthy, high-CTR titles</li>
         </ul>
-        <p class="callout">100% free, no signup, no API keys, no watermarks. Everything runs in your browser.</p>
+        <p class="callout">Free, no signup, no watermarks. Uses your own free Groq API key. Runs entirely in your browser.</p>
       </section>
 
       <section class="page-section">
-        <h2>🚀 Step-by-Step Guide</h2>
+        <h2>Step-by-Step Guide</h2>
 
         <div class="step-doc">
-          <h3><span class="step-num-badge">1</span> Pick Your Language</h3>
-          <p>Choose from 10 Indian languages: <b>English, Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, Punjabi, Malayalam, Kannada</b>.</p>
-          <p>The script, title, and voiceover will all be generated in the language you pick.</p>
+          <h3><span class="step-num-badge">1</span> Pick Your Niche</h3>
+          <p>Choose from 15 content categories: <b>Dark Mystery, Finance, Motivation, Tech, True Crime, History, Astrology, Health, Gaming, Relationships, Science, Food, Travel, Business, Mythology</b>.</p>
+          <p>AI will generate trending video ideas tailored to your chosen niche.</p>
         </div>
 
         <div class="step-doc">
-          <h3><span class="step-num-badge">2</span> Enter Your Topic</h3>
-          <p>Type your video topic — be specific. Examples:</p>
+          <h3><span class="step-num-badge">2</span> Choose from 5 Viral Ideas</h3>
+          <p>AI generates 5 viral video ideas with titles and reasons why they'll perform well. Click any idea to proceed to script generation.</p>
+        </div>
+
+        <div class="step-doc">
+          <h3><span class="step-num-badge">3</span> Review Your Script</h3>
+          <p>A 400-600 word retention-optimized script is generated with:</p>
           <ul>
-            <li><code>Dark Psychology</code></li>
-            <li><code>Indian Stock Market for Beginners</code></li>
-            <li><code>Street Food of Mumbai</code></li>
-            <li><code>AI Tools for Students</code></li>
+            <li><b>Hook</b> — First 3 seconds that stop the scroll</li>
+            <li><b>Problem</b> — The pain point your audience relates to</li>
+            <li><b>Story</b> — The narrative build-up</li>
+            <li><b>Reveal</b> — The solution or twist</li>
+            <li><b>CTA</b> — Subscribe and follow call to action</li>
           </ul>
+          <p>Copy the script or proceed to thumbnail generation.</p>
         </div>
 
         <div class="step-doc">
-          <h3><span class="step-num-badge">3</span> Tell Us More (the secret to great scripts)</h3>
-          <p>Briefly describe what the video should cover. The more specific, the better the output. You can also:</p>
-          <ul>
-            <li>Write a brief (e.g. "3 dark psychology tricks that make people buy things")</li>
-            <li>Provide your own title (and we'll generate a script around it)</li>
-            <li>Specify the audience (e.g. "Indian teens 16-22")</li>
-          </ul>
-        </div>
-
-        <div class="step-doc">
-          <h3><span class="step-num-badge">4</span> Choose Format & Length</h3>
-          <p><b>YouTube Shorts</b> (60s) or <b>Long Video</b> (1-60 min).</p>
-        </div>
-
-        <div class="step-doc">
-          <h3><span class="step-num-badge">5</span> Pick a Viral Idea</h3>
-          <p>5 viral title ideas in your language. If you provided your own title, it appears as the first option.</p>
-        </div>
-
-        <div class="step-doc">
-          <h3><span class="step-num-badge">6</span> Script + Customise</h3>
-          <p>Retention-optimised script (built from your brief), copyright-free music, and optional customisation:</p>
-          <ul>
-            <li><b>Real Videos</b> as background (Pexels API) or Photos / Animated / Solid</li>
-            <li><b>Your face</b> overlay</li>
-            <li><b>Your voice sample</b> as ambient voice</li>
-            <li><b>Voice picker</b> in Settings</li>
-          </ul>
-        </div>
-
-        <div class="step-doc">
-          <h3><span class="step-num-badge">7</span> Edit Scenes <span class="badge-inline">New</span></h3>
-          <p>Scene-by-scene editor. You can:</p>
-          <ul>
-            <li>Edit any scene's text</li>
-            <li>Regenerate a single scene's text</li>
-            <li>Reorder scenes (drag with arrows)</li>
-            <li>Delete unwanted scenes</li>
-            <li>Add new scenes</li>
-            <li>Adjust each scene's duration in seconds</li>
-            <li>Everything is <b>auto-saved</b> to your browser</li>
-          </ul>
-        </div>
-
-        <div class="step-doc">
-          <h3><span class="step-num-badge">8</span> Render & Download Your Video</h3>
-          <p>Click <b>Render Video</b>. We pre-render all frames (so it's <b>5-10x faster than real-time</b>), then encode to .webm.</p>
-          <p>When it's done, you can:</p>
-          <ul>
-            <li><b>Play with Voiceover</b> — watch + hear the script in your language</li>
-            <li><b>Regenerate Video</b></li>
-            <li><b>Download Script</b></li>
-            <li><b>Download .webm</b></li>
-          </ul>
+          <h3><span class="step-num-badge">4</span> Generate &amp; Download Thumbnail</h3>
+          <p>AI creates a detailed image prompt based on your script, then generates a 1280x720 thumbnail image via Pollinations.ai. Download it directly or regenerate for a new variation.</p>
         </div>
       </section>
 
       <section class="page-section">
-        <h2 id="tips">💡 Tips for Viral Videos</h2>
-        <ul class="tip-list">
+        <h2 id="tips">Tips for Viral Videos</h2>
+        <ul>
           <li><b>Be specific with your niche.</b> "Dark Psychology" works better than "Psychology".</li>
           <li><b>First 1 second matters most.</b> Our hooks are designed to stop the scroll.</li>
           <li><b>Use emotion in titles.</b> Words like "secret", "truth", "shocking", "mistake" boost CTR.</li>
-          <li><b>Pattern break every 7-8 sec.</b> Our scripts do this automatically via scene changes.</li>
           <li><b>Post 2-3 videos/week.</b> Consistency beats perfection.</li>
           <li><b>Always end with a clear CTA.</b> Like + Subscribe + Comment is the proven formula.</li>
-          <li><b>Use the suggested music</b> — they're all copyright-free, safe for monetisation.</li>
-          <li><b>Post in your language</b> — India has 500M+ Hindi, 90M+ Tamil, 80M+ Telugu speakers hungry for content.</li>
+          <li><b>Write in English or Hindi</b> — the two largest YouTube audiences in India.</li>
         </ul>
       </section>
 
       <section class="page-section" id="faq">
-        <h2>❓ FAQ</h2>
+        <h2>FAQ</h2>
 
         <details class="faq-item">
           <summary>Is ScriptSpark really free?</summary>
-          <p>Yes — 100% free, no signup, no API keys, no hidden costs, no watermarks. You can use the videos you generate commercially.</p>
+          <p>Yes. You need a free Groq API key (get one in 30 seconds at console.groq.com). Thumbnail generation via Pollinations.ai is also free. No signup, no credit card, no hidden costs.</p>
         </details>
 
         <details class="faq-item">
           <summary>Does my data leave my browser?</summary>
-          <p>No. Everything runs in your browser. The only network requests are:</p>
+          <p>No. Your Groq API key and all content stay in your browser. The only network requests are:</p>
           <ul>
-            <li>Picsum (background photos) — free image service, no personal data sent</li>
-            <li>Pixabay / YouTube (music links) — links you click open in a new tab</li>
+            <li><b>Groq API</b> — for AI text generation (your key, your request)</li>
+            <li><b>Pollinations.ai</b> — for thumbnail image generation (no key needed)</li>
           </ul>
-          <p>Your face/voice uploads, scripts, and videos stay on your device.</p>
+          <p>Nothing is sent to our servers because we have no servers.</p>
         </details>
 
         <details class="faq-item">
-          <summary>Can it clone my voice?</summary>
-          <p>Not yet — true neural voice cloning needs paid AI models. The free alternative we use is your browser's <b>Web Speech API</b>, which reads the script in your language using the OS's native voice.</p>
-          <p>If you upload a 30-60 sec voice sample, it plays softly in the background as your "voice signature" (looped at low volume). It gives the video a personal feel without using paid AI.</p>
+          <summary>Which languages are supported?</summary>
+          <p>English and Hindi. Scripts can be generated in either language. The Groq API handles both well.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>How do I get a Groq API key?</summary>
+          <p>Go to <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>, sign up (free), and create an API key. Paste it in Settings. It takes about 30 seconds.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>What format is the thumbnail?</summary>
+          <p>1280x720 pixels (YouTube standard thumbnail size). Generated as a PNG image via Pollinations.ai.</p>
         </details>
 
         <details class="faq-item">
           <summary>Which browsers are supported?</summary>
-          <p>Latest <b>Chrome, Edge, Brave, or Firefox</b> on desktop. Mobile Chrome/Safari works too, but desktop is recommended for best video quality.</p>
-          <p>Web Speech API voices vary by browser & OS — Windows, macOS, Android, and iOS each have different built-in voices for Indian languages.</p>
-        </details>
-
-        <details class="faq-item">
-          <summary>Can I make YouTube Shorts with this?</summary>
-          <p>Yes! Choose <b>YouTube Shorts</b> in Step 3. The video will be rendered in 9:16 vertical format, exactly 60 seconds, perfect for Shorts.</p>
-        </details>
-
-        <details class="faq-item">
-          <summary>How long does video rendering take?</summary>
-          <p>Roughly equal to the video length:</p>
-          <ul>
-            <li>60s Shorts — ~60s to render</li>
-            <li>5 min video — ~5 min to render</li>
-            <li>10 min video — ~10 min to render</li>
-          </ul>
-          <p>Rendering speed depends on your device. The progress bar shows real-time status.</p>
-        </details>
-
-        <details class="faq-item">
-          <summary>What format is the downloaded video?</summary>
-          <p><b>.webm</b> (VP9 + Opus). It plays in all modern browsers, on YouTube, and in most video editors. You can convert to MP4 with free tools like HandBrake if needed.</p>
-        </details>
-
-        <details class="faq-item">
-          <summary>Is the music really copyright-free?</summary>
-          <p>Yes. We link to two 100% royalty-free sources:</p>
-          <ul>
-            <li><b>Pixabay Music</b> — free for commercial use, no attribution required</li>
-            <li><b>YouTube Audio Library</b> — free for YouTube creators, safe for monetisation</li>
-          </ul>
-          <p>You should still download them separately and add them to your video in your editor for the best quality.</p>
-        </details>
-
-        <details class="faq-item">
-          <summary>Which Indian languages are supported?</summary>
-          <p>10 languages: <b>English, Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, Punjabi, Malayalam, Kannada</b>.</p>
-          <p>Voiceover quality depends on your device — Windows/macOS/Android ship with native voices for most of these.</p>
+          <p>Latest Chrome, Edge, Brave, or Firefox on desktop. Mobile works too, but desktop is recommended for the best experience.</p>
         </details>
       </section>
 
       <section class="page-section">
-        <h2>🛠️ Free Tools We Use</h2>
-        <p>ScriptSpark is built entirely with free, browser-native technology:</p>
+        <h2>Free Tools We Use</h2>
         <ul>
-          <li><b>Picsum Photos</b> — free stock photos, no API key needed</li>
-          <li><b>Pixabay Music</b> — free royalty-free music</li>
-          <li><b>YouTube Audio Library</b> — free music for creators</li>
-          <li><b>Web Speech API</b> — built into every modern browser</li>
-          <li><b>HTML5 Canvas</b> — for video frame rendering</li>
-          <li><b>MediaRecorder API</b> — for capturing canvas + audio to .webm</li>
-          <li><b>Web Audio API</b> — for music synthesis & sound effects</li>
-          <li><b>System fonts</b> — no Google Fonts, no paid fonts</li>
+          <li><b>Groq API</b> — Free AI text generation (llama-3.1-8b-instant)</li>
+          <li><b>Pollinations.ai</b> — Free AI image generation for thumbnails</li>
+          <li><b>IndexedDB</b> — Browser-native storage for projects and settings</li>
         </ul>
         <p class="callout">No third-party trackers, no ads, no analytics, no cookies (except your theme preference).</p>
       </section>
 
       <section class="page-section">
-        <h2>🔒 Security & Privacy</h2>
+        <h2>Security &amp; Privacy</h2>
         <p>ScriptSpark runs entirely in your browser. Here's how your data is protected:</p>
         <ul>
-          <li><b>No server, no tracking</b> — there is no backend; your ideas, scripts and videos stay on your device.</li>
+          <li><b>No server, no tracking</b> — there is no backend; your content stays on your device.</li>
           <li><b>Content Security Policy</b> — strict CSP blocks unauthorized scripts and external resources.</li>
-          <li><b>Encrypted Pexels API key</b> — your key is stored in IndexedDB encrypted with AES-GCM (256-bit), and the encryption key never leaves your browser.</li>
-          <li><b>EXIF stripped from uploads</b> — face images are re-encoded through canvas, so GPS / camera data is removed before storage.</li>
-          <li><b>Magic-number file validation</b> — uploaded files are checked by their actual bytes, not just the file extension.</li>
-          <li><b>No third-party trackers</b> — no ads, no analytics, no cookies (except your theme preference).</li>
-          <li><b>Frame-ancestors none</b> — no other site can embed this app in an iframe (clickjacking protection).</li>
+          <li><b>API key stays local</b> — your Groq key is stored in your browser only.</li>
+          <li><b>No third-party trackers</b> — no ads, no analytics, no cookies.</li>
+          <li><b>Frame-ancestors none</b> — clickjacking protection.</li>
         </ul>
-        <p class="callout">Read the full <a href="policy.html">Privacy & Policy</a> for details.</p>
+        <p class="callout">Read the full <a href="policy.html">Privacy Policy</a> for details.</p>
       </section>
 
       <section class="page-section">
-        <h2>📬 Contact</h2>
-        <p>Found a bug? Have a feature request? Open an issue on the project's GitHub page or contact us at <a href="mailto:hello@scriptspark.in">hello@scriptspark.in</a>.</p>
+        <h2>Contact</h2>
+        <p>Found a bug? Have a feature request? Contact us at <a href="mailto:hello@scriptspark.in">hello@scriptspark.in</a>.</p>
       </section>
 
       <div class="page-cta">
-        <a href="app.html" class="btn-primary">🚀 Start Creating Videos</a>
-        <a href="policy.html" class="btn-ghost">🛡️ Read Policy</a>
+        <a href="app.html" class="btn-primary">Start Creating</a>
+        <a href="policy.html" class="btn-ghost">Read Policy</a>
       </div>
     </article>
   </main>
 
   <footer class="footer">
-    <p>Made with 🐯 in India · ScriptSpark.in — Generate viral YouTube content in your language</p>
+    <p>Made in India &middot; ScriptSpark.in — AI Script &amp; Thumbnail Studio</p>
   </footer>
 
   <script>
@@ -283,7 +220,7 @@
           btn.classList.toggle('open');
           btn.setAttribute('aria-expanded', open);
         });
-        nav.querySelectorAll('a, button').forEach(function(el){
+        nav.querySelectorAll('a').forEach(function(el){
           el.addEventListener('click', function(){
             nav.classList.remove('open');
             btn.classList.remove('open');
@@ -291,32 +228,6 @@
           });
         });
       }
-    })();
-    (function() {
-      var themeButtons = document.querySelectorAll('.theme-toggle .icon-btn');
-      function applyTheme(opt) {
-        var actual = opt;
-        if (opt === 'system') {
-          actual = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        document.documentElement.setAttribute('data-theme', actual);
-        document.body.dataset.theme = actual;
-        document.body.classList.toggle('dark', actual === 'dark');
-        document.body.classList.toggle('light', actual === 'light');
-        themeButtons.forEach(function(b) {
-          b.classList.toggle('active', b.dataset.themeOption === opt);
-        });
-        try { localStorage.setItem('ss-theme', opt); } catch (e) {}
-        document.dispatchEvent(new CustomEvent('appThemeChanged', { detail: { theme: actual } }));
-      }
-      themeButtons.forEach(function(b) {
-        b.addEventListener('click', function() {
-          applyTheme(b.dataset.themeOption);
-        });
-      });
-      var saved = 'dark';
-      try { saved = localStorage.getItem('ss-theme') || 'dark'; } catch (e) {}
-      applyTheme(saved);
     })();
   </script>
   <script src="wallpaper.js"></script>

@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Policy — ScriptSpark.in</title>
-  <meta name="description" content="Privacy, terms, copyright, and disclaimer for ScriptSpark.in" />
+  <meta name="description" content="Privacy, terms, copyright, and disclaimer for ScriptSpark.in — AI Script & Thumbnail Studio" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="wallpaper.css" />
 </head>
-<body data-theme="dark">
+<body>
 
   <header class="navbar">
     <a href="landing.html" class="logo">
@@ -19,28 +19,16 @@
       <span class="logo-text">ScriptSpark</span>
       <span class="logo-badge">.in</span>
     </a>
-    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
-      <span class="hamburger-line"></span>
-      <span class="hamburger-line"></span>
-      <span class="hamburger-line"></span>
-    </button>
-    <nav class="navbar-actions" id="navbarActions">
-      <a href="app.html" class="nav-link">🚀 App</a>
-      <a href="docs.html" class="nav-link">📖 Docs</a>
-      <a href="policy.html" class="nav-link active">🛡️ Policy</a>
-      <a href="#" class="nav-link" data-open-wallpaper title="Pick a cinematic wallpaper">🪐 Themes</a>
-      <div class="theme-toggle" role="group" aria-label="Theme">
-        <button class="icon-btn" data-theme-option="light" title="Light" aria-label="Light theme">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        </button>
-        <button class="icon-btn active" data-theme-option="dark" title="Dark" aria-label="Dark theme">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        </button>
-        <button class="icon-btn" data-theme-option="system" title="System" aria-label="System theme">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        </button>
-      </div>
-    </nav>
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+      <nav class="navbar-actions" id="navbarActions">
+        <a href="app.html" class="nav-link">App</a>
+        <a href="docs.html" class="nav-link">Docs</a>
+        <a href="policy.html" class="nav-link active">Policy</a>
+      </nav>
   </header>
 
   <main class="page">
@@ -80,16 +68,16 @@
 
         <h3>What stays on your device</h3>
         <ul>
-          <li>Your scripts, titles, and generated videos — never uploaded anywhere</li>
-          <li>Your face/voice uploads — processed locally in your browser, never sent to a server</li>
+          <li>Your scripts, titles, and thumbnails — never uploaded anywhere</li>
+          <li>Your Groq API key — stored locally, never sent to our servers</li>
           <li>Your theme preference (light/dark) — stored in <code>localStorage</code> on your device only</li>
         </ul>
 
         <h3>Network requests we make</h3>
         <p>The only external requests are:</p>
         <ul>
-          <li><b>Picsum Photos</b> (<code>picsum.photos</code>) — to fetch free background images. No personal data is sent.</li>
-          <li><b>Pixabay / YouTube</b> — these open in a new tab only when <b>you click</b> a music link.</li>
+          <li><b>Groq API</b> (<code>api.groq.com</code>) — to generate AI text content using your own API key.</li>
+          <li><b>Pollinations.ai</b> (<code>image.pollinations.ai</code>) — to generate thumbnail images (no key needed).</li>
         </ul>
 
         <h3>Cookies</h3>
@@ -105,15 +93,14 @@
 
         <h3>You may use ScriptSpark to</h3>
         <ul>
-          <li>Generate YouTube videos (Shorts and long form) for personal or commercial use</li>
-          <li>Monetise videos on YouTube and other platforms</li>
+          <li>Generate YouTube scripts and thumbnails for personal or commercial use</li>
+          <li>Monetise videos on YouTube and other platforms using generated content</li>
           <li>Use the generated scripts as a base for your own content</li>
         </ul>
 
         <h3>You agree not to</h3>
         <ul>
           <li>Use ScriptSpark to generate harmful, illegal, hateful, defamatory, or misleading content</li>
-          <li>Impersonate real people (other than yourself) in face overlays or voiceovers</li>
           <li>Use ScriptSpark to spread misinformation, spam, or scams</li>
           <li>Attempt to reverse-engineer, hack, or disrupt the service</li>
           <li>Use automated scripts to abuse the free service</li>
@@ -134,27 +121,25 @@
         <ul>
           <li>The scripts generated for you</li>
           <li>The titles generated for you</li>
-          <li>The video files rendered in your browser</li>
+          <li>The thumbnail images generated for you</li>
           <li>Any modifications or edits you make to the above</li>
         </ul>
         <p>You can use these commercially, claim copyright on them, and monetise them on any platform.</p>
 
         <h3>Third-party content (used with permission / free licenses)</h3>
-        <p>The following free resources are used by ScriptSpark. You can use them in your videos too:</p>
+        <p>The following free resources are used by ScriptSpark. You can use them in your content too:</p>
         <ul>
-          <li><b>Picsum Photos</b> — <a href="https://picsum.photos/" target="_blank" rel="noopener">picsum.photos</a> — free under the <a href="https://unsplash.com/license" target="_blank" rel="noopener">Unsplash License</a></li>
-          <li><b>Pixabay Music</b> — <a href="https://pixabay.com/music/" target="_blank" rel="noopener">pixabay.com/music</a> — free for commercial use, no attribution required (<a href="https://pixabay.com/service/license/" target="_blank" rel="noopener">Pixabay License</a>)</li>
-          <li><b>YouTube Audio Library</b> — <a href="https://www.youtube.com/audiolibrary" target="_blank" rel="noopener">youtube.com/audiolibrary</a> — free for YouTube creators</li>
+          <li><b>Groq API</b> — <a href="https://groq.com" target="_blank" rel="noopener">groq.com</a> — free AI text generation (your own API key)</li>
+          <li><b>Pollinations.ai</b> — <a href="https://pollinations.ai" target="_blank" rel="noopener">pollinations.ai</a> — free AI image generation (no key needed)</li>
         </ul>
         <p>If you use a music track in your monetised YouTube video, double-check the licence on the source site — third-party terms may change.</p>
       </section>
 
       <section class="page-section" id="content">
-        <h2>🎬 User-Generated Content</h2>
+        <h2>User-Generated Content</h2>
         <p>You are fully responsible for the content you create with ScriptSpark. By using the service you confirm that:</p>
         <ul>
-          <li>You have the right to use any face photos or voice samples you upload (they belong to you or you have permission).</li>
-          <li>Your scripts and videos do not violate any laws or third-party rights.</li>
+          <li>Your scripts and thumbnails do not violate any laws or third-party rights.</li>
           <li>You will not generate content that is illegal, defamatory, obscene, hateful, or harmful.</li>
         </ul>
         <p>ScriptSpark is a tool. We do not review, endorse, or take responsibility for the content you create with it.</p>
@@ -165,10 +150,10 @@
         <p>To the maximum extent permitted by law:</p>
         <ul>
           <li>ScriptSpark is provided <b>without warranty of any kind</b>, express or implied.</li>
-          <li>We are <b>not affiliated with, endorsed by, or partnered with YouTube, Google, Pixabay, Picsum, or any third party</b> mentioned on this site.</li>
-          <li><b>"YouTube" and "Shorts" are trademarks of Google LLC.</b> All references are for descriptive purposes only.</li>
+          <li>We are <b>not affiliated with, endorsed by, or partnered with YouTube, Google, Groq, Pollinations.ai, or any third party</b> mentioned on this site.</li>
+          <li><b>"YouTube" is a trademark of Google LLC.</b> All references are for descriptive purposes only.</li>
           <li>You are solely responsible for any consequences (legal, financial, or reputational) arising from content you create using ScriptSpark.</li>
-          <li>We do not guarantee that the videos you generate will be monetisable, viral, or successful on any platform.</li>
+          <li>We do not guarantee that the scripts or thumbnails you generate will be monetisable, viral, or successful on any platform.</li>
           <li>In no event will the authors be liable for any indirect, incidental, special, or consequential damages.</li>
         </ul>
       </section>
@@ -192,7 +177,7 @@
   </main>
 
   <footer class="footer">
-    <p>Made with 🐯 in India · ScriptSpark.in — Generate viral YouTube content in your language</p>
+    <p>Made in India &middot; ScriptSpark.in — AI Script &amp; Thumbnail Studio</p>
   </footer>
 
   <script>
@@ -205,7 +190,7 @@
           btn.classList.toggle('open');
           btn.setAttribute('aria-expanded', open);
         });
-        nav.querySelectorAll('a, button').forEach(function(el){
+        nav.querySelectorAll('a').forEach(function(el){
           el.addEventListener('click', function(){
             nav.classList.remove('open');
             btn.classList.remove('open');
@@ -213,35 +198,6 @@
           });
         });
       }
-    })();
-    (function() {
-      function applyTheme(opt) {
-        var actual = opt;
-        if (opt === 'system') {
-          actual = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        document.documentElement.setAttribute('data-theme', actual);
-        document.body.dataset.theme = actual;
-        document.body.classList.toggle('dark', actual === 'dark');
-        document.body.classList.toggle('light', actual === 'light');
-        var themeButtons = document.querySelectorAll('.theme-toggle .icon-btn');
-        themeButtons.forEach(function(b) {
-          b.classList.toggle('active', b.dataset.themeOption === opt);
-        });
-        try { localStorage.setItem('ss-theme', opt); } catch (e) {}
-        document.dispatchEvent(new CustomEvent('appThemeChanged', { detail: { theme: actual } }));
-      }
-
-      var themeButtons = document.querySelectorAll('.theme-toggle .icon-btn');
-      themeButtons.forEach(function(b) {
-        b.addEventListener('click', function() {
-          applyTheme(b.dataset.themeOption);
-        });
-      });
-
-      var saved = 'dark';
-      try { saved = localStorage.getItem('ss-theme') || 'dark'; } catch (e) {}
-      applyTheme(saved);
     })();
   </script>
   <script src="wallpaper.js"></script>
