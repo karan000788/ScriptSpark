@@ -284,8 +284,10 @@
     [data-theme="light"] body { background: #FAFAFA; }
 
     /* ── Content z-index ─────────────────────────────────────── */
-    .app-wrapper, .navbar, .stepper, .mobile-stepper, .section,
-    footer, .toast { position: relative; z-index: 1; }
+    .app-wrapper, .stepper, .section, footer, .toast {
+      position: relative; z-index: 1;
+    }
+    .mobile-stepper { z-index: 200; }
 
     /* ── Cursor hit area expansion ─────────────────────────────── */
     button, a, [role="button"] { position: relative; }
@@ -466,12 +468,15 @@
       /* ── Hamburger ────────────────────────────────────────── */
       var btn = document.getElementById('hamburgerBtn');
       var nav = document.getElementById('navbarActions');
+      function toggleMenu(e) {
+        e.preventDefault();
+        var open = nav.classList.toggle('open');
+        btn.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open);
+      }
       if(btn && nav){
-        btn.addEventListener('click', function(){
-          var open = nav.classList.toggle('open');
-          btn.classList.toggle('open');
-          btn.setAttribute('aria-expanded', open);
-        });
+        btn.addEventListener('click', toggleMenu);
+        btn.addEventListener('touchstart', toggleMenu, { passive: true });
         nav.querySelectorAll('a, button').forEach(function(el){
           el.addEventListener('click', function(){
             nav.classList.remove('open');

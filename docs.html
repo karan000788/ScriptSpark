@@ -37,7 +37,7 @@
     .navbar-actions { display: flex; align-items: center; gap: 4px; }
     .nav-link { font-size: 0.82rem; font-weight: 500; color: var(--text-muted); text-decoration: none; padding: 6px 10px; border-radius: 8px; transition: all 150ms ease; }
     .nav-link:hover, .nav-link.active { color: var(--text); background: var(--bg-card); }
-    .hamburger-btn { display: none; background: none; border: none; cursor: pointer; padding: 8px; }
+    .hamburger-btn { display: none; background: none; border: none; cursor: pointer; padding: 8px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     .hamburger-line { display: block; width: 20px; height: 2px; background: var(--text); margin: 4px 0; transition: all 150ms ease; }
     @media (max-width: 768px) {
       .hamburger-btn { display: flex; flex-direction: column; }
@@ -225,12 +225,15 @@
     (function(){
       var btn = document.getElementById('hamburgerBtn');
       var nav = document.getElementById('navbarActions');
+      function toggleMenu(e) {
+        e.preventDefault();
+        var open = nav.classList.toggle('open');
+        btn.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open);
+      }
       if(btn && nav){
-        btn.addEventListener('click', function(){
-          var open = nav.classList.toggle('open');
-          btn.classList.toggle('open');
-          btn.setAttribute('aria-expanded', open);
-        });
+        btn.addEventListener('click', toggleMenu);
+        btn.addEventListener('touchstart', toggleMenu, { passive: true });
         nav.querySelectorAll('a').forEach(function(el){
           el.addEventListener('click', function(){
             nav.classList.remove('open');
