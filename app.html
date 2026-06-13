@@ -50,7 +50,7 @@
     .mobile-step-prev, .mobile-step-next { background: var(--bg-card); border: 1px solid var(--border); width: 36px; height: 36px; border-radius: var(--r); font-size: 0.85rem; display: flex; align-items: center; justify-content: center; transition: all 150ms var(--ease); }
     .mobile-step-prev:hover:not(:disabled), .mobile-step-next:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
     .mobile-step-prev:disabled, .mobile-step-next:disabled { opacity: 0.3; cursor: not-allowed; }
-    @media (max-width: 640px) { .mobile-stepper { display: flex; } }
+    @media (max-width: 640px) { .mobile-stepper { display: flex; position: static; } }
 
     /* Section / Step Views */
     .section { display: none; padding: 24px 16px 40px; max-width: 900px; margin: 0 auto; width: 100%; }
