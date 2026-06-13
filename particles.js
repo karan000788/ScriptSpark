@@ -5,6 +5,7 @@
   var bgParticles = [];
   var sparkParticles = [];
   var trailParticles = [];
+  var ripples = [];
   var animId = null;
   var lastTrailTime = 0;
 
@@ -33,16 +34,16 @@
 
   /* ── Background floating dust ─────────────────────────── */
   function initBgParticles(count) {
-    count = count || 40;
+    count = count || 60;
     bgParticles = [];
     for (var i = 0; i < count; i++) {
       bgParticles.push({
         x: Math.random() * w,
         y: Math.random() * h,
-        r: Math.random() * 2 + 0.5,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        o: Math.random() * 0.3 + 0.05,
+        r: Math.random() * 2.5 + 0.5,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        o: Math.random() * 0.35 + 0.05,
         color: ['rgba(139,92,246,', 'rgba(59,130,246,', 'rgba(0,255,255,'][Math.floor(Math.random() * 3)]
       });
     }
@@ -72,40 +73,46 @@
 
   /* ── Spark burst / hover particles ────────────────────── */
   function emitSparks(x, y, count, isBurst) {
-    count = count || (isBurst ? 20 : 4);
-    var colors = ['#8B5CF6', '#6D28D9', '#3B82F6', '#06B6D4', '#C084FC'];
+    count = count || (isBurst ? 30 : 4);
+    var colors;
+    if (isBurst) {
+      colors = ['#8B5CF6', '#6D28D9', '#3B82F6', '#06B6D4', '#C084FC', '#A78BFA', '#FFFFFF'];
+      count = Math.max(count, 25);
+    } else {
+      colors = ['#8B5CF6', '#6D28D9', '#3B82F6', '#06B6D4', '#C084FC'];
+    }
     for (var i = 0; i < count; i++) {
       var angle = Math.random() * Math.PI * 2;
-      var speed = isBurst ? (Math.random() * 4 + 1) : (Math.random() * 1.5 + 0.3);
+      var speed = isBurst ? (Math.random() * 6 + 1.5) : (Math.random() * 1.5 + 0.3);
       sparkParticles.push({
-        x: x + (Math.random() - 0.5) * 6,
-        y: y + (Math.random() - 0.5) * 6,
+        x: x + (Math.random() - 0.5) * 8,
+        y: y + (Math.random() - 0.5) * 8,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        r: isBurst ? (Math.random() * 2.5 + 0.8) : (Math.random() * 1.5 + 0.5),
+        r: isBurst ? (Math.random() * 3 + 1) : (Math.random() * 1.5 + 0.5),
         life: 1,
-        decay: isBurst ? (Math.random() * 0.02 + 0.01) : (Math.random() * 0.04 + 0.02),
+        decay: isBurst ? (Math.random() * 0.018 + 0.008) : (Math.random() * 0.04 + 0.02),
         color: colors[Math.floor(Math.random() * colors.length)],
-        gravity: isBurst ? 0.02 : 0
+        gravity: isBurst ? 0.025 : 0
       });
     }
   }
 
   function emitCelebration(x, y) {
-    var colors = ['#8B5CF6', '#3B82F6', '#06B6D4', '#C084FC', '#A78BFA'];
-    for (var i = 0; i < 40; i++) {
+    var colors = ['#8B5CF6', '#3B82F6', '#06B6D4', '#C084FC', '#A78BFA', '#FFFFFF'];
+    for (var i = 0; i < 60; i++) {
       var angle = Math.random() * Math.PI * 2;
-      var speed = Math.random() * 5 + 1;
+      var speed = Math.random() * 7 + 1.5;
       sparkParticles.push({
-        x: x + (Math.random() - 0.5) * 20,
-        y: y + (Math.random() - 0.5) * 20,
+        x: x + (Math.random() - 0.5) * 30,
+        y: y + (Math.random() - 0.5) * 30,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 2,
-        r: Math.random() * 3 + 1,
+        vy: Math.sin(angle) * speed - 2.5,
+        r: Math.random() * 3.5 + 1,
         life: 1,
-        decay: Math.random() * 0.015 + 0.005,
+        decay: Math.random() * 0.012 + 0.004,
         color: colors[Math.floor(Math.random() * colors.length)],
-        gravity: 0.03
+        gravity: 0.035
       });
     }
   }
@@ -126,8 +133,16 @@
   function drawSparks() {
     for (var i = 0; i < sparkParticles.length; i++) {
       var p = sparkParticles[i];
+      var radius = p.r * p.life;
+      /* Glow */
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, radius * 3, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.life * 0.12;
+      ctx.fill();
+      /* Core */
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
       ctx.fillStyle = p.color;
       ctx.globalAlpha = p.life;
       ctx.fill();
@@ -193,6 +208,42 @@
     }
   }
 
+  /* ── Ripple ring effect (tap impact) ──────────────────── */
+  function addRipple(x, y) {
+    ripples.push({
+      x: x, y: y,
+      r: 5,
+      maxR: Math.max(w, h) * 0.4,
+      life: 1,
+      decay: 0.025
+    });
+  }
+
+  function updateRipples() {
+    for (var i = ripples.length - 1; i >= 0; i--) {
+      var r = ripples[i];
+      r.r += (r.maxR - r.r) * 0.12;
+      r.life -= r.decay;
+      if (r.life <= 0) ripples.splice(i, 1);
+    }
+  }
+
+  function drawRipples() {
+    for (var i = 0; i < ripples.length; i++) {
+      var r = ripples[i];
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(139,92,246,' + (r.life * 0.3) + ')';
+      ctx.lineWidth = 2 * r.life;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.r * 0.7, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(6,182,212,' + (r.life * 0.15) + ')';
+      ctx.lineWidth = 1 * r.life;
+      ctx.stroke();
+    }
+  }
+
   /* ── Main loop ────────────────────────────────────────── */
   function loop() {
     ctx.clearRect(0, 0, w, h);
@@ -202,6 +253,8 @@
     drawSparks();
     updateTrail();
     drawTrail();
+    updateRipples();
+    drawRipples();
     animId = requestAnimationFrame(loop);
   }
 
@@ -231,13 +284,10 @@
     });
 
     document.addEventListener('click', function (e) {
-      var target = e.target.closest('button, a, [role="button"], .niche-card, .idea-card');
-      if (target) {
-        var rect = target.getBoundingClientRect();
-        var cx = rect.left + rect.width / 2;
-        var cy = rect.top + rect.height / 2;
-        emitSparks(cx, cy, 16, true);
-      }
+      var x = e.clientX;
+      var y = e.clientY;
+      emitSparks(x, y, 20, true);
+      addRipple(x, y);
     });
 
     document.addEventListener('particleCelebrate', function (e) {
@@ -262,6 +312,14 @@
     document.addEventListener('touchmove', function (e) {
       var touch = e.touches[0];
       if (touch) addTrailParticle(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    document.addEventListener('touchstart', function (e) {
+      var touch = e.touches[0];
+      if (touch) {
+        emitSparks(touch.clientX, touch.clientY, 25, true);
+        addRipple(touch.clientX, touch.clientY);
+      }
     }, { passive: true });
   }
 

@@ -6,6 +6,11 @@
 (function () {
   'use strict';
 
+  const DEBUG = true;
+  function dbg(...args) {
+    if (DEBUG) console.log('[App]', ...args);
+  }
+
   /* ── State ──────────────────────────────────────────────── */
   const state = {
     niche: '',
@@ -321,27 +326,96 @@
   });
 
   /* ── STEP 4: Thumbnail (Puter.js) ────────────────────────── */
+  function extractImageUrl(response) {
+    dbg('Puter raw response type:', typeof response, response);
+
+    if (!response) return null;
+
+    /* Direct HTMLImageElement */
+    if (response instanceof HTMLImageElement) {
+      dbg('Response is HTMLImageElement, src:', response.src);
+      return response.src;
+    }
+
+    /* Object with src/url/image_url */
+    if (typeof response === 'object') {
+      if (response.src) { dbg('Extracted src:', response.src); return response.src; }
+      if (response.url) { dbg('Extracted url:', response.url); return response.url; }
+      if (response.image_url) { dbg('Extracted image_url:', response.image_url); return response.image_url; }
+
+      /* Try toString */
+      var str = String(response);
+      if (str.startsWith('http')) { dbg('Extracted via toString:', str); return str; }
+    }
+
+    /* Plain string URL */
+    if (typeof response === 'string') {
+      if (response.startsWith('http') || response.startsWith('data:')) {
+        dbg('Response is string URL:', response);
+        return response;
+      }
+    }
+
+    dbg('Could not extract image URL from:', response);
+    return null;
+  }
+
   async function generateThumbnail(topic, niche) {
     var container = $('thumbnailContainer');
     container.innerHTML = thumbnailSkeletonHTML;
     if (window.Animations) Animations.showLoading([
       'Generating Image Prompt...',
-      'Opening Puter Sign-In...',
+      'Signing in to Puter...',
       'Creating Thumbnail...'
-    ], 5000);
+    ], 8000);
     if (window.Sound) Sound.click();
     try {
       var promptResponse = await withTimeout(Pipeline.generateImagePrompt(topic, niche), 15000);
       var imagePrompt = (promptResponse || '').trim() + ', YouTube thumbnail style, 16:9, high contrast, dramatic';
+      dbg('Image prompt:', imagePrompt);
 
-      if (typeof puter === 'undefined') throw new Error('Puter.js not loaded. Check your internet connection.');
+      if (typeof puter === 'undefined') {
+        throw new Error('Puter.js SDK not loaded. Check your internet connection or ad blocker.');
+      }
 
       var statusEl = document.querySelector('.loading-status');
-      if (statusEl) statusEl.textContent = 'Opening Puter sign-in...';
-      /* Small delay for the popup to appear */
-      await new Promise(function (r) { setTimeout(r, 500); });
 
-      var img = await withTimeout(puter.ai.txt2img(imagePrompt), 60000);
+      /* Sign in first (opens popup if needed) */
+      if (statusEl) statusEl.textContent = 'Signing in to Puter...';
+      var signedIn = false;
+      try {
+        var user = await withTimeout(puter.signIn(), 30000);
+        signedIn = !!user;
+        dbg('Puter sign-in result:', user);
+      } catch (signInErr) {
+        dbg('Puter sign-in error:', signInErr);
+        /* Continue anyway — txt2img may trigger its own sign-in */
+      }
+
+      if (!signedIn) {
+        dbg('Puter sign-in not detected, proceeding with txt2img anyway');
+      }
+
+      if (statusEl) statusEl.textContent = 'Creating thumbnail...';
+
+      var puterResponse;
+      try {
+        puterResponse = await withTimeout(puter.ai.txt2img(imagePrompt), 60000);
+      } catch (puterErr) {
+        dbg('Puter call error:', puterErr);
+        if (statusEl) statusEl.textContent = 'Retrying...';
+        await new Promise(function (r) { setTimeout(r, 1000); });
+        puterResponse = await withTimeout(puter.ai.txt2img(imagePrompt), 60000);
+      }
+
+      dbg('Puter response:', puterResponse);
+
+      var imageUrl = extractImageUrl(puterResponse);
+      dbg('Extracted image URL:', imageUrl);
+
+      if (!imageUrl) {
+        throw new Error('Puter returned an unexpected response. Try again.');
+      }
 
       if (window.Animations) Animations.hideLoading();
       if (window.Sound) Sound.chime();
@@ -355,12 +429,26 @@
         '</div>';
 
       var wrap = $('thumbImgWrap');
+      var img = document.createElement('img');
       img.className = 'thumbnail-image';
       img.id = 'thumbnail-img';
       img.alt = 'AI Generated Thumbnail';
-      wrap.appendChild(img);
+      img.crossOrigin = 'anonymous';
+      img.src = imageUrl;
 
-      window.currentThumbnailSrc = img.src;
+      img.onerror = function () {
+        dbg('Image load error for:', imageUrl);
+        showErrorCard(container, 'Image loaded but could not display. URL may be blocked by CSP. Try regenerating.', function () {
+          generateThumbnail(topic, niche);
+        });
+      };
+
+      img.onload = function () {
+        dbg('Image loaded successfully:', imageUrl);
+      };
+
+      wrap.appendChild(img);
+      window.currentThumbnailSrc = imageUrl;
 
       $('download-btn').addEventListener('click', function () {
         if (!window.currentThumbnailSrc) return;
@@ -377,15 +465,54 @@
     } catch (err) {
       if (window.Animations) Animations.hideLoading();
       console.error('Thumbnail error:', err);
-      var msg = 'Something went wrong.';
+      dbg('Full error:', err.message, err.stack);
+
+      var msg = err.message || 'Unknown error.';
+      var promptText = '';
+
+      /* Try to get the prompt even if image failed */
+      try {
+        promptText = await Pipeline.generateImagePrompt(topic, niche);
+      } catch (_) { /* ignore */ }
+
       if (err.message && err.message.includes('timed out')) {
-        msg = 'The Puter sign-in popup may have been blocked or took too long. Please allow popups for this site and try again.';
+        msg = 'Puter took too long. The sign-in popup may be blank or blocked. Please allow popups, disable ad blockers, and try again.';
       } else if (err.message && err.message.includes('Puter.js')) {
         msg = err.message;
+      } else if (err.message && err.message.includes('extract image URL') || err.message.includes('unexpected response')) {
+        msg = 'Puter returned an unexpected response. The service may be down. Try again later.';
+      } else if (err.message && err.message.includes('CSP')) {
+        msg = 'Image blocked by Content Security Policy. Trying alternative method...';
+      } else if (err.message && err.message.includes('signIn')) {
+        msg = 'Puter sign-in failed. The popup may be blocked. Please allow popups for this site.';
+      } else if (err.message && err.message.includes('NetworkError') || err.message.includes('Failed to fetch')) {
+        msg = 'Network error. Check your internet connection and try again.';
       }
-      showErrorCard(container, msg, function () {
+
+      /* Show error with prompt fallback */
+      container.innerHTML =
+        '<div class="error-card">' +
+        '<div style="font-size:28px; margin-bottom:8px;">&#9888;&#65039;</div>' +
+        '<p style="font-size:0.9rem; margin-bottom:12px;">' + msg + '</p>' +
+        (promptText ? '<div style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:12px; text-align:left;"><div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Generated prompt (use manually):</div><div style="font-size:0.8rem; color:var(--text-dim); word-break:break-word;">' + promptText + '</div></div>' : '') +
+        '<div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">' +
+        (promptText ? '<button class="btn-ghost btn-sm" id="copyPromptBtn">Copy Prompt</button>' : '') +
+        '<button class="retry-btn" id="retryThumbBtn">Try Again</button>' +
+        '</div>' +
+        '</div>';
+
+      var retryBtn = document.getElementById('retryThumbBtn');
+      if (retryBtn) retryBtn.addEventListener('click', function () {
         generateThumbnail(topic, niche);
       });
+
+      var copyBtn = document.getElementById('copyPromptBtn');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+          navigator.clipboard.writeText(promptText);
+          showToast('Prompt copied to clipboard!');
+        });
+      }
     }
   }
 
