@@ -14,6 +14,10 @@
     * { cursor: none !important; }
     #cursor-main { width:40px; height:40px; position:fixed; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); background-image:url('https://cdn.custom-cursor.com/db/7600/32/stain-of-paint-cursor.png'); background-size:contain; background-repeat:no-repeat; background-position:center; transition:transform 0.1s ease; }
     #cursor-pointer { width:40px; height:40px; position:fixed; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); background-image:url('https://cdn.custom-cursor.com/db/7599/32/stain-of-paint-pointer.png'); background-size:contain; background-repeat:no-repeat; background-position:center; display:none; }
+    button, a, [role="button"] { position: relative; }
+    button::before, a::before, [role="button"]::before {
+      content: ''; position: absolute; inset: -15px; border-radius: inherit;
+    }
   </style>
 </head>
 <body>
@@ -208,6 +212,14 @@
     })();
   </script>
   <script src="wallpaper.js"></script>
+  <script src="particles.js"></script>
+  <script src="animations.js"></script>
+  <script>
+    (function(){
+      if (window.Particles) Particles.start();
+      if (window.Animations) Animations.init();
+    })();
+  </script>
   <script>
     (function(){
       var cursorMain = document.getElementById('cursor-main');

@@ -283,7 +283,13 @@
 
     /* ── Content z-index ─────────────────────────────────────── */
     .app-wrapper, .navbar, .stepper, .mobile-stepper, .section,
-    footer, .modal-backdrop, .toast { position: relative; z-index: 1; }
+    footer, .toast { position: relative; z-index: 1; }
+
+    /* ── Cursor hit area expansion ─────────────────────────────── */
+    button, a, [role="button"] { position: relative; }
+    button::before, a::before, [role="button"]::before {
+      content: ''; position: absolute; inset: -15px; border-radius: inherit;
+    }
   </style>
 </head>
 <body>
@@ -420,6 +426,10 @@
         <div style="display:flex; gap:6px;"><input type="password" id="groqKey" placeholder="gsk_..." autocomplete="off" /><button class="btn-ghost btn-sm" id="toggleGroqKey" title="Show/hide">Show</button></div>
         <p class="modal-hint" style="margin-top:6px;">Get your free key at <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a></p>
         <hr />
+        <h3>Sound</h3>
+        <button class="sound-toggle" id="soundToggle">&#9835; Sound Effects</button>
+        <p class="modal-hint" style="margin-top:6px;">Subtle audio feedback for interactions. Muted by default.</p>
+        <hr />
         <h3>Language</h3>
         <label class="field-label" for="langSelect">Script language</label>
         <select id="langSelect"><option value="en">English</option><option value="hi">Hindi</option></select>
@@ -445,6 +455,9 @@
   </div>
 
   <script src="pipeline.js"></script>
+  <script src="particles.js"></script>
+  <script src="animations.js"></script>
+  <script src="sound.js"></script>
   <script src="script.js"></script>
   <script>
     (function(){
@@ -533,47 +546,98 @@
       });
 
       /* ── Custom Cursor ────────────────────────────────────── */
-      var cursorMain = document.getElementById('cursor-main');
-      var cursorPointer = document.getElementById('cursor-pointer');
-      if(cursorMain && cursorPointer){
-        document.addEventListener('mousemove', function(e){
-          cursorMain.style.left = e.clientX + 'px';
-          cursorMain.style.top = e.clientY + 'px';
-          cursorPointer.style.left = e.clientX + 'px';
-          cursorPointer.style.top = e.clientY + 'px';
-        });
-        document.addEventListener('mouseleave', function(){
-          cursorMain.style.display = 'none';
-          cursorPointer.style.display = 'none';
-        });
-        document.addEventListener('mouseenter', function(){
-          cursorMain.style.display = 'block';
-          cursorPointer.style.display = 'none';
-        });
-        var hoverTargets = 'button, a, .niche-card, [role="button"], input, select, textarea, label';
-        document.querySelectorAll(hoverTargets).forEach(function(el){
-          el.addEventListener('mouseenter', function(){
-            cursorMain.style.display = 'none';
-            cursorPointer.style.display = 'block';
+      (function(){
+        var cursorMain = document.getElementById('cursor-main');
+        var cursorPointer = document.getElementById('cursor-pointer');
+        if(cursorMain && cursorPointer){
+          document.addEventListener('mousemove', function(e){
+            cursorMain.style.left = e.clientX + 'px';
+            cursorMain.style.top = e.clientY + 'px';
+            cursorPointer.style.left = e.clientX + 'px';
+            cursorPointer.style.top = e.clientY + 'px';
           });
-          el.addEventListener('mouseleave', function(){
+          document.addEventListener('mouseleave', function(){
+            cursorMain.style.display = 'none';
+            cursorPointer.style.display = 'none';
+          });
+          document.addEventListener('mouseenter', function(){
             cursorMain.style.display = 'block';
             cursorPointer.style.display = 'none';
           });
-        });
-        document.addEventListener('mousedown', function(){
-          cursorMain.style.transform = 'translate(-50%, -50%) scale(0.85)';
-          cursorPointer.style.transform = 'translate(-50%, -50%) scale(0.85)';
-        });
-        document.addEventListener('mouseup', function(){
-          cursorMain.style.transform = 'translate(-50%, -50%) scale(1)';
-          cursorPointer.style.transform = 'translate(-50%, -50%) scale(1)';
+          var hoverTargets = 'button, a, .niche-card, [role="button"], input, select, textarea, label';
+          document.querySelectorAll(hoverTargets).forEach(function(el){
+            el.addEventListener('mouseenter', function(){
+              cursorMain.style.display = 'none';
+              cursorPointer.style.display = 'block';
+            });
+            el.addEventListener('mouseleave', function(){
+              cursorMain.style.display = 'block';
+              cursorPointer.style.display = 'none';
+            });
+          });
+          document.addEventListener('mousedown', function(){
+            cursorMain.style.transform = 'translate(-50%, -50%) scale(0.85)';
+            cursorPointer.style.transform = 'translate(-50%, -50%) scale(0.85)';
+          });
+          document.addEventListener('mouseup', function(){
+            cursorMain.style.transform = 'translate(-50%, -50%) scale(1)';
+            cursorPointer.style.transform = 'translate(-50%, -50%) scale(1)';
+          });
+        }
+      })();
+
+      /* ── Init particles, sound, animations ──────────────── */
+      if (window.Particles) Particles.start();
+
+      if (window.Animations) {
+        Animations.init();
+        Animations.initCardTilt('.niche-card, .idea-card, .feat-card, .trust-card');
+      }
+
+      /* ── Sound toggle in settings ───────────────────────── */
+      var soundToggle = document.getElementById('soundToggle');
+      if (soundToggle && window.Sound) {
+        var soundPref = localStorage.getItem('ss-sound') === 'on';
+        Sound.setEnabled(soundPref);
+        if (soundPref) soundToggle.classList.add('active');
+
+        soundToggle.addEventListener('click', function () {
+          var on = !Sound.isEnabled();
+          Sound.setEnabled(on);
+          localStorage.setItem('ss-sound', on ? 'on' : 'off');
+          this.classList.toggle('active');
+          if (on) Sound.click();
         });
       }
 
-      /* ── Button Ripple ────────────────────────────────────── */
+      /* ── Celebrate events ───────────────────────────────── */
+      document.addEventListener('scriptGenerated', function () {
+        if (window.Sound) Sound.success();
+        if (window.Particles) {
+          Particles.emitCelebration(window.innerWidth / 2, window.innerHeight / 2);
+        }
+        document.querySelector('.celebrate-flash') && setTimeout(function () {
+          var el = document.querySelector('.celebrate-flash');
+          el && el.classList.remove('celebrate-flash');
+        }, 800);
+      });
+
+      document.addEventListener('thumbnailGenerated', function () {
+        if (window.Sound) Sound.chime();
+        if (window.Particles) {
+          Particles.emitCelebration(window.innerWidth / 2, window.innerHeight / 2);
+        }
+      });
+
+      /* ── Hook loading overlay into fetch functions ───────── */
+      var origFetchIdeas = window._origFetchIdeas;
+      var origFetchScript = window._origFetchScript;
+      var origGenerateThumb = window._origGenerateThumb;
+
+      /* ── Button Ripple ───────────────────────────────────── */
       document.querySelectorAll('button').forEach(function(btn){
         btn.addEventListener('click', function(e){
+          if (window.Sound) Sound.click();
           var rect = this.getBoundingClientRect();
           var size = Math.max(rect.width, rect.height);
           var ripple = document.createElement('span');

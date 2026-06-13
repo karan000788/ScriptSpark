@@ -254,12 +254,18 @@
   async function fetchIdeas(niche) {
     var container = $('ideasContainer');
     container.innerHTML = ideasSkeletonHTML;
+    if (window.Animations) Animations.showLoading(undefined, 3000);
+    if (window.Sound) Sound.click();
     try {
       var ideas = await withTimeout(Pipeline.generateIdeas(niche), 15000);
       state.ideas = ideas;
       saveProject();
       renderIdeas(ideas);
+      if (window.Animations) Animations.hideLoading();
+      if (window.Sound) Sound.success();
+      document.dispatchEvent(new CustomEvent('scriptGenerated'));
     } catch (err) {
+      if (window.Animations) Animations.hideLoading();
       showErrorCard(container, 'Something went wrong. Please try again.', function () { fetchIdeas(niche); });
     }
   }
@@ -272,25 +278,38 @@
   function renderScript(script) {
     var container = $('scriptContainer');
     var wordCount = script.wordCount || (script.script ? script.script.split(/\s+/).length : 0);
+    var scriptText = script.script || '';
+    var paragraphs = scriptText.split('\n').filter(function (p) { return p.trim(); });
     container.innerHTML =
       '<div class="script-title-display">' + (script.title || 'Untitled') + '</div>' +
       '<div class="script-meta">' + wordCount + ' words &middot; ' + state.niche + '</div>' +
-      '<div class="script-body">' + (script.script || '') + '</div>' +
+      '<div class="script-body script-typewriter" id="scriptBody"></div>' +
       '<div class="script-actions">' +
       '<button class="btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.querySelector(\'.script-body\').textContent); showToast(\'Copied!\')">Copy Script</button>' +
       '<button class="btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.querySelector(\'.script-title-display\').textContent); showToast(\'Title copied!\')">Copy Title</button>' +
       '</div>';
+    if (window.Animations && window.Animations.revealParagraphs) {
+      Animations.revealParagraphs($('scriptBody'), paragraphs, 60);
+    } else {
+      $('scriptBody').textContent = scriptText;
+    }
   }
 
   async function fetchScript(topic, niche) {
     var container = $('scriptContainer');
     container.innerHTML = scriptSkeletonHTML;
+    if (window.Animations) Animations.showLoading(undefined, 5000);
+    if (window.Sound) Sound.click();
     try {
       var script = await withTimeout(Pipeline.generateScript(topic, niche), 15000);
       state.script = script;
       saveProject();
       renderScript(script);
+      if (window.Animations) Animations.hideLoading();
+      if (window.Sound) Sound.success();
+      document.dispatchEvent(new CustomEvent('scriptGenerated'));
     } catch (err) {
+      if (window.Animations) Animations.hideLoading();
       showErrorCard(container, 'Something went wrong. Please try again.', function () { fetchScript(topic, niche); });
     }
   }
@@ -305,6 +324,8 @@
   async function generateThumbnail(topic, niche) {
     var container = $('thumbnailContainer');
     container.innerHTML = thumbnailSkeletonHTML;
+    if (window.Animations) Animations.showLoading(undefined, 6000);
+    if (window.Sound) Sound.click();
     try {
       var promptResponse = await withTimeout(Pipeline.generateImagePrompt(topic, niche), 15000);
       var imagePrompt = (promptResponse || '').trim() + ', YouTube thumbnail style, 16:9, high contrast, dramatic';
@@ -312,6 +333,10 @@
       if (typeof puter === 'undefined') throw new Error('Puter.js not loaded. Check your internet connection.');
 
       var img = await puter.ai.txt2img(imagePrompt);
+
+      if (window.Animations) Animations.hideLoading();
+      if (window.Sound) Sound.chime();
+      document.dispatchEvent(new CustomEvent('thumbnailGenerated'));
 
       container.innerHTML =
         '<div class="thumbnail-img-wrap" id="thumbImgWrap"></div>' +
@@ -341,6 +366,7 @@
       });
 
     } catch (err) {
+      if (window.Animations) Animations.hideLoading();
       console.error('Thumbnail error:', err);
       showErrorCard(container, 'Something went wrong. Please try again.', function () {
         generateThumbnail(topic, niche);

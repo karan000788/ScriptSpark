@@ -336,6 +336,10 @@
     * { cursor: none !important; }
     #cursor-main { width:40px; height:40px; position:fixed; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); background-image:url('https://cdn.custom-cursor.com/db/7600/32/stain-of-paint-cursor.png'); background-size:contain; background-repeat:no-repeat; background-position:center; transition:transform 0.1s ease; }
     #cursor-pointer { width:40px; height:40px; position:fixed; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); background-image:url('https://cdn.custom-cursor.com/db/7599/32/stain-of-paint-pointer.png'); background-size:contain; background-repeat:no-repeat; background-position:center; display:none; }
+    button, a, [role="button"] { position: relative; }
+    button::before, a::before, [role="button"]::before {
+      content: ''; position: absolute; inset: -15px; border-radius: inherit;
+    }
   </style>
 </head>
 <body>
@@ -397,11 +401,11 @@
   </section>
 
   <!-- TRUST -->
-  <section class="section" id="trust">
+  <section class="section reveal" id="trust">
     <h2 class="section-title">Built on Transparency</h2>
     <p class="section-sub">No hidden claims. No misleading metrics. Just a tool that works.</p>
     <div class="trust-grid">
-      <div class="trust-card">
+      <div class="trust-card reveal">
         <div class="trust-icon">&#128274;</div>
         <h3>100% Private</h3>
         <p>Your API key and content stay on your device. Nothing is sent to our servers, ever.</p>
@@ -435,7 +439,7 @@
   </section>
 
   <!-- HOW IT WORKS -->
-  <section class="section section-alt" id="how-it-works">
+  <section class="section section-alt reveal" id="how-it-works">
     <h2 class="section-title">How It Works</h2>
     <p class="section-sub">From niche to downloadable script and thumbnail in 4 simple steps.</p>
     <div class="workflow">
@@ -466,7 +470,7 @@
   </section>
 
   <!-- FEATURES -->
-  <section class="section" id="features">
+  <section class="section reveal" id="features">
     <h2 class="section-title">Everything You Need</h2>
     <p class="section-sub">A focused AI tool for YouTube scripts and thumbnails.</p>
     <div class="feat-grid">
@@ -533,61 +537,57 @@
   </footer>
 
   <script src="wallpaper.js"></script>
+  <script src="particles.js"></script>
+  <script src="animations.js"></script>
   <script>
     (function(){
-      var observer = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-          if (entry.isIntersecting) {
-            entry.target.style.animation = 'fadeUp 0.5s ease forwards';
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.1 });
-      document.querySelectorAll('.feat-card, .wf-step, .trust-card').forEach(function(el) {
-        el.style.opacity = '0';
-        observer.observe(el);
-      });
-    })();
-  </script>
-  <script>
-    (function(){
-      var cursorMain = document.getElementById('cursor-main');
-      var cursorPointer = document.getElementById('cursor-pointer');
-      if(cursorMain && cursorPointer){
-        document.addEventListener('mousemove', function(e){
-          cursorMain.style.left = e.clientX + 'px';
-          cursorMain.style.top = e.clientY + 'px';
-          cursorPointer.style.left = e.clientX + 'px';
-          cursorPointer.style.top = e.clientY + 'px';
-        });
-        document.addEventListener('mouseleave', function(){
-          cursorMain.style.display = 'none';
-          cursorPointer.style.display = 'none';
-        });
-        document.addEventListener('mouseenter', function(){
-          cursorMain.style.display = 'block';
-          cursorPointer.style.display = 'none';
-        });
-        var hoverTargets = 'button, a, [role="button"], input, select, textarea, label';
-        document.querySelectorAll(hoverTargets).forEach(function(el){
-          el.addEventListener('mouseenter', function(){
-            cursorMain.style.display = 'none';
-            cursorPointer.style.display = 'block';
+      if (window.Particles) Particles.start();
+      if (window.Animations) {
+        Animations.init();
+        Animations.initCardTilt('.feat-card, .trust-card');
+        setTimeout(function(){ Animations.staggerReveal('.feat-card, .trust-card, .wf-step', 60); }, 1000);
+      }
+
+      /* ── Custom Cursor ────────────────────────────────────── */
+      (function(){
+        var cursorMain = document.getElementById('cursor-main');
+        var cursorPointer = document.getElementById('cursor-pointer');
+        if(cursorMain && cursorPointer){
+          document.addEventListener('mousemove', function(e){
+            cursorMain.style.left = e.clientX + 'px';
+            cursorMain.style.top = e.clientY + 'px';
+            cursorPointer.style.left = e.clientX + 'px';
+            cursorPointer.style.top = e.clientY + 'px';
           });
-          el.addEventListener('mouseleave', function(){
+          document.addEventListener('mouseleave', function(){
+            cursorMain.style.display = 'none';
+            cursorPointer.style.display = 'none';
+          });
+          document.addEventListener('mouseenter', function(){
             cursorMain.style.display = 'block';
             cursorPointer.style.display = 'none';
           });
-        });
-        document.addEventListener('mousedown', function(){
-          cursorMain.style.transform = 'translate(-50%, -50%) scale(0.85)';
-          cursorPointer.style.transform = 'translate(-50%, -50%) scale(0.85)';
-        });
-        document.addEventListener('mouseup', function(){
-          cursorMain.style.transform = 'translate(-50%, -50%) scale(1)';
-          cursorPointer.style.transform = 'translate(-50%, -50%) scale(1)';
-        });
-      }
+          var hoverTargets = 'button, a, [role="button"], input, select, textarea, label';
+          document.querySelectorAll(hoverTargets).forEach(function(el){
+            el.addEventListener('mouseenter', function(){
+              cursorMain.style.display = 'none';
+              cursorPointer.style.display = 'block';
+            });
+            el.addEventListener('mouseleave', function(){
+              cursorMain.style.display = 'block';
+              cursorPointer.style.display = 'none';
+            });
+          });
+          document.addEventListener('mousedown', function(){
+            cursorMain.style.transform = 'translate(-50%, -50%) scale(0.85)';
+            cursorPointer.style.transform = 'translate(-50%, -50%) scale(0.85)';
+          });
+          document.addEventListener('mouseup', function(){
+            cursorMain.style.transform = 'translate(-50%, -50%) scale(1)';
+            cursorPointer.style.transform = 'translate(-50%, -50%) scale(1)';
+          });
+        }
+      })();
     })();
   </script>
 </body>
