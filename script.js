@@ -324,7 +324,11 @@
   async function generateThumbnail(topic, niche) {
     var container = $('thumbnailContainer');
     container.innerHTML = thumbnailSkeletonHTML;
-    if (window.Animations) Animations.showLoading(undefined, 6000);
+    if (window.Animations) Animations.showLoading([
+      'Generating Image Prompt...',
+      'Opening Puter Sign-In...',
+      'Creating Thumbnail...'
+    ], 5000);
     if (window.Sound) Sound.click();
     try {
       var promptResponse = await withTimeout(Pipeline.generateImagePrompt(topic, niche), 15000);
@@ -332,7 +336,12 @@
 
       if (typeof puter === 'undefined') throw new Error('Puter.js not loaded. Check your internet connection.');
 
-      var img = await puter.ai.txt2img(imagePrompt);
+      var statusEl = document.querySelector('.loading-status');
+      if (statusEl) statusEl.textContent = 'Opening Puter sign-in...';
+      /* Small delay for the popup to appear */
+      await new Promise(function (r) { setTimeout(r, 500); });
+
+      var img = await withTimeout(puter.ai.txt2img(imagePrompt), 60000);
 
       if (window.Animations) Animations.hideLoading();
       if (window.Sound) Sound.chime();
@@ -368,7 +377,13 @@
     } catch (err) {
       if (window.Animations) Animations.hideLoading();
       console.error('Thumbnail error:', err);
-      showErrorCard(container, 'Something went wrong. Please try again.', function () {
+      var msg = 'Something went wrong.';
+      if (err.message && err.message.includes('timed out')) {
+        msg = 'The Puter sign-in popup may have been blocked or took too long. Please allow popups for this site and try again.';
+      } else if (err.message && err.message.includes('Puter.js')) {
+        msg = err.message;
+      }
+      showErrorCard(container, msg, function () {
         generateThumbnail(topic, niche);
       });
     }
