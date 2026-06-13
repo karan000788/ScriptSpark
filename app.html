@@ -468,21 +468,23 @@
       /* ── Hamburger ────────────────────────────────────────── */
       var btn = document.getElementById('hamburgerBtn');
       var nav = document.getElementById('navbarActions');
-      function toggleMenu(e) {
-        e.preventDefault();
-        var open = nav.classList.toggle('open');
-        btn.classList.toggle('open');
-        btn.setAttribute('aria-expanded', open);
-      }
       if(btn && nav){
-        btn.addEventListener('click', toggleMenu);
-        btn.addEventListener('touchstart', toggleMenu, { passive: true });
+        btn.addEventListener('click', function(e){
+          var open = nav.classList.toggle('open');
+          btn.classList.toggle('open');
+          btn.setAttribute('aria-expanded', open);
+        });
         nav.querySelectorAll('a, button').forEach(function(el){
           el.addEventListener('click', function(){
             nav.classList.remove('open');
             btn.classList.remove('open');
             btn.setAttribute('aria-expanded','false');
           });
+          el.addEventListener('touchstart', function(){
+            nav.classList.remove('open');
+            btn.classList.remove('open');
+            btn.setAttribute('aria-expanded','false');
+          }, { passive: true });
         });
       }
 

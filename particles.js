@@ -213,7 +213,7 @@
     ripples.push({
       x: x, y: y,
       r: 5,
-      maxR: Math.max(w, h) * 0.4,
+      maxR: Math.max(w, h) * 0.5,
       life: 1,
       decay: 0.025
     });
@@ -286,7 +286,7 @@
     document.addEventListener('click', function (e) {
       var x = e.clientX;
       var y = e.clientY;
-      emitSparks(x, y, 20, true);
+      emitSparks(x, y, 30, true);
       addRipple(x, y);
     });
 
@@ -317,7 +317,7 @@
     document.addEventListener('touchstart', function (e) {
       var touch = e.touches[0];
       if (touch) {
-        emitSparks(touch.clientX, touch.clientY, 25, true);
+        emitSparks(touch.clientX, touch.clientY, 30, true);
         addRipple(touch.clientX, touch.clientY);
       }
     }, { passive: true });
