@@ -10,12 +10,12 @@
   <meta http-equiv="Permissions-Policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()" />
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' 'unsafe-inline';
+    script-src 'self' 'unsafe-inline' https://js.puter.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com data:;
-    img-src 'self' data: blob: https://image.pollinations.ai;
+    img-src 'self' data: blob: https://cdn.custom-cursor.com;
     media-src 'self' blob:;
-    connect-src 'self' https://api.groq.com https://image.pollinations.ai;
+    connect-src 'self' https://api.groq.com https://api.puter.com https://auth.puter.com;
     frame-ancestors 'none';
     base-uri 'self';
     form-action 'self';
@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="wallpaper.css" />
+  <script src="https://js.puter.com/v2/"></script>
   <style>
     .app-wrapper { min-height: 100vh; display: flex; flex-direction: column; }
 
@@ -53,8 +53,7 @@
     /* Section / Step Views */
     .section { display: none; padding: 24px 16px 40px; max-width: 900px; margin: 0 auto; width: 100%; }
 
-    .section.active { display: block; animation: sectionIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-    @keyframes sectionIn { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .section.active { display: block; }
     .hero { text-align: center; margin-bottom: 32px; position: relative; }
     .hero::before { content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 400px; height: 400px; background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%); pointer-events: none; }
     .hero-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; position: relative; z-index: 1; }
@@ -90,18 +89,27 @@
     .niche-name { font-size: 0.85rem; font-weight: 600; }
     @media (max-width: 480px) { .niche-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; } .niche-card { padding: 14px 8px; } .niche-icon { font-size: 1.5rem; } .niche-name { font-size: 0.75rem; } }
 
-    /* Skeleton */
-    .skeleton-wrap { display: flex; flex-direction: column; gap: 12px; max-width: 720px; margin: 0 auto; }
-    .skeleton-card { padding: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); animation: skeletonIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-    .skeleton-card:nth-child(2) { animation-delay: 0.08s; }
-    .skeleton-card:nth-child(3) { animation-delay: 0.16s; }
-    @keyframes skeletonIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-    .skeleton-line { height: 14px; border-radius: 7px; background: linear-gradient(90deg, var(--bg-input) 25%, rgba(139,92,246,0.06) 50%, var(--bg-input) 75%); background-size: 200% 100%; animation: shimmer 1.8s ease-in-out infinite; }
-    .skeleton-line.w60 { width: 60%; }
-    .skeleton-line.w80 { width: 80%; }
-    .skeleton-line.w40 { width: 40%; }
-    .skeleton-line.h20 { height: 20px; }
-    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    /* Skeleton & Shimmer */
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+      background-size: 1000px 100%;
+      animation: shimmer 1.5s infinite linear;
+      border-radius: 8px;
+    }
+    [data-theme="light"] .skeleton {
+      background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+      background-size: 1000px 100%;
+    }
+    .ideas-skeleton, .script-skeleton, .thumbnail-skeleton {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .thumbnail-skeleton { text-align: center; }
+    .thumbnail-skeleton > div:last-child { justify-content: center; }
 
     /* Ideas List */
     .ideas-list { display: flex; flex-direction: column; gap: 10px; }
@@ -124,7 +132,8 @@
     /* Thumbnail Display */
     .thumbnail-display { max-width: 720px; margin: 0 auto; text-align: center; }
     .thumbnail-prompt-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; text-align: left; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 16px; }
-    .thumbnail-image { width: 100%; max-width: 640px; border-radius: var(--r-lg); border: 1px solid var(--border); margin: 0 auto; display: block; }
+    .thumbnail-img-wrap { position: relative; width: 100%; max-width: 640px; margin: 0 auto; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--border); background: var(--bg-card); aspect-ratio: 16/9; }
+    .thumbnail-image { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: var(--r-lg); }
     .thumbnail-actions { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
 
     /* Error */
@@ -132,10 +141,157 @@
     .error-box .error-icon { font-size: 2rem; margin-bottom: 12px; }
     .error-box .error-msg { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 16px; }
 
+    .error-card { text-align: center; padding: 40px; border-radius: 12px; border: 1px solid #FF4444; max-width: 480px; margin: 0 auto; }
+    .error-card p { margin-bottom: 16px; color: #FF4444; }
+    .retry-btn {
+      background: var(--accent); color: #fff; border: none; padding: 12px 28px;
+      border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 150ms var(--ease);
+    }
+    .retry-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
     .mt12 { margin-top: 12px; } .mt16 { margin-top: 16px; } .mt20 { margin-top: 20px; } .text-center { text-align: center; }
+  </style>
+  <style>
+    /* ── Custom Cursor (Stain Paint) ──────────────────────────── */
+    * { cursor: none !important; }
+    #cursor-main {
+      width: 40px; height: 40px; position: fixed; pointer-events: none; z-index: 99999;
+      transform: translate(-50%, -50%);
+      background-image: url('https://cdn.custom-cursor.com/db/7600/32/stain-of-paint-cursor.png');
+      background-size: contain; background-repeat: no-repeat; background-position: center;
+      transition: transform 0.1s ease;
+    }
+    #cursor-pointer {
+      width: 40px; height: 40px; position: fixed; pointer-events: none; z-index: 99999;
+      transform: translate(-50%, -50%);
+      background-image: url('https://cdn.custom-cursor.com/db/7599/32/stain-of-paint-pointer.png');
+      background-size: contain; background-repeat: no-repeat; background-position: center;
+      display: none;
+    }
+
+    /* ── Animated Background ─────────────────────────────────── */
+    body { background: #0A0A0A; position: relative; overflow-x: hidden; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(108,71,255,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 80%, rgba(255,107,53,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 60% 30%, rgba(108,71,255,0.06) 0%, transparent 50%);
+      animation: bgShift 12s ease-in-out infinite alternate;
+      pointer-events: none; z-index: 0;
+    }
+    @keyframes bgShift {
+      0%   { opacity: 1; transform: scale(1) rotate(0deg); }
+      50%  { opacity: 0.8; transform: scale(1.05) rotate(1deg); }
+      100% { opacity: 1; transform: scale(1.02) rotate(-1deg); }
+    }
+    .orb {
+      position: fixed; border-radius: 50%; filter: blur(80px);
+      pointer-events: none; z-index: 0;
+      animation: orbFloat linear infinite;
+    }
+    .orb-1 { width:400px; height:400px; background:rgba(108,71,255,0.08); top:-100px; left:-100px; animation-duration:20s; }
+    .orb-2 { width:300px; height:300px; background:rgba(255,107,53,0.06); bottom:-50px; right:-50px; animation-duration:25s; animation-delay:-10s; }
+    .orb-3 { width:200px; height:200px; background:rgba(108,71,255,0.05); top:40%; left:60%; animation-duration:18s; animation-delay:-5s; }
+    @keyframes orbFloat {
+      0%,100% { transform: translate(0,0) scale(1); }
+      33%      { transform: translate(30px,-20px) scale(1.05); }
+      66%      { transform: translate(-20px,30px) scale(0.95); }
+    }
+
+    /* ── Button Click Animations ─────────────────────────────── */
+    button {
+      position: relative; overflow: hidden;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    button::after {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(255,255,255,0.15); border-radius: inherit;
+      opacity: 0; transform: scale(0);
+      transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+    button:active { transform: scale(0.96); }
+    button:active::after { transform: scale(2); opacity: 0; transition: 0s; }
+    @keyframes ripple {
+      to { transform: scale(2.5); opacity: 0; }
+    }
+
+    /* ── Niche Card Animations ───────────────────────────────── */
+    .niche-card {
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1),
+                  box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .niche-card:hover {
+      transform: translateY(-4px) scale(1.03);
+      box-shadow: 0 12px 32px rgba(108,71,255,0.2);
+      border-color: #6C47FF;
+    }
+    .niche-card:active { transform: scale(0.97); }
+    .niche-card.selected {
+      border-color: #6C47FF;
+      background: rgba(108,71,255,0.1);
+      box-shadow: 0 0 0 2px #6C47FF, 0 8px 24px rgba(108,71,255,0.25);
+      animation: selectedPulse 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes selectedPulse {
+      0%  { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100%{ transform: scale(1); }
+    }
+
+    /* ── Step Transition Animations ──────────────────────────── */
+    @keyframes slideOutLeft {
+      to { opacity: 0; transform: translateX(-30px); }
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Progress Bar Animation ──────────────────────────────── */
+    .progress-bar-fill {
+      transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+      background: linear-gradient(90deg, #6C47FF, #FF6B35);
+      background-size: 200% 100%;
+      animation: progressShimmer 2s linear infinite;
+    }
+    @keyframes progressShimmer {
+      0%   { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+
+    /* ── Skeleton Shimmer Upgrade ────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg,
+        rgba(255,255,255,0.03) 25%,
+        rgba(108,71,255,0.08) 50%,
+        rgba(255,255,255,0.03) 75%);
+      background-size: 1000px 100%;
+      animation: shimmer 1.8s infinite linear;
+      border-radius: 8px;
+    }
+
+    /* ── Light Theme Adjustments ─────────────────────────────── */
+    [data-theme="light"] body::before {
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(108,71,255,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 80%, rgba(255,107,53,0.05) 0%, transparent 60%);
+    }
+    [data-theme="light"] .orb-1 { background: rgba(108,71,255,0.05); }
+    [data-theme="light"] .orb-2 { background: rgba(255,107,53,0.04); }
+    [data-theme="light"] body { background: #FAFAFA; }
+
+    /* ── Content z-index ─────────────────────────────────────── */
+    .app-wrapper, .navbar, .stepper, .mobile-stepper, .section,
+    footer, .modal-backdrop, .toast { position: relative; z-index: 1; }
   </style>
 </head>
 <body>
+  <div id="cursor-main"></div>
+  <div id="cursor-pointer"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
   <div class="app-wrapper">
     <header class="navbar">
       <a href="index.html" class="logo" title="Back to landing">
@@ -290,9 +446,9 @@
 
   <script src="pipeline.js"></script>
   <script src="script.js"></script>
-  <script src="wallpaper.js"></script>
   <script>
     (function(){
+      /* ── Hamburger ────────────────────────────────────────── */
       var btn = document.getElementById('hamburgerBtn');
       var nav = document.getElementById('navbarActions');
       if(btn && nav){
@@ -310,6 +466,7 @@
         });
       }
 
+      /* ── Mobile stepper ───────────────────────────────────── */
       var stepLabels = {1:'Niche',2:'Ideas',3:'Script',4:'Thumbnail'};
       var currentStep = 1;
       var label = document.getElementById('mobileStepLabel');
@@ -327,18 +484,43 @@
         if(currentStep<4){ currentStep++; updateMobileStepper(); window.showStep(currentStep); }
       });
 
+      /* ── Animated showStep ────────────────────────────────── */
       function showStep(n){
-        document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); s.hidden=true; });
-        var el=document.getElementById('step-'+n);
-        if(el){ el.classList.add('active'); el.hidden=false; }
-        document.querySelectorAll('.step-item').forEach(function(s){
-          var sn=parseInt(s.dataset.step);
-          s.classList.remove('active','done');
-          if(sn===n) s.classList.add('active');
-          else if(sn<n) s.classList.add('done');
-        });
-        currentStep=n;
-        updateMobileStepper();
+        var current = document.querySelector('.section.active');
+        var nextEl = document.getElementById('step-'+n);
+        if (current && current !== nextEl) {
+          current.style.animation = 'slideOutLeft 0.25s ease forwards';
+          setTimeout(function(){
+            current.classList.remove('active');
+            current.hidden = true;
+            current.style.animation = '';
+            if(nextEl){
+              nextEl.classList.add('active');
+              nextEl.hidden = false;
+              nextEl.style.animation = 'slideInRight 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards';
+            }
+            document.querySelectorAll('.step-item').forEach(function(s){
+              var sn=parseInt(s.dataset.step);
+              s.classList.remove('active','done');
+              if(sn===n) s.classList.add('active');
+              else if(sn<n) s.classList.add('done');
+            });
+            currentStep=n;
+            updateMobileStepper();
+          }, 200);
+        } else if (nextEl) {
+          nextEl.classList.add('active');
+          nextEl.hidden = false;
+          nextEl.style.animation = 'slideInRight 0.3s ease forwards';
+          document.querySelectorAll('.step-item').forEach(function(s){
+            var sn=parseInt(s.dataset.step);
+            s.classList.remove('active','done');
+            if(sn===n) s.classList.add('active');
+            else if(sn<n) s.classList.add('done');
+          });
+          currentStep=n;
+          updateMobileStepper();
+        }
       }
       window.showStep = showStep;
       showStep(1);
@@ -349,6 +531,65 @@
           if(step>=1&&step<=4) showStep(step);
         });
       });
+
+      /* ── Custom Cursor ────────────────────────────────────── */
+      var cursorMain = document.getElementById('cursor-main');
+      var cursorPointer = document.getElementById('cursor-pointer');
+      if(cursorMain && cursorPointer){
+        document.addEventListener('mousemove', function(e){
+          cursorMain.style.left = e.clientX + 'px';
+          cursorMain.style.top = e.clientY + 'px';
+          cursorPointer.style.left = e.clientX + 'px';
+          cursorPointer.style.top = e.clientY + 'px';
+        });
+        document.addEventListener('mouseleave', function(){
+          cursorMain.style.display = 'none';
+          cursorPointer.style.display = 'none';
+        });
+        document.addEventListener('mouseenter', function(){
+          cursorMain.style.display = 'block';
+          cursorPointer.style.display = 'none';
+        });
+        var hoverTargets = 'button, a, .niche-card, [role="button"], input, select, textarea, label';
+        document.querySelectorAll(hoverTargets).forEach(function(el){
+          el.addEventListener('mouseenter', function(){
+            cursorMain.style.display = 'none';
+            cursorPointer.style.display = 'block';
+          });
+          el.addEventListener('mouseleave', function(){
+            cursorMain.style.display = 'block';
+            cursorPointer.style.display = 'none';
+          });
+        });
+        document.addEventListener('mousedown', function(){
+          cursorMain.style.transform = 'translate(-50%, -50%) scale(0.85)';
+          cursorPointer.style.transform = 'translate(-50%, -50%) scale(0.85)';
+        });
+        document.addEventListener('mouseup', function(){
+          cursorMain.style.transform = 'translate(-50%, -50%) scale(1)';
+          cursorPointer.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
+      }
+
+      /* ── Button Ripple ────────────────────────────────────── */
+      document.querySelectorAll('button').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+          var rect = this.getBoundingClientRect();
+          var size = Math.max(rect.width, rect.height);
+          var ripple = document.createElement('span');
+          ripple.style.cssText =
+            'position:absolute; border-radius:50%;' +
+            'width:' + size + 'px; height:' + size + 'px;' +
+            'left:' + (e.clientX - rect.left - size/2) + 'px;' +
+            'top:' + (e.clientY - rect.top - size/2) + 'px;' +
+            'background:rgba(255,255,255,0.25);' +
+            'transform:scale(0); animation:ripple 0.5s ease-out forwards;' +
+            'pointer-events:none;';
+          this.appendChild(ripple);
+          setTimeout(function(){ ripple.remove(); }, 500);
+        });
+      });
+
     })();
   </script>
 </body>

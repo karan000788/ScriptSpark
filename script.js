@@ -44,18 +44,60 @@
     t._timer = setTimeout(function () { t.classList.remove('show'); }, duration);
   }
 
-  function skeleton(count) {
-    var html = '<div class="skeleton-wrap">';
-    for (var i = 0; i < count; i++) {
-      html += '<div class="skeleton-card"><div class="skeleton-line h20 w60" style="margin-bottom:10px;"></div><div class="skeleton-line w80" style="margin-bottom:8px;"></div><div class="skeleton-line w40"></div></div>';
-    }
-    html += '</div>';
-    return html;
+  function withTimeout(promise, ms) {
+    var timeout = new Promise(function (_, reject) {
+      setTimeout(function () { reject(new Error('Request timed out')); }, ms);
+    });
+    return Promise.race([promise, timeout]);
   }
 
-  function errorBox(msg) {
-    return '<div class="error-box"><div class="error-icon">&#9888;</div><div class="error-msg">' + msg + '</div><button class="btn-ghost" onclick="location.reload()">Try Again</button></div>';
+  function showErrorCard(container, msg, retryFn) {
+    container.innerHTML =
+      '<div class="error-card">' +
+      '<div style="font-size:32px; margin-bottom:12px;">&#9888;&#65039;</div>' +
+      '<p>' + (msg || 'Something went wrong. Please try again.') + '</p>' +
+      '<button class="retry-btn">Try Again</button>' +
+      '</div>';
+    var btn = container.querySelector('.retry-btn');
+    if (btn && retryFn) btn.addEventListener('click', retryFn);
   }
+
+  var ideasSkeletonHTML =
+    '<div class="ideas-skeleton">' +
+    '<div class="skeleton" style="height:28px; width:60%; margin-bottom:24px;"></div>' +
+    Array(5).fill(
+      '<div class="skeleton-card" style="padding:16px; margin-bottom:12px; border-radius:12px;">' +
+      '<div class="skeleton" style="height:14px; width:40px; margin-bottom:8px;"></div>' +
+      '<div class="skeleton" style="height:20px; width:90%;"></div>' +
+      '</div>'
+    ).join('') +
+    '</div>';
+
+  var scriptSkeletonHTML =
+    '<div class="script-skeleton">' +
+    '<div class="skeleton" style="height:28px; width:50%; margin-bottom:20px;"></div>' +
+    '<div class="skeleton" style="height:16px; width:100%; margin-bottom:10px;"></div>' +
+    '<div class="skeleton" style="height:16px; width:95%; margin-bottom:10px;"></div>' +
+    '<div class="skeleton" style="height:16px; width:88%; margin-bottom:10px;"></div>' +
+    '<div class="skeleton" style="height:16px; width:92%; margin-bottom:10px;"></div>' +
+    '<div class="skeleton" style="height:16px; width:80%; margin-bottom:24px;"></div>' +
+    '<div class="skeleton" style="height:16px; width:100%; margin-bottom:10px;"></div>' +
+    '<div class="skeleton" style="height:16px; width:91%; margin-bottom:10px;"></div>' +
+    '<div class="skeleton" style="height:16px; width:85%; margin-bottom:10px;"></div>' +
+    '<div class="skeleton" style="height:16px; width:95%; margin-bottom:24px;"></div>' +
+    '<div class="skeleton" style="height:16px; width:78%; margin-bottom:10px;"></div>' +
+    '<div class="skeleton" style="height:16px; width:90%;"></div>' +
+    '</div>';
+
+  var thumbnailSkeletonHTML =
+    '<div class="thumbnail-skeleton">' +
+    '<div class="skeleton" style="height:28px; width:45%; margin-bottom:20px; margin-inline:auto;"></div>' +
+    '<div class="skeleton" style="width:100%; aspect-ratio:16/9; border-radius:12px; margin-bottom:16px;"></div>' +
+    '<div style="display:flex; gap:12px; justify-content:center;">' +
+    '<div class="skeleton" style="height:44px; width:140px; border-radius:8px;"></div>' +
+    '<div class="skeleton" style="height:44px; width:140px; border-radius:8px;"></div>' +
+    '</div>' +
+    '</div>';
 
   /* ── IndexedDB for projects ─────────────────────────────── */
   var db = null;
@@ -211,14 +253,14 @@
 
   async function fetchIdeas(niche) {
     var container = $('ideasContainer');
-    container.innerHTML = skeleton(5);
+    container.innerHTML = ideasSkeletonHTML;
     try {
-      var ideas = await Pipeline.generateIdeas(niche);
+      var ideas = await withTimeout(Pipeline.generateIdeas(niche), 15000);
       state.ideas = ideas;
       saveProject();
       renderIdeas(ideas);
     } catch (err) {
-      container.innerHTML = errorBox(err.message || 'Failed to generate ideas.');
+      showErrorCard(container, 'Something went wrong. Please try again.', function () { fetchIdeas(niche); });
     }
   }
 
@@ -242,56 +284,67 @@
 
   async function fetchScript(topic, niche) {
     var container = $('scriptContainer');
-    container.innerHTML = skeleton(2);
+    container.innerHTML = scriptSkeletonHTML;
     try {
-      var script = await Pipeline.generateScript(topic, niche);
+      var script = await withTimeout(Pipeline.generateScript(topic, niche), 15000);
       state.script = script;
       saveProject();
       renderScript(script);
     } catch (err) {
-      container.innerHTML = errorBox(err.message || 'Failed to generate script.');
+      showErrorCard(container, 'Something went wrong. Please try again.', function () { fetchScript(topic, niche); });
     }
   }
 
   $('scriptBackBtn').addEventListener('click', function () { showStep(2); });
   $('toThumbnailBtn').addEventListener('click', function () {
     showStep(4);
-    fetchThumbnail();
+    generateThumbnail(state.selectedIdea || state.script?.title || state.niche, state.niche);
   });
 
-  /* ── STEP 4: Thumbnail ──────────────────────────────────── */
-  function renderThumbnail(url, prompt, desc) {
+  /* ── STEP 4: Thumbnail (Puter.js) ────────────────────────── */
+  async function generateThumbnail(topic, niche) {
     var container = $('thumbnailContainer');
-    container.innerHTML =
-      '<div class="thumbnail-prompt-box"><strong>AI Prompt:</strong> ' + prompt + '</div>' +
-      (url ? '<img class="thumbnail-image" src="' + url + '" alt="AI Generated Thumbnail" loading="lazy" />' : '') +
-      (desc ? '<p style="margin-top:12px; font-size:0.85rem; color:var(--text-secondary);">' + desc + '</p>' : '') +
-      '<div class="thumbnail-actions">' +
-      (url ? '<a class="btn-primary btn-sm" href="' + url + '" download="scriptspark-thumbnail.png">Download</a>' : '') +
-      '<button class="btn-ghost btn-sm" id="regenThumbBtn">Regenerate</button>' +
-      '</div>';
-
-    $('regenThumbBtn').addEventListener('click', fetchThumbnail);
-  }
-
-  async function fetchThumbnail() {
-    var container = $('thumbnailContainer');
-    container.innerHTML = skeleton(2);
+    container.innerHTML = thumbnailSkeletonHTML;
     try {
-      var title = state.script?.title || state.selectedIdea || state.niche;
-      var scriptText = state.script?.script || '';
-      var result = await Pipeline.generateThumbnailPrompt(title, scriptText);
-      state.thumbnailPrompt = result;
+      var promptResponse = await withTimeout(Pipeline.generateImagePrompt(topic, niche), 15000);
+      var imagePrompt = (promptResponse || '').trim() + ', YouTube thumbnail style, 16:9, high contrast, dramatic';
 
-      var encodedPrompt = encodeURIComponent(result.prompt);
-      var seed = Math.floor(Math.random() * 999999);
-      var imageUrl = 'https://image.pollinations.ai/prompt/' + encodedPrompt + '?width=1280&height=720&nologo=true&seed=' + seed;
-      state.thumbnailUrl = imageUrl;
-      saveProject();
+      if (typeof puter === 'undefined') throw new Error('Puter.js not loaded. Check your internet connection.');
 
-      renderThumbnail(imageUrl, result.prompt, result.visualDescription);
+      var img = await puter.ai.txt2img(imagePrompt);
+
+      container.innerHTML =
+        '<div class="thumbnail-img-wrap" id="thumbImgWrap"></div>' +
+        '<div class="thumbnail-actions">' +
+        '<button class="btn-primary btn-sm" id="download-btn">Download</button>' +
+        '<button class="btn-ghost btn-sm" id="regenThumbBtn">Regenerate</button>' +
+        '</div>';
+
+      var wrap = $('thumbImgWrap');
+      img.className = 'thumbnail-image';
+      img.id = 'thumbnail-img';
+      img.alt = 'AI Generated Thumbnail';
+      wrap.appendChild(img);
+
+      window.currentThumbnailSrc = img.src;
+
+      $('download-btn').addEventListener('click', function () {
+        if (!window.currentThumbnailSrc) return;
+        var a = document.createElement('a');
+        a.href = window.currentThumbnailSrc;
+        a.download = 'thumbnail.jpg';
+        a.click();
+      });
+
+      $('regenThumbBtn').addEventListener('click', function () {
+        generateThumbnail(topic, niche);
+      });
+
     } catch (err) {
-      container.innerHTML = errorBox(err.message || 'Failed to generate thumbnail.');
+      console.error('Thumbnail error:', err);
+      showErrorCard(container, 'Something went wrong. Please try again.', function () {
+        generateThumbnail(topic, niche);
+      });
     }
   }
 
