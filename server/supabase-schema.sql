@@ -1,4 +1,4 @@
--- ScriptSpark V3 - Supabase Database Schema
+-- Creatora - Supabase Database Schema
 -- Run this in your Supabase SQL Editor
 
 -- 1. Users table (extends Supabase Auth)

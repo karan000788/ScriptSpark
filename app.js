@@ -661,7 +661,7 @@
     $('downloadThumbBtn')?.addEventListener('click', () => {
       const a = document.createElement('a');
       a.href = data.imageUrl;
-      a.download = 'scriptspark-thumbnail.jpg';
+      a.download = 'creatora-thumbnail.jpg';
       a.click();
     });
     $('copyPromptBtn')?.addEventListener('click', () => {

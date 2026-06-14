@@ -1,5 +1,5 @@
 /* ================================================================
-   SCRIPTSPARK — Premium Dark Design System
+   CREATORA — Premium Dark Design System
    ================================================================ */
 
 :root {
@@ -108,9 +108,11 @@ img { max-width: 100%; }
   transition: all 200ms var(--ease); white-space: nowrap;
 }
 .btn-primary {
-  background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+  background: linear-gradient(135deg, #8B5CF6, #F97316);
   color: #fff; box-shadow: 0 2px 16px rgba(139, 92, 246, 0.25);
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
 }
 .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 24px rgba(139, 92, 246, 0.4); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }

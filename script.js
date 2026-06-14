@@ -1,5 +1,5 @@
 /**
- * ScriptSpark — Main application logic.
+ * Creatora — Main application logic.
  * 4-step flow: Niche → Ideas → Script → Thumbnail
  */
 
@@ -108,7 +108,7 @@
   var db = null;
   function openDB() {
     return new Promise(function (resolve, reject) {
-      var req = indexedDB.open('ScriptSparkDB', 2);
+      var req = indexedDB.open('CreatoraDB', 2);
       req.onupgradeneeded = function (e) {
         var d = e.target.result;
         if (!d.objectStoreNames.contains('projects')) d.createObjectStore('projects', { keyPath: 'id' });
@@ -557,7 +557,7 @@
         var blob = new Blob([JSON.stringify(list, null, 2)], { type: 'application/json' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'scriptspark-data.json';
+        a.download = 'creatora-data.json';
         a.click();
       });
     });

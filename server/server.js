@@ -64,7 +64,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`ScriptSpark V3 API running on port ${PORT}`);
+  console.log(`Creatora API running on port ${PORT}`);
   console.log(`Supabase: ${process.env.SUPABASE_URL ? 'configured' : 'missing'}`);
   console.log(`YouTube API: ${process.env.YOUTUBE_API_KEY ? 'configured' : 'missing'}`);
   console.log(`Groq API: ${process.env.GROQ_API_KEY ? 'configured' : 'missing'}`);

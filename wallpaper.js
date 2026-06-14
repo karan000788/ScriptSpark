@@ -1,5 +1,5 @@
 /**
- * ScriptSpark Wallpaper — Injects animated gradient background.
+ * Creatora Wallpaper — Injects animated gradient background.
  * Lightweight, no user interaction needed.
  */
 (function () {

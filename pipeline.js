@@ -1,5 +1,5 @@
 /**
- * ScriptSpark Pipeline — AI content generation via Groq API.
+ * Creatora Pipeline — AI content generation via Groq API.
  * All data stays in the browser. Your API key is never sent to our servers.
  */
 
