@@ -346,6 +346,26 @@
   <div id="cursor-main"></div>
   <div id="cursor-pointer"></div>
 
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">&#128049;</span>
+      <span class="logo-text">ScriptSpark</span>
+      <span class="logo-badge">V3</span>
+    </a>
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    <nav class="navbar-actions" id="navbarActions">
+      <a href="index.html" class="nav-link active">Home</a>
+      <a href="app.html" class="nav-link">App</a>
+      <a href="docs.html" class="nav-link">Docs</a>
+      <a href="policy.html" class="nav-link">Policy</a>
+    </nav>
+  </header>
+
   <!-- HERO -->
   <section class="hero">
     <div class="badge">
@@ -595,6 +615,31 @@
           document.addEventListener('mouseup', function(){
             cursorMain.style.transform = 'translate(-50%, -50%) scale(1)';
             cursorPointer.style.transform = 'translate(-50%, -50%) scale(1)';
+          });
+        }
+      })();
+
+      /* ── Hamburger Menu ──────────────────────────────────── */
+      (function(){
+        var btn = document.getElementById('hamburgerBtn');
+        var nav = document.getElementById('navbarActions');
+        if(btn && nav){
+          btn.addEventListener('click', function(){
+            var open = nav.classList.toggle('open');
+            btn.classList.toggle('open');
+            btn.setAttribute('aria-expanded', open);
+          });
+          nav.querySelectorAll('a').forEach(function(el){
+            el.addEventListener('click', function(){
+              nav.classList.remove('open');
+              btn.classList.remove('open');
+              btn.setAttribute('aria-expanded','false');
+            });
+            el.addEventListener('touchstart', function(){
+              nav.classList.remove('open');
+              btn.classList.remove('open');
+              btn.setAttribute('aria-expanded','false');
+            }, { passive: true });
           });
         }
       })();
