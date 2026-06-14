@@ -115,7 +115,7 @@ export async function getVideoStats(videoIds) {
   for (let i = 0; i < videoIds.length; i += chunkSize) {
     const chunk = videoIds.slice(i, i + chunkSize);
     const data = await fetchYouTube('videos', {
-      part: 'statistics,snippet',
+      part: 'statistics,snippet,contentDetails',
       id: chunk.join(','),
       maxResults: 50
     });
@@ -128,7 +128,8 @@ export async function getVideoStats(videoIds) {
         views: parseInt(item.statistics.viewCount) || 0,
         likes: parseInt(item.statistics.likeCount) || 0,
         comments: parseInt(item.statistics.commentCount) || 0,
-        categoryId: item.snippet.categoryId
+        categoryId: item.snippet.categoryId,
+        duration: item.contentDetails?.duration || null
       });
     }
   }
@@ -144,7 +145,7 @@ export async function analyzeChannel(channelId, channelName) {
   const videoMap = new Map(stats.map(v => [v.videoId, v]));
   const enriched = videos.map(v => ({
     ...v,
-    ...(videoMap.get(v.videoId) || { views: 0, likes: 0, comments: 0 })
+    ...(videoMap.get(v.videoId) || { views: 0, likes: 0, comments: 0, duration: null })
   })).sort((a, b) => b.views - a.views);
 
   const withViews = enriched.filter(v => v.views > 0);
@@ -156,13 +157,15 @@ export async function analyzeChannel(channelId, channelName) {
     views: v.views,
     likes: v.likes,
     comments: v.comments,
-    videoId: v.videoId
+    videoId: v.videoId,
+    duration: v.duration
   }));
 
   const worstVideos = enriched.filter(v => v.views > 0).slice(-5).map(v => ({
     title: v.title,
     views: v.views,
-    videoId: v.videoId
+    videoId: v.videoId,
+    duration: v.duration
   }));
 
   const titles = enriched.map(v => v.title);

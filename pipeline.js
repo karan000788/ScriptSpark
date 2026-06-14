@@ -8,8 +8,7 @@ const Pipeline = (() => {
 
   const MODELS = [
     'llama-3.3-70b-versatile',
-    'deepseek-r1-distill-llama-70b',
-    'llama-3.1-8b-instant'
+    'deepseek-r1-distill-llama-70b'
   ];
 
   let activeModel = MODELS[0];
@@ -74,9 +73,25 @@ const Pipeline = (() => {
     return result;
   }
 
+  function estimateTokens(text) {
+    return Math.ceil(text.length / 4);
+  }
+
   async function callGroq(systemPrompt, userMessage, modelIndex) {
     const key = getApiKey();
     if (!key) throw new Error('API key not set. Open Settings to add your Groq API key.');
+
+    let total = systemPrompt + (userMessage || '');
+    if (estimateTokens(total) > 5000) {
+      let trimmed = userMessage || '';
+      let attempts = 0;
+      while (estimateTokens(systemPrompt + trimmed) > 5000 && attempts < 20) {
+        trimmed = trimmed.slice(0, Math.floor(trimmed.length * 0.8));
+        attempts++;
+      }
+      userMessage = trimmed;
+      dbg('Prompt truncated to ~' + estimateTokens(systemPrompt + trimmed) + ' tokens');
+    }
 
     modelIndex = modelIndex || 0;
     const model = MODELS[modelIndex] || MODELS[0];

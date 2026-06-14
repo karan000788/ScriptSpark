@@ -9,14 +9,35 @@ if (!GROQ_API_KEY) {
 }
 
 const MODELS = [
-  'llama-3.1-8b-instant',
   'llama-3.3-70b-versatile',
   'deepseek-r1-distill-llama-70b'
 ];
 
+function estimateTokens(text) {
+  return Math.ceil(text.length / 4);
+}
+
+function truncateToTokenLimit(systemPrompt, userMessage, maxTokens = 5000) {
+  let total = systemPrompt + (userMessage || '');
+  if (estimateTokens(total) <= maxTokens) return userMessage;
+  let trimmed = userMessage || '';
+  let attempts = 0;
+  while (estimateTokens(systemPrompt + trimmed) > maxTokens && attempts < 20) {
+    trimmed = trimmed.slice(0, Math.floor(trimmed.length * 0.8));
+    attempts++;
+  }
+  return trimmed;
+}
+
 async function callGroq(systemPrompt, userMessage, modelIndex = 0) {
   if (!GROQ_API_KEY) throw new Error('GROQ_API_KEY not configured on server');
   const model = MODELS[modelIndex] || MODELS[0];
+
+  userMessage = truncateToTokenLimit(systemPrompt, userMessage);
+  const promptText = systemPrompt + (userMessage || '');
+  if (estimateTokens(promptText) > 5000) {
+    console.warn(`Prompt still ~${estimateTokens(promptText)} tokens after truncation`);
+  }
 
   const resp = await fetch(GROQ_ENDPOINT, {
     method: 'POST',
@@ -79,91 +100,34 @@ function cleanJsonString(raw) {
 
 export async function generatePremiumScript({ topic, niche, contentType, channelAnalysis, creatorProfile, marketIntelligence }) {
   const isShorts = contentType === 'shorts';
-  const lengthGuide = isShorts
-    ? '30-60 seconds (150-250 words). Fast pacing, quick cuts, pattern interrupts every 5-7 seconds.'
-    : '8-20 minutes (1500-3000 words). Deep storytelling, emotional narrative arcs, pattern interrupts every 30-40 seconds.';
 
   const channelContext = channelAnalysis ? `
-CHANNEL PERFORMANCE DATA:
-- Average Views: ${channelAnalysis.averageViews || 'N/A'}
-- Best Performing Topics: ${channelAnalysis.viralTopics?.slice(0, 5).join(', ') || 'N/A'}
-- Engagement Rate: ${channelAnalysis.engagementRate || 'N/A'}%
-- Upload Frequency: ${channelAnalysis.uploadFrequency || 'N/A'}
-- Top Title Patterns: ${JSON.stringify(channelAnalysis.titlePatterns || {})}` : '';
+CHANNEL: avgViews=${channelAnalysis.averageViews || 'N/A'}, engagement=${channelAnalysis.engagementRate || 'N/A'}%, uploadFreq=${channelAnalysis.uploadFrequency || 'N/A'}, topics=${(channelAnalysis.viralTopics || []).slice(0, 3).join(', ')}` : '';
 
   const profileContext = creatorProfile ? `
-CREATOR PROFILE:
-- Best Topics: ${creatorProfile.bestTopics?.join(', ') || 'N/A'}
-- Best Title Styles: ${creatorProfile.bestTitleStyles?.join(', ') || 'N/A'}
-- Thumbnail Style: ${creatorProfile.thumbnailStyle || 'N/A'}
-- Average Engagement: ${creatorProfile.averageEngagement || 'N/A'}` : '';
+PROFILE: topics=${(creatorProfile.bestTopics || []).slice(0, 3).join(', ')}, titles=${(creatorProfile.bestTitleStyles || []).slice(0, 3).join(', ')}, thumbnail=${creatorProfile.thumbnailStyle || 'N/A'}, engagement=${creatorProfile.averageEngagement || 'N/A'}` : '';
 
   const marketContext = marketIntelligence ? `
-MARKET INTELLIGENCE:
-- Top Competitor Titles: ${marketIntelligence.viralTopics?.slice(0, 10).join(', ') || 'N/A'}
-- Market Average Views: ${marketIntelligence.averageViews || 'N/A'}` : '';
+MARKET: titles=${(marketIntelligence.viralTopics || []).slice(0, 5).join(', ')}, avgViews=${marketIntelligence.averageViews || 'N/A'}` : '';
 
-  const systemPrompt = `You are the world's best YouTube scriptwriter. Creators like MrBeast, Alex Hormozi, and Marques Brownlee would hire you.
+  const lengthInfo = isShorts ? '30-60 sec (150-250 words)' : '8-20 min (1500-3000 words)';
 
-Your task: Write a highly engaging YouTube ${isShorts ? 'SHORTS' : 'LONG FORM'} video script for the topic: "${topic}" in the "${niche}" niche.
+  const systemPrompt = `You are the world's best YouTube scriptwriter. Write a ${isShorts ? 'SHORTS' : 'LONG FORM'} script for "${topic}" (${niche}).
 
-${lengthGuide}
+Length: ${lengthInfo}.
 
-SCRIPT REQUIREMENTS:
-1. HOOK (first 3-5 seconds for shorts, first 15-30 seconds for long form):
-   - Pattern interrupt that stops the scroll
-   - Curiosity gap that demands attention
-   - Emotional trigger (fear, anger, awe, greed, or curiosity)
-
-2. RETENTION TECHNIQUES (use throughout):
-   - Open loops (start a story, cut away, return later)
-   - Curiosity gaps (present a mystery, hint at the answer)
-   - Pattern interrupts (unexpected cuts, sudden changes in tone/pacing)
-   - Emotional escalation (start calm, build intensity)
-   - The "But then..." moment (twist or revelation)
-
-3. STORYTELLING FRAMEWORK:
-   - Use one of: Hero's Journey, Before/After, Problem/Solution, Mystery/Reveal, or Contrarian take
-   - Show, don't tell — use vivid imagery and specific details
-   - Personal anecdotes or case studies that feel authentic
-
-4. LANGUAGE & TONE:
-   - Natural, conversational — like a friend telling you something mind-blowing
-   - NEVER sound like AI. No "in today's video", "let's dive in", "without further ado"
-   - Use rhetorical questions, short sentences, punchy phrases
-   - Vary sentence length for rhythm
-
-5. STRUCTURE:
-   ${isShorts ? `
-   - 0-5s: Hook
-   - 5-20s: Setup / Context
-   - 20-40s: Main content / Escalation
-   - 40-55s: Revelation / Twist
-   - 55-60s: CTA (like & subscribe)` : `
-   - Act 1 (0-2 min): Hook + Setup
-   - Act 2 (2-8 min): Escalation + Story
-   - Act 3 (8-15 min): Revelation + Twist
-   - Act 4 (15-20 min): Conclusion + CTA
-   `}
-
-6. ENDING:
-   - Strong conclusion that delivers on the hook's promise
-   - Subscribe CTA (make it feel natural, not desperate)
-   - Engagement prompt (comment a specific word or thought)
-
-${channelContext}
-${profileContext}
-${marketContext}
-
-CRITICAL: Never write "welcome back", "in today's video", "let's get into it", "make sure to like and subscribe". Sound 100% human.
-
-Output ONLY valid JSON (no markdown, no backticks). Return JSON with:
-- "title": click-optimized YouTube title under 70 chars
-- "script": the complete script with timing markers [0:00], [0:15], etc.
-- "wordCount": approximate word count
-- "hook": the opening hook (first line)
-- "estimatedDuration": estimated watch time
-- "cta": the call to action used`;
+Requirements:
+- Hook (first ${isShorts ? '3-5s' : '15-30s'}): pattern interrupt, curiosity gap, emotional trigger
+- Retention: open loops, curiosity gaps, pattern interrupts, emotional escalation
+- Framework: Hero's Journey / Before-After / Problem-Solution / Mystery-Reveal / Contrarian
+- Natural conversational tone. NEVER "in today's video", "let's dive in", "without further ado"
+- Vary sentence length. Use rhetorical questions.
+${isShorts ? `
+Structure: 0-5s Hook | 5-20s Setup | 20-40s Escalation | 40-55s Twist | 55-60s CTA` : `
+Structure: Act 1 (0-2min) Hook+Setup | Act 2 (2-8min) Escalation | Act 3 (8-15min) Twist | Act 4 (15-20min) Conclusion+CTA`}
+- Ending: deliver on hook's promise, natural subscribe CTA, engagement prompt
+${channelContext}${profileContext}${marketContext}
+Output ONLY valid JSON: {"title":"click-optimized under 70 chars","script":"full script with [0:00] markers","wordCount":number,"hook":"opening line","estimatedDuration":"","cta":""}`;
 
   const result = await callGroq(systemPrompt, `Write a ${isShorts ? 'Shorts' : 'long form'} script for: ${topic} (Niche: ${niche}, Content Type: ${contentType})`);
   return JSON.parse(cleanJsonString(result));
@@ -171,28 +135,14 @@ Output ONLY valid JSON (no markdown, no backticks). Return JSON with:
 
 export async function generateIdeas({ niche, channelAnalysis, marketIntelligence, contentType, count = 5 }) {
   const channelContext = channelAnalysis ? `
-Channel Performance:
-- Best Videos: ${channelAnalysis.bestVideos?.slice(0, 3).map(v => v.title).join(', ')}
-- Viral Topics: ${channelAnalysis.viralTopics?.slice(0, 5).join(', ')}
-- Title Patterns: ${JSON.stringify(channelAnalysis.titlePatterns)}` : '';
+Channel: bestVideos=${(channelAnalysis.bestVideos || []).slice(0, 3).map(v => v.title).join(', ')}, viralTopics=${(channelAnalysis.viralTopics || []).slice(0, 3).join(', ')}` : '';
 
   const marketContext = marketIntelligence ? `
-Market Intelligence:
-- Competitor Viral Topics: ${marketIntelligence.viralTopics?.slice(0, 10).join(', ') || 'N/A'}
-- Market Patterns: ${JSON.stringify(marketIntelligence.marketPatterns?.commonTitlePatterns || {})}` : '';
+Market: competitorTopics=${(marketIntelligence.viralTopics || []).slice(0, 5).join(', ')}` : '';
 
-  const systemPrompt = `You are a viral YouTube content strategist. Generate exactly ${count} video ${contentType === 'shorts' ? 'Shorts' : 'video'} topic ideas for the "${niche}" niche.
-
-Each idea must:
-- Be trending and searchable
-- Have high curiosity gap
-- Feel emotionally charged
-- Be optimized for high CTR
-
-${channelContext}
-${marketContext}
-
-Output ONLY valid JSON array. Each object: {"title": "viral title under 70 chars", "hook": "powerful one-sentence hook", "whyViral": "why this will trend (1-2 sentences)", "estimatedViews": "estimated view potential"}`;
+  const systemPrompt = `You are a viral YouTube content strategist. Generate ${count} ${contentType === 'shorts' ? 'Shorts' : 'video'} topic ideas for "${niche}". Each must be trending, curiosity-driven, emotionally charged, high CTR.
+${channelContext}${marketContext}
+Output ONLY valid JSON array: [{"title":"under 70 chars","hook":"one-sentence hook","whyViral":"1-2 sentences","estimatedViews":""}]`;
 
   const result = await callGroq(systemPrompt, `Generate ${count} viral ${contentType} topic ideas for niche: ${niche}`);
   return JSON.parse(cleanJsonString(result));
@@ -200,22 +150,12 @@ Output ONLY valid JSON array. Each object: {"title": "viral title under 70 chars
 
 export async function generateThumbnailPrompt({ title, niche, analysis }) {
   const bestPerforming = analysis?.viralTopics?.slice(0, 3).join(', ') || '';
-  const systemPrompt = `You are an elite YouTube thumbnail designer. Create the perfect thumbnail image prompt for the video titled "${title}" in the "${niche}" niche.
+  const systemPrompt = `You are an elite YouTube thumbnail designer. Create a thumbnail image prompt for "${title}" (${niche}).
 
-Requirements:
-- Photorealistic, ultra detailed
-- Emotional facial expression (shock, awe, fear, curiosity, anger)
-- Dramatic lighting, cinematic composition
-- Vivid colors, high contrast
-- Professional YouTube thumbnail style
-- Visually striking, maximum CTR
-- 16:9 composition
-- NO text in the image
-- NO watermarks
+Requirements: photorealistic, ultra detailed, emotional expression (shock/awe/fear/curiosity/anger), dramatic lighting, cinematic composition, vivid colors, high contrast, 16:9, no text, no watermarks, max CTR.
 
-${bestPerforming ? `This creator's best performing content: ${bestPerforming}` : ''}
-
-Return ONLY the image prompt string. Max 100 words. No explanation. No markdown.`;
+${bestPerforming ? `Best content: ${bestPerforming}` : ''}
+Return ONLY the prompt string. Max 100 words. No markdown.`;
 
   const result = await callGroq(systemPrompt, `Generate thumbnail prompt for: ${title}`);
   return result.replace(/```/g, '').trim();
@@ -226,54 +166,44 @@ export async function generateScriptIdeas({ channelAnalysis, niche, contentType,
 }
 
 export async function generateCreatorProfile({ channelAnalysis, niche, contentType }) {
-  const simplifiedData = {
-    performance: channelAnalysis.performance,
-    viralTopics: channelAnalysis.viralTopics,
-    titlePatterns: channelAnalysis.titlePatterns,
-    bestVideos: channelAnalysis.bestVideos?.map(v => ({ title: v.title, views: v.viewCount })).slice(0, 10),
-    worstVideos: channelAnalysis.worstVideos?.map(v => ({ title: v.title, views: v.viewCount })).slice(0, 5)
+  const info = channelAnalysis.channelInfo || {};
+  const topVids = (channelAnalysis.bestVideos || []).slice(0, 5).map(v => ({
+    title: v.title, views: v.views, duration: v.duration
+  }));
+  const bottomVids = (channelAnalysis.worstVideos || []).slice(0, 3).map(v => ({
+    title: v.title, views: v.views
+  }));
+
+  const trimmedData = {
+    name: info.name,
+    subscribers: info.subscribers,
+    topVideos: topVids,
+    bottomVideos: bottomVids,
+    viralTopics: (channelAnalysis.viralTopics || []).slice(0, 5),
+    avgViews: channelAnalysis.performance?.averageViews,
+    engagementRate: channelAnalysis.performance?.engagementRate,
+    uploadFrequency: channelAnalysis.performance?.uploadFrequency
   };
 
-  const systemPrompt = `You are a YouTube channel audit expert. Based on the following channel analysis data, create a detailed Creator Profile.
+  const systemPrompt = `You are a YouTube channel audit expert. Analyze this channel and create a Creator Profile.
 
-Channel Data:
-${JSON.stringify(simplifiedData, null, 2)}
-
+Channel: ${trimmedData.name} (${trimmedData.subscribers} subs, ${trimmedData.avgViews || 'N/A'} avg views, ${trimmedData.engagementRate || 'N/A'}% engagement, ${trimmedData.uploadFrequency || 'N/A'})
+Top videos: ${trimmedData.topVideos.map(v => `${v.title} (${v.views} views${v.duration ? ', ' + v.duration : ''})`).join(' | ')}
+Bottom videos: ${trimmedData.bottomVideos.map(v => `${v.title} (${v.views} views)`).join(' | ')}
+Viral topics: ${(trimmedData.viralTopics || []).join(', ')}
 Niche: ${niche}
-Content Type: ${contentType}
+Content: ${contentType}
 
-Analyze and output a JSON object with:
-- "bestTopics": array of top performing content topics/themes
-- "bestHooks": what hook styles work best for this channel
-- "bestTitleStyles": what title patterns get the most views
-- "thumbnailStyle": what thumbnail elements/style works best
-- "uploadPattern": best upload frequency and timing
-- "averageEngagement": average like/comment/view ratio
-- "recommendedContentType": shorts or long form recommendation
-- "growthOpportunities": array of 3-5 growth opportunities
-- "contentGaps": what topics they are missing
-
-Output ONLY valid JSON. No markdown.`;
+Output JSON: {bestTopics[], bestHooks[], bestTitleStyles[], thumbnailStyle, uploadPattern, averageEngagement, recommendedContentType, growthOpportunities[3-5], contentGaps[]}. ONLY valid JSON.`;
 
   const result = await callGroq(systemPrompt, 'Create a detailed creator profile from the channel analysis data.');
   return JSON.parse(cleanJsonString(result));
 }
 
 export async function factCheckContent(script, topic) {
-  const systemPrompt = `You are a fact-checking expert. Review the following script about "${topic}" for factual accuracy.
+  const systemPrompt = `You are a fact-checking expert. Review this script about "${topic}" for factual accuracy. For each claim: is it true/false/unverifiable? What source supports/refutes it? Suggest corrections.
 
-Identify ANY claims that need verification. For each claim:
-1. Is it likely true, false, or unverifiable?
-2. What source would support or refute it?
-3. Suggest corrections if needed.
-
-Also provide:
-- Overall accuracy score (0-100)
-- List of verified claims
-- List of questionable claims needing sources
-- Suggested corrections
-
-Output ONLY valid JSON with: accuracy_score, verified_claims[], questionable_claims[{claim, concern, suggested_correction, suggested_source}], overall_assessment`;
+Output JSON: {accuracy_score:0-100, verified_claims[], questionable_claims[{claim, concern, suggested_correction, suggested_source}], overall_assessment}. ONLY valid JSON.`;
 
   const result = await callGroq(systemPrompt, `Fact-check this script:\n\n${script}`);
   return JSON.parse(cleanJsonString(result));
