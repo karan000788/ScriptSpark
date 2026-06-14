@@ -9,9 +9,9 @@ if (!GROQ_API_KEY) {
 }
 
 const MODELS = [
+  'llama-3.1-8b-instant',
   'llama-3.3-70b-versatile',
-  'deepseek-r1-distill-llama-70b',
-  'llama-3.1-8b-instant'
+  'deepseek-r1-distill-llama-70b'
 ];
 
 async function callGroq(systemPrompt, userMessage, modelIndex = 0) {

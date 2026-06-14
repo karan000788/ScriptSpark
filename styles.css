@@ -417,6 +417,17 @@ button:active, .btn-primary:active, .btn-ghost:active {
 .sel-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
 .sel-card p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
 
+/* ── Niche Grid ─────────────────────────────────────── */
+.niche-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+.niche-card {
+  padding: 16px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r-lg); cursor: pointer; transition: all 200ms var(--ease);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center;
+}
+.niche-card:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.niche-icon { font-size: 1.8rem; display: block; }
+.niche-name { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+
 /* ── Analysis Loading ───────────────────────────────── */
 .analysis-loading { text-align: center; padding: 40px; }
 .loading-spinner { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 24px; }
