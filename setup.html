@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScriptSpark V3 — Setup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    * { cursor: none !important; }
+    #cursor-main { width:40px; height:40px; position:fixed; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); background-image:url('https://cdn.custom-cursor.com/db/7600/32/stain-of-paint-cursor.png'); background-size:contain; background-repeat:no-repeat; background-position:center; }
+    #cursor-pointer { width:40px; height:40px; position:fixed; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); background-image:url('https://cdn.custom-cursor.com/db/7599/32/stain-of-paint-pointer.png'); background-size:contain; background-repeat:no-repeat; background-position:center; display:none; }
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 40px 20px; }
+    .setup-card { max-width: 640px; width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 40px; }
+    h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+    p { color: var(--text-dim); line-height: 1.6; margin-bottom: 16px; }
+    .step { display: flex; gap: 16px; padding: 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 12px; }
+    .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--gradient); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+    .step-content { flex: 1; }
+    .step-content h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+    .step-content p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+    code { display: block; padding: 12px; background: #0A0A10; border: 1px solid var(--border); border-radius: 8px; font-size: 0.8rem; color: var(--accent); margin: 8px 0; word-break: break-all; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: var(--r); font-weight: 600; background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: #fff; border: 1px solid rgba(139,92,246,0.3); text-decoration: none; transition: all 200ms var(--ease); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(139,92,246,0.4); }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .dot-green { background: #22C55E; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-red { background: #EF4444; }
+  </style>
+</head>
+<body>
+  <div id="cursor-main"></div>
+  <div id="cursor-pointer"></div>
+  <div class="setup-card">
+    <h1>&#128736; ScriptSpark V3 Setup</h1>
+    <p>Follow these steps to complete the database setup.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Open Supabase SQL Editor</h3>
+        <p>Click the button below to open your project's SQL Editor.</p>
+        <a href="https://supabase.com/dashboard/project/einfzxirrwpkvzrpdnma/sql/new" target="_blank" class="btn-primary" style="margin-top:12px;">&#128279; Open Supabase SQL Editor</a>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Copy the Schema SQL</h3>
+        <p>The SQL below creates all required tables. Click to copy.</p>
+        <code id="sqlBlock">-- Copy the content from server/supabase-schema.sql</code>
+        <button class="btn-primary" onclick="copySQL()">&#128203; Copy SQL</button>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Paste and Run</h3>
+        <p>In the SQL Editor, paste the SQL and click <strong>Run</strong>. Then refresh this page.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+      <h3 style="margin-bottom:12px;">Status</h3>
+      <div id="statusCheck">
+        <p style="color:var(--text-muted);">Checking database status...</p>
+      </div>
+      <button class="btn-primary" onclick="checkStatus()" style="margin-top:12px;">&#128260; Check Status</button>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script>
+    function copySQL() {
+      fetch('/api/setup/sql')
+        .then(r => r.text())
+        .then(sql => {
+          navigator.clipboard.writeText(sql);
+          alert('SQL copied to clipboard!');
+        })
+        .catch(() => {
+          alert('Could not fetch SQL. Please copy from server/supabase-schema.sql');
+        });
+    }
+
+    async function checkStatus() {
+      const statusEl = document.getElementById('statusCheck');
+      statusEl.innerHTML = '<p style="color:var(--text-muted);">Checking...</p>';
+      try {
+        const r = await fetch('/api/setup/db');
+        const data = await r.json();
+        if (data.success) {
+          statusEl.innerHTML = '<p><span class="status-dot dot-green"></span> All tables are set up!</p>';
+        } else {
+          statusEl.innerHTML = data.results.map(r => '<p style="font-size:0.82rem;margin:4px 0;">' + r + '</p>').join('') +
+            '<p style="margin-top:12px;color:var(--text-dim);">Please run the SQL manually using the steps above.</p>';
+        }
+      } catch(e) {
+        statusEl.innerHTML = '<p><span class="status-dot dot-red"></span> Server not running. Start the backend first.</p>';
+      }
+    }
+
+    checkStatus();
+
+    /* Custom cursor */
+    (function(){
+      var cursorMain = document.getElementById('cursor-main');
+      var cursorPointer = document.getElementById('cursor-pointer');
+      if(cursorMain && cursorPointer){
+        document.addEventListener('mousemove', function(e){
+          cursorMain.style.left = e.clientX + 'px'; cursorMain.style.top = e.clientY + 'px';
+          cursorPointer.style.left = e.clientX + 'px'; cursorPointer.style.top = e.clientY + 'px';
+        });
+        document.addEventListener('mouseleave', function(){ cursorMain.style.display = 'none'; cursorPointer.style.display = 'none'; });
+        document.addEventListener('mouseenter', function(){ cursorMain.style.display = 'block'; cursorPointer.style.display = 'none'; });
+        document.querySelectorAll('button, a').forEach(function(el){
+          el.addEventListener('mouseenter', function(){ cursorMain.style.display = 'none'; cursorPointer.style.display = 'block'; });
+          el.addEventListener('mouseleave', function(){ cursorMain.style.display = 'block'; cursorPointer.style.display = 'none'; });
+        });
+        document.addEventListener('mousedown', function(){ cursorMain.style.transform = 'translate(-50%, -50%) scale(0.85)'; cursorPointer.style.transform = 'translate(-50%, -50%) scale(0.85)'; });
+        document.addEventListener('mouseup', function(){ cursorMain.style.transform = 'translate(-50%, -50%) scale(1)'; cursorPointer.style.transform = 'translate(-50%, -50%) scale(1)'; });
+      }
+    })();
+  </script>
+</body>
+</html>

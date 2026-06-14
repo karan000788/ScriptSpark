@@ -3,296 +3,243 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ScriptSpark — AI Script & Thumbnail Studio</title>
-  <meta name="description" content="Generate viral YouTube scripts and thumbnails with AI. Free, browser-based, your data stays private." />
+  <title>ScriptSpark V3 — AI YouTube Growth Platform</title>
+  <meta name="description" content="Generate viral YouTube scripts, custom thumbnails, and channel growth insights with AI." />
   <meta name="referrer" content="no-referrer" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <meta http-equiv="Permissions-Policy" content="geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()" />
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' 'unsafe-inline' https://js.puter.com https://*.puter.com;
+    script-src 'self' 'unsafe-inline';
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com data:;
-    img-src 'self' data: blob: https://cdn.custom-cursor.com https://puter.com https://*.puter.com https://*.puter.app https://*.puter.vip;
+    img-src 'self' data: blob: https: https://cdn.custom-cursor.com;
     media-src 'self' blob:;
-    connect-src 'self' https://api.groq.com https://api.puter.com https://auth.puter.com https://*.puter.com;
-    frame-src https://*.puter.com;
-    child-src https://*.puter.com;
+    connect-src 'self' https://api.groq.com https://*.supabase.co https://www.googleapis.com https://api.replicate.com https://image.pollinations.ai;
+    frame-src 'self';
+    child-src 'self';
     frame-ancestors 'none';
     base-uri 'self';
-    form-action 'self' https://*.puter.com;
+    form-action 'self';
     object-src 'none';
   " />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://js.puter.com/v2/"></script>
   <style>
-    .app-wrapper { min-height: 100vh; display: flex; flex-direction: column; }
-
-    /* Stepper */
-    .stepper { display: flex; justify-content: center; padding: 24px 16px 0; }
-    .stepper ol { list-style: none; display: flex; gap: 4px; align-items: center; }
-    .step-item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 9999px; font-size: 0.82rem; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1); border: 1px solid transparent; }
-    .step-item:hover { color: var(--text-dim); background: rgba(255,255,255,0.03); }
-    .step-item.active { color: var(--text); background: var(--accent-soft); border-color: rgba(139,92,246,0.3); box-shadow: 0 0 16px rgba(139, 92, 246, 0.15); }
-    .step-item.done { color: var(--success); }
-    .step-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; background: var(--bg-card); border: 1px solid var(--border); flex-shrink: 0; transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1); }
-    .step-item.active .step-num { background: var(--gradient); border-color: var(--accent); color: #fff; box-shadow: 0 0 12px rgba(139, 92, 246, 0.4); transform: scale(1.1); }
-    .step-item.done .step-num { background: var(--success); border-color: var(--success); color: #fff; }
-    .step-divider { width: 32px; height: 1px; background: var(--border); transition: background 300ms; }
-    @media (max-width: 640px) { .stepper { display: none; } }
-
-    /* Mobile Stepper */
-    .mobile-stepper { display: none; position: sticky; top: 0; z-index: 200; background: var(--bg-glass); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 10px 16px; align-items: center; justify-content: space-between; }
-    .mobile-step-label { font-size: 0.82rem; font-weight: 600; }
-    .mobile-step-prev, .mobile-step-next { background: var(--bg-card); border: 1px solid var(--border); width: 36px; height: 36px; border-radius: var(--r); font-size: 0.85rem; display: flex; align-items: center; justify-content: center; transition: all 150ms var(--ease); }
-    .mobile-step-prev:hover:not(:disabled), .mobile-step-next:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-    .mobile-step-prev:disabled, .mobile-step-next:disabled { opacity: 0.3; cursor: not-allowed; }
-    @media (max-width: 640px) { .mobile-stepper { display: flex; position: static; } }
-
-    /* Section / Step Views */
-    .section { display: none; padding: 24px 16px 40px; max-width: 900px; margin: 0 auto; width: 100%; }
-
-    .section.active { display: block; }
-    .hero { text-align: center; margin-bottom: 32px; position: relative; }
-    .hero::before { content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 400px; height: 400px; background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%); pointer-events: none; }
-    .hero-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; position: relative; z-index: 1; }
-    .hero-sub { color: var(--text-dim); font-size: 0.95rem; margin-top: 8px; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.5; position: relative; z-index: 1; }
-
-    /* Niche Cards */
-    .niche-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; max-width: 720px; margin: 0 auto; }
-    .niche-card { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg); cursor: pointer; transition: all 250ms cubic-bezier(0.34, 1.56, 0.64, 1); text-align: center; position: relative; overflow: hidden; animation: cardIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-    .niche-card:nth-child(1) { animation-delay: 0.03s; }
-    .niche-card:nth-child(2) { animation-delay: 0.06s; }
-    .niche-card:nth-child(3) { animation-delay: 0.09s; }
-    .niche-card:nth-child(4) { animation-delay: 0.12s; }
-    .niche-card:nth-child(5) { animation-delay: 0.15s; }
-    .niche-card:nth-child(6) { animation-delay: 0.18s; }
-    .niche-card:nth-child(7) { animation-delay: 0.21s; }
-    .niche-card:nth-child(8) { animation-delay: 0.24s; }
-    .niche-card:nth-child(9) { animation-delay: 0.27s; }
-    .niche-card:nth-child(10) { animation-delay: 0.30s; }
-    .niche-card:nth-child(11) { animation-delay: 0.33s; }
-    .niche-card:nth-child(12) { animation-delay: 0.36s; }
-    .niche-card:nth-child(13) { animation-delay: 0.39s; }
-    .niche-card:nth-child(14) { animation-delay: 0.42s; }
-    .niche-card:nth-child(15) { animation-delay: 0.45s; }
-    @keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-    .niche-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,92,246,0.2), transparent); opacity: 0; transition: opacity 250ms; }
-    .niche-card:hover::before { opacity: 1; }
-    .niche-card:hover { border-color: var(--border-hover); transform: translateY(-4px) scale(1.03); box-shadow: var(--shadow-md), 0 0 20px rgba(139, 92, 246, 0.1); }
-    .niche-card:active { transform: translateY(-1px) scale(0.98); transition-duration: 80ms; }
-    .niche-card.selected { border-color: var(--accent); background: var(--accent-soft); box-shadow: var(--accent-glow); transform: translateY(-2px) scale(1.02); animation: selectPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-    @keyframes selectPop { 0% { transform: scale(1); } 40% { transform: scale(1.08); } 100% { transform: scale(1.02); } }
-    .niche-card.selected::before { opacity: 1; background: linear-gradient(90deg, transparent, rgba(139,92,246,0.5), transparent); }
-    .niche-icon { font-size: 1.8rem; }
-    .niche-name { font-size: 0.85rem; font-weight: 600; }
-    @media (max-width: 480px) { .niche-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; } .niche-card { padding: 14px 8px; } .niche-icon { font-size: 1.5rem; } .niche-name { font-size: 0.75rem; } }
-
-    /* Skeleton & Shimmer */
-    @keyframes shimmer {
-      0% { background-position: -1000px 0; }
-      100% { background-position: 1000px 0; }
-    }
-    .skeleton {
-      background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
-      background-size: 1000px 100%;
-      animation: shimmer 1.5s infinite linear;
-      border-radius: 8px;
-    }
-    [data-theme="light"] .skeleton {
-      background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
-      background-size: 1000px 100%;
-    }
-    .ideas-skeleton, .script-skeleton, .thumbnail-skeleton {
-      max-width: 720px;
-      margin: 0 auto;
-    }
-    .thumbnail-skeleton { text-align: center; }
-    .thumbnail-skeleton > div:last-child { justify-content: center; }
-
-    /* Ideas List */
-    .ideas-list { display: flex; flex-direction: column; gap: 10px; }
-    .idea-card { padding: 16px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; transition: all 200ms var(--ease); display: flex; align-items: center; gap: 14px; position: relative; overflow: hidden; }
-    .idea-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,92,246,0.2), transparent); opacity: 0; transition: opacity 200ms; }
-    .idea-card:hover::before { opacity: 1; }
-    .idea-card:hover { border-color: var(--border-accent); background: var(--accent-soft); }
-    .idea-card.selected { border-color: var(--accent); background: var(--accent-soft); box-shadow: var(--accent-glow); }
-    .idea-num { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 0.82rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .idea-title { font-size: 0.95rem; font-weight: 600; line-height: 1.4; }
-    .idea-reason { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
-
-    /* Script Display */
-    .script-display { max-width: 720px; margin: 0 auto; }
-    .script-title-display { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
-    .script-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px; }
-    .script-body { font-size: 0.92rem; line-height: 1.7; color: var(--text-dim); white-space: pre-wrap; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; max-height: 400px; overflow-y: auto; }
-    .script-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
-
-    /* Thumbnail Display */
-    .thumbnail-display { max-width: 720px; margin: 0 auto; text-align: center; }
-    .thumbnail-prompt-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; text-align: left; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 16px; }
-    .thumbnail-img-wrap { position: relative; width: 100%; max-width: 640px; margin: 0 auto; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--border); background: var(--bg-card); aspect-ratio: 16/9; }
-    .thumbnail-image { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: var(--r-lg); }
-    .thumbnail-actions { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
-
-    /* Error */
-    .error-box { max-width: 480px; margin: 0 auto; text-align: center; padding: 32px 24px; background: var(--bg-card); border: 1px solid var(--error); border-radius: var(--r-lg); }
-    .error-box .error-icon { font-size: 2rem; margin-bottom: 12px; }
-    .error-box .error-msg { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 16px; }
-
-    .error-card { text-align: center; padding: 40px; border-radius: 12px; border: 1px solid #FF4444; max-width: 480px; margin: 0 auto; }
-    .error-card p { margin-bottom: 16px; color: #FF4444; }
-    .retry-btn {
-      background: var(--accent); color: #fff; border: none; padding: 12px 28px;
-      border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 150ms var(--ease);
-    }
-    .retry-btn:hover { opacity: 0.85; transform: translateY(-1px); }
-
-    .mt12 { margin-top: 12px; } .mt16 { margin-top: 16px; } .mt20 { margin-top: 20px; } .text-center { text-align: center; }
-  </style>
-  <style>
-    /* ── Custom Cursor (Stain Paint) ──────────────────────────── */
+    /* ── Custom Cursor ──────────────────────────── */
     * { cursor: none !important; }
-    #cursor-main {
-      width: 40px; height: 40px; position: fixed; pointer-events: none; z-index: 99999;
-      transform: translate(-50%, -50%);
-      background-image: url('https://cdn.custom-cursor.com/db/7600/32/stain-of-paint-cursor.png');
-      background-size: contain; background-repeat: no-repeat; background-position: center;
-      transition: transform 0.1s ease;
-    }
-    #cursor-pointer {
-      width: 40px; height: 40px; position: fixed; pointer-events: none; z-index: 99999;
-      transform: translate(-50%, -50%);
-      background-image: url('https://cdn.custom-cursor.com/db/7599/32/stain-of-paint-pointer.png');
-      background-size: contain; background-repeat: no-repeat; background-position: center;
-      display: none;
-    }
-
-    /* ── Animated Background ─────────────────────────────────── */
-    body { background: #0A0A0A; position: relative; overflow-x: hidden; }
-    body::before {
-      content: ''; position: fixed; inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(108,71,255,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 80% at 80% 80%, rgba(255,107,53,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse 40% 40% at 60% 30%, rgba(108,71,255,0.06) 0%, transparent 50%);
-      animation: bgShift 12s ease-in-out infinite alternate;
-      pointer-events: none; z-index: 0;
-    }
-    @keyframes bgShift {
-      0%   { opacity: 1; transform: scale(1) rotate(0deg); }
-      50%  { opacity: 0.8; transform: scale(1.05) rotate(1deg); }
-      100% { opacity: 1; transform: scale(1.02) rotate(-1deg); }
-    }
-    .orb {
-      position: fixed; border-radius: 50%; filter: blur(80px);
-      pointer-events: none; z-index: 0;
-      animation: orbFloat linear infinite;
-    }
+    #cursor-main { width:40px; height:40px; position:fixed; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); background-image:url('https://cdn.custom-cursor.com/db/7600/32/stain-of-paint-cursor.png'); background-size:contain; background-repeat:no-repeat; background-position:center; transition:transform 0.1s ease; }
+    #cursor-pointer { width:40px; height:40px; position:fixed; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); background-image:url('https://cdn.custom-cursor.com/db/7599/32/stain-of-paint-pointer.png'); background-size:contain; background-repeat:no-repeat; background-position:center; display:none; }
+    button, a, [role="button"] { position: relative; }
+    button::before, a::before, [role="button"]::before { content: ''; position: absolute; inset: -15px; border-radius: inherit; }
+    
+    /* ── Orb Backgrounds ────────────────────────── */
+    .orb { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; animation: orbFloat linear infinite; }
     .orb-1 { width:400px; height:400px; background:rgba(108,71,255,0.08); top:-100px; left:-100px; animation-duration:20s; }
     .orb-2 { width:300px; height:300px; background:rgba(255,107,53,0.06); bottom:-50px; right:-50px; animation-duration:25s; animation-delay:-10s; }
     .orb-3 { width:200px; height:200px; background:rgba(108,71,255,0.05); top:40%; left:60%; animation-duration:18s; animation-delay:-5s; }
-    @keyframes orbFloat {
-      0%,100% { transform: translate(0,0) scale(1); }
-      33%      { transform: translate(30px,-20px) scale(1.05); }
-      66%      { transform: translate(-20px,30px) scale(0.95); }
-    }
+    @keyframes orbFloat { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.05); } 66% { transform: translate(-20px,30px) scale(0.95); } }
 
-    /* ── Button Click Animations ─────────────────────────────── */
-    button {
-      position: relative; overflow: hidden;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    button::after {
-      content: ''; position: absolute; inset: 0;
-      background: rgba(255,255,255,0.15); border-radius: inherit;
-      opacity: 0; transform: scale(0);
-      transition: transform 0.4s ease, opacity 0.4s ease;
-    }
+    /* ── Animated Background ────────────────────── */
+    body { background: #0A0A0A; position: relative; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 80% 60% at 20% 20%, rgba(108,71,255,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 80% at 80% 80%, rgba(255,107,53,0.08) 0%, transparent 60%), radial-gradient(ellipse 40% 40% at 60% 30%, rgba(108,71,255,0.06) 0%, transparent 50%); animation: bgShift 12s ease-in-out infinite alternate; pointer-events: none; z-index: 0; }
+    @keyframes bgShift { 0% { opacity: 1; transform: scale(1) rotate(0deg); } 50% { opacity: 0.8; transform: scale(1.05) rotate(1deg); } 100% { opacity: 1; transform: scale(1.02) rotate(-1deg); } }
+
+    /* ── Button Click Animations ────────────────── */
+    button { position: relative; overflow: hidden; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    button::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.15); border-radius: inherit; opacity: 0; transform: scale(0); transition: transform 0.4s ease, opacity 0.4s ease; }
     button:active { transform: scale(0.96); }
     button:active::after { transform: scale(2); opacity: 0; transition: 0s; }
-    @keyframes ripple {
-      to { transform: scale(2.5); opacity: 0; }
-    }
+    @keyframes ripple { to { transform: scale(2.5); opacity: 0; } }
 
-    /* ── Niche Card Animations ───────────────────────────────── */
-    .niche-card {
-      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1),
-                  box-shadow 0.2s ease, border-color 0.2s ease;
-    }
-    .niche-card:hover {
-      transform: translateY(-4px) scale(1.03);
-      box-shadow: 0 12px 32px rgba(108,71,255,0.2);
-      border-color: #6C47FF;
-    }
-    .niche-card:active { transform: scale(0.97); }
-    .niche-card.selected {
-      border-color: #6C47FF;
-      background: rgba(108,71,255,0.1);
-      box-shadow: 0 0 0 2px #6C47FF, 0 8px 24px rgba(108,71,255,0.25);
-      animation: selectedPulse 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    @keyframes selectedPulse {
-      0%  { transform: scale(1); }
-      50% { transform: scale(1.06); }
-      100%{ transform: scale(1); }
-    }
+    /* ── Content z-index ────────────────────────── */
+    .app-wrapper, .view, footer, .toast, .navbar { position: relative; z-index: 1; }
 
-    /* ── Step Transition Animations ──────────────────────────── */
-    @keyframes slideOutLeft {
-      to { opacity: 0; transform: translateX(-30px); }
-    }
-    @keyframes slideInRight {
-      from { opacity: 0; transform: translateX(30px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-
-    /* ── Progress Bar Animation ──────────────────────────────── */
-    .progress-bar-fill {
-      transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1);
-      background: linear-gradient(90deg, #6C47FF, #FF6B35);
-      background-size: 200% 100%;
-      animation: progressShimmer 2s linear infinite;
-    }
-    @keyframes progressShimmer {
-      0%   { background-position: 200% center; }
-      100% { background-position: -200% center; }
-    }
-
-    /* ── Skeleton Shimmer Upgrade ────────────────────────────── */
-    .skeleton {
-      background: linear-gradient(90deg,
-        rgba(255,255,255,0.03) 25%,
-        rgba(108,71,255,0.08) 50%,
-        rgba(255,255,255,0.03) 75%);
-      background-size: 1000px 100%;
-      animation: shimmer 1.8s infinite linear;
-      border-radius: 8px;
-    }
-
-    /* ── Light Theme Adjustments ─────────────────────────────── */
-    [data-theme="light"] body::before {
-      background:
-        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(108,71,255,0.07) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 80% at 80% 80%, rgba(255,107,53,0.05) 0%, transparent 60%);
-    }
+    /* ── Light theme override ───────────────────── */
+    [data-theme="light"] body::before { background: radial-gradient(ellipse 80% 60% at 20% 20%, rgba(108,71,255,0.07) 0%, transparent 60%), radial-gradient(ellipse 60% 80% at 80% 80%, rgba(255,107,53,0.05) 0%, transparent 60%); }
     [data-theme="light"] .orb-1 { background: rgba(108,71,255,0.05); }
     [data-theme="light"] .orb-2 { background: rgba(255,107,53,0.04); }
     [data-theme="light"] body { background: #FAFAFA; }
 
-    /* ── Content z-index ─────────────────────────────────────── */
-    .app-wrapper, .stepper, .section, footer, .toast {
-      position: relative; z-index: 1;
+    :root {
+    :root {
+      --auth-gradient: linear-gradient(135deg, #7C3AED, #3B82F6, #06B6D4);
+      --card-hover-transform: translateY(-4px);
     }
-    .mobile-stepper { z-index: 200; }
 
-    /* ── Cursor hit area expansion ─────────────────────────────── */
-    button, a, [role="button"] { position: relative; }
-    button::before, a::before, [role="button"]::before {
-      content: ''; position: absolute; inset: -15px; border-radius: inherit;
+    .view { display: none; padding: 24px 16px 60px; max-width: 960px; margin: 0 auto; width: 100%; }
+    .view.active { display: block; }
+
+    .page-hero { text-align: center; margin-bottom: 32px; animation: fadeUp 0.5s ease both; }
+    .page-hero h1 { font-size: clamp(1.4rem, 3.5vw, 2rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; }
+    .page-hero p { color: var(--text-dim); font-size: 0.95rem; max-width: 520px; margin: 0 auto; line-height: 1.6; }
+    .page-hero .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: var(--accent-soft); border: 1px solid rgba(139,92,246,0.2); border-radius: 999px; font-size: 0.72rem; font-weight: 600; color: var(--accent); margin-bottom: 16px; }
+
+    /* Auth */
+    .auth-container { max-width: 420px; margin: 40px auto; }
+    .auth-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 32px; }
+    .auth-tabs { display: flex; gap: 0; margin-bottom: 24px; background: var(--bg-input); border-radius: var(--r); padding: 3px; }
+    .auth-tab { flex: 1; padding: 10px; text-align: center; border-radius: calc(var(--r) - 3px); font-size: 0.88rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 150ms var(--ease); border: none; background: none; }
+    .auth-tab.active { background: var(--accent); color: #fff; box-shadow: 0 2px 12px rgba(139,92,246,0.3); }
+    .auth-tab:hover:not(.active) { color: var(--text-dim); }
+    .auth-form { display: none; }
+    .auth-form.active { display: block; animation: fadeUp 0.3s ease both; }
+    .auth-form label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; margin-top: 16px; }
+    .auth-form input { width: 100%; padding: 12px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); font-size: 0.9rem; outline: none; transition: border 150ms var(--ease); }
+    .auth-form input:focus { border-color: var(--accent); }
+    .auth-form .btn-primary { width: 100%; margin-top: 20px; padding: 14px; font-size: 0.95rem; }
+    .auth-toggle { text-align: center; margin-top: 16px; font-size: 0.85rem; color: var(--text-muted); }
+    .auth-toggle a { color: var(--accent); cursor: pointer; }
+    .auth-logo { text-align: center; margin-bottom: 24px; }
+    .auth-logo .logo-icon { font-size: 2rem; }
+    .auth-logo h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 800; margin-top: 8px; }
+    .auth-logo p { font-size: 0.82rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* Selection Cards */
+    .sel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; max-width: 620px; margin: 0 auto; }
+    .sel-card { padding: 32px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-xl); cursor: pointer; transition: all 300ms cubic-bezier(0.34,1.56,0.64,1); text-align: center; position: relative; overflow: hidden; }
+    .sel-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0; transition: opacity 300ms; }
+    .sel-card:hover::before { opacity: 1; }
+    .sel-card:hover { border-color: var(--border-hover); transform: var(--card-hover-transform); box-shadow: var(--shadow-md); }
+    .sel-card.selected { border-color: var(--accent); background: var(--accent-soft); box-shadow: var(--accent-glow); }
+    .sel-card.selected::before { opacity: 1; }
+    .sel-icon { font-size: 2.5rem; margin-bottom: 16px; display: block; }
+    .sel-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+    .sel-card p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+    .sel-check { position: absolute; top: 12px; right: 12px; width: 24px; height: 24px; border-radius: 50%; background: var(--gradient); color: #fff; font-size: 0.75rem; display: none; align-items: center; justify-content: center; }
+    .sel-card.selected .sel-check { display: flex; }
+
+    /* Forms */
+    .form-card { max-width: 520px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 28px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); font-size: 0.9rem; outline: none; transition: border 150ms var(--ease); }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+    .form-group textarea { min-height: 80px; resize: vertical; font-family: inherit; }
+    .form-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+    .form-actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+
+    /* Analysis */
+    .analysis-loading { text-align: center; padding: 40px; }
+    .loading-spinner { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 24px; }
+    .loading-steps { max-width: 300px; margin: 0 auto; }
+    .loading-step { padding: 8px 0; font-size: 0.88rem; color: var(--text-muted); position: relative; padding-left: 28px; text-align: left; }
+    .loading-step::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); }
+    .loading-step.active { color: var(--accent); }
+    .loading-step.active::before { border-color: var(--accent); border-top-color: transparent; animation: spin 0.6s linear infinite; }
+    .loading-step.done { color: var(--success); }
+    .loading-step.done::before { content: '✓'; border-color: var(--success); background: var(--success); color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .analysis-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 24px; animation: fadeUp 0.5s ease both; }
+    .analysis-header { display: flex; gap: 16px; align-items: center; margin-bottom: 20px; }
+    .analysis-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+    .analysis-header h3 { font-size: 1.1rem; font-weight: 700; }
+    .analysis-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.82rem; color: var(--text-muted); margin-top: 4px; }
+    .analysis-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-box { padding: 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r); text-align: center; }
+    .stat-value { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.2rem; font-weight: 800; background: var(--auth-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+    .analysis-section { margin-bottom: 16px; }
+    .analysis-section h4 { font-size: 0.88rem; font-weight: 700; margin-bottom: 8px; color: var(--text-dim); }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { padding: 5px 12px; background: var(--accent-soft); border: 1px solid rgba(139,92,246,0.2); border-radius: 999px; font-size: 0.75rem; color: var(--accent); font-weight: 500; }
+    .video-list { display: flex; flex-direction: column; gap: 6px; }
+    .video-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r); text-decoration: none; transition: all 150ms var(--ease); }
+    .video-item:hover { border-color: var(--border-accent); }
+    .video-title { font-size: 0.85rem; color: var(--text); font-weight: 500; flex: 1; margin-right: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .video-views { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+    .competitor-list { display: flex; flex-direction: column; gap: 6px; }
+    .competitor-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r); font-size: 0.88rem; }
+
+    /* Ideas */
+    .ideas-list { max-width: 620px; margin: 0 auto; }
+    .ideas-skeleton { max-width: 620px; margin: 0 auto; }
+    .idea-card { padding: 18px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg); cursor: pointer; transition: all 200ms var(--ease); display: flex; align-items: center; gap: 16px; margin-bottom: 10px; }
+    .idea-card:hover { border-color: var(--border-accent); background: var(--accent-soft); transform: translateX(4px); }
+    .idea-card.selected { border-color: var(--accent); box-shadow: var(--accent-glow); }
+    .idea-num { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .idea-title { font-size: 0.95rem; font-weight: 600; line-height: 1.4; }
+    .idea-reason { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* Script */
+    .script-display { max-width: 720px; margin: 0 auto; }
+    .script-title-display { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+    .script-meta { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 20px; }
+    .script-body { font-size: 0.92rem; line-height: 1.8; color: var(--text-dim); white-space: pre-wrap; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 24px; max-height: 500px; overflow-y: auto; }
+    .script-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+    .script-skeleton { max-width: 720px; margin: 0 auto; }
+
+    /* Fact Check */
+    .fact-check-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; margin-top: 16px; }
+    .fact-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-weight: 600; font-size: 0.9rem; }
+    .fact-score { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.2rem; font-weight: 800; }
+    .fact-section { margin-bottom: 12px; }
+    .fact-section h5 { font-size: 0.82rem; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; }
+    .fact-claim { padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 8px; }
+    .claim-concern { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+    .claim-correction { font-size: 0.8rem; color: var(--success); margin-top: 4px; }
+    .claim-source { font-size: 0.75rem; color: var(--accent); margin-top: 2px; }
+
+    /* Thumbnail */
+    .thumbnail-display { max-width: 640px; margin: 0 auto; }
+    .thumbnail-prompt-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; font-size: 0.82rem; color: var(--text-dim); margin-bottom: 16px; line-height: 1.5; }
+    .thumbnail-img-wrap { width: 100%; aspect-ratio: 16/9; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--border); background: var(--bg-input); }
+    .thumbnail-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .thumbnail-placeholder { padding: 60px 20px; text-align: center; color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--r-lg); }
+    .thumbnail-actions { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+    .thumbnail-skeleton { max-width: 640px; margin: 0 auto; }
+
+    /* Dashboard */
+    .dash-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .dash-stat-card { padding: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg); text-align: center; }
+    .dash-stat-value { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.5rem; font-weight: 800; background: var(--auth-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .dash-stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+    .dash-section { margin-bottom: 20px; }
+    .dash-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
+    .dash-list { display: flex; flex-direction: column; gap: 6px; }
+    .dash-item { padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); }
+    .dash-item-title { font-size: 0.88rem; font-weight: 600; }
+    .dash-item-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+    .dash-empty { text-align: center; padding: 40px; color: var(--text-dim); }
+
+    /* Navbar upgrades */
+    .navbar-user { display: none; align-items: center; gap: 10px; }
+    .user-name { font-size: 0.82rem; font-weight: 500; color: var(--text-dim); }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #fff; font-weight: 700; }
+
+    /* Error card */
+    .error-card { text-align: center; padding: 40px; background: var(--bg-card); border: 1px solid var(--error); border-radius: var(--r-lg); max-width: 480px; margin: 0 auto; }
+    .error-card p { color: var(--text-dim); margin-bottom: 16px; }
+    .retry-btn { background: var(--accent); color: #fff; border: none; padding: 12px 28px; border-radius: var(--r); font-weight: 600; cursor: pointer; transition: all 150ms var(--ease); }
+    .retry-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    /* Animations */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideOutLeft { to { opacity: 0; transform: translateX(-30px); } }
+
+    /* Skeleton */
+    .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(139,92,246,0.08) 50%, rgba(255,255,255,0.03) 75%); background-size: 1000px 100%; animation: shimmer 1.8s infinite linear; border-radius: 8px; }
+    @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+
+    /* Quick Back Button */
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-muted); cursor: pointer; transition: all 150ms var(--ease); margin-bottom: 16px; padding: 6px 12px; border-radius: var(--r); border: 1px solid var(--border); background: var(--bg-card); }
+    .back-btn:hover { border-color: var(--border-accent); color: var(--accent); }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .view { padding: 16px 12px 40px; }
+      .auth-container { margin: 20px auto; }
+      .auth-box { padding: 20px; }
+      .sel-grid { grid-template-columns: 1fr; }
+      .analysis-stats { grid-template-columns: repeat(2, 1fr); }
+      .dash-stats { grid-template-columns: repeat(2, 1fr); }
+      .analysis-header { flex-direction: column; text-align: center; }
+      .analysis-meta { justify-content: center; }
+      .form-card { padding: 20px; }
     }
   </style>
 </head>
@@ -302,52 +249,238 @@
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
   <div class="orb orb-3"></div>
+
   <div class="app-wrapper">
     <header class="navbar">
-      <a href="index.html" class="logo" title="Back to landing">
+      <a href="#" class="logo" id="logoLink">
         <span class="logo-icon">&#128049;</span>
         <span>ScriptSpark</span>
-        <span class="logo-badge">.in</span>
+        <span class="logo-badge">V3</span>
       </a>
       <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
         <span class="hamburger-line"></span><span class="hamburger-line"></span><span class="hamburger-line"></span>
       </button>
       <nav class="navbar-actions" id="navbarActions">
-        <a href="app.html" class="nav-link active">App</a>
-        <a href="#" class="nav-link" id="myProjectsLink">Projects</a>
-        <a href="#" class="nav-link" id="settingsLink">Settings</a>
-        <a href="docs.html" class="nav-link">Docs</a>
-        <a href="policy.html" class="nav-link">Policy</a>
+        <a href="#" class="nav-link" id="navDashboard">Dashboard</a>
+        <a href="#" class="nav-link" id="navNewScript">New Script</a>
+        <div class="navbar-user" id="navbarUser">
+          <div class="user-avatar" id="userAvatar">U</div>
+          <span class="user-name" id="userName">User</span>
+          <button class="btn-ghost btn-sm" id="logoutBtn">Logout</button>
+        </div>
+        <div id="navbarAuth" style="display:flex;align-items:center;gap:8px;">
+          <a href="#" class="nav-link active" id="navLoginBtn">Sign In</a>
+        </div>
       </nav>
     </header>
 
-    <!-- Desktop Stepper -->
-    <nav class="stepper" id="stepper" aria-label="Progress">
-      <ol>
-        <li class="step-item active" data-step="1"><span class="step-num">1</span><span class="step-name">Niche</span></li>
-        <li class="step-divider"></li>
-        <li class="step-item" data-step="2"><span class="step-num">2</span><span class="step-name">Ideas</span></li>
-        <li class="step-divider"></li>
-        <li class="step-item" data-step="3"><span class="step-num">3</span><span class="step-name">Script</span></li>
-        <li class="step-divider"></li>
-        <li class="step-item" data-step="4"><span class="step-num">4</span><span class="step-name">Thumbnail</span></li>
-      </ol>
-    </nav>
+    <!-- TOAST -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <!-- Mobile Stepper -->
-    <nav class="mobile-stepper" id="mobileStepper" aria-label="Progress">
-      <button class="mobile-step-prev" id="mobileStepPrev" aria-label="Previous step" disabled>&#8592;</button>
-      <span class="mobile-step-label" id="mobileStepLabel">Step 1 of 4 &middot; Niche</span>
-      <button class="mobile-step-next" id="mobileStepNext" aria-label="Next step">&#8594;</button>
-    </nav>
-
-    <!-- Step 1: Choose Niche -->
-    <section class="section active" id="step-1">
-      <div class="hero">
-        <h1 class="hero-title">Pick Your Niche</h1>
-        <p class="hero-sub">Choose a content category. AI will generate trending video ideas tailored to that niche.</p>
+    <!-- ─── VIEW: LOGIN ────────────────────────────────────── -->
+    <section class="view" id="view-login">
+      <div class="auth-container">
+        <div class="auth-logo">
+          <div class="logo-icon">&#128049;</div>
+          <h2>ScriptSpark <span style="font-size:0.6rem;color:var(--accent);">V3</span></h2>
+          <p>AI YouTube Growth Platform</p>
+        </div>
+        <div class="auth-box">
+          <div class="auth-tabs">
+            <button class="auth-tab active" id="authTabLogin">Sign In</button>
+            <button class="auth-tab" id="authTabSignup">Create Account</button>
+          </div>
+          <form class="auth-form active" id="loginForm">
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" />
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" />
+            <button type="submit" class="btn-primary" id="loginBtn">Sign In</button>
+          </form>
+          <form class="auth-form" id="signupForm">
+            <label for="signupName">Display Name (optional)</label>
+            <input type="text" id="signupName" placeholder="Your name" autocomplete="name" />
+            <label for="signupEmail">Email</label>
+            <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email" />
+            <label for="signupPassword">Password <span style="font-size:0.7rem;color:var(--text-muted);">(min 6 chars)</span></label>
+            <input type="password" id="signupPassword" placeholder="Create a password" autocomplete="new-password" />
+            <button type="submit" class="btn-primary" id="signupBtn">Create Account</button>
+          </form>
+          <div class="auth-toggle" id="authToggle">
+            Don't have an account? <a href="#" id="showSignup">Sign up</a>
+          </div>
+        </div>
       </div>
-      <div class="niche-grid" id="nicheGrid">
+    </section>
+
+    <!-- ─── VIEW: CHANNEL TYPE ─────────────────────────────── -->
+    <section class="view" id="view-channel-type">
+      <div class="page-hero">
+        <div class="badge">&#128640; Step 1</div>
+        <h1>What type of channel do you have?</h1>
+        <p>We'll tailor the experience based on your channel.</p>
+      </div>
+      <div class="sel-grid">
+        <div class="sel-card channel-type-card" data-type="new">
+          <div class="sel-check">&#10003;</div>
+          <span class="sel-icon">&#127793;</span>
+          <h3>New Channel</h3>
+          <p>Starting fresh? We'll research your niche and find winning strategies from top creators.</p>
+        </div>
+        <div class="sel-card channel-type-card" data-type="existing">
+          <div class="sel-check">&#10003;</div>
+          <span class="sel-icon">&#128200;</span>
+          <h3>Existing Channel</h3>
+          <p>Already have a channel? We'll analyze your data to optimize your content strategy.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── VIEW: CONTENT TYPE ─────────────────────────────── -->
+    <section class="view" id="view-content-type">
+      <div class="page-hero">
+        <div class="badge">&#127916; Step 2</div>
+        <h1>What content do you create?</h1>
+        <p>We use different frameworks for Shorts vs Long Form.</p>
+      </div>
+      <button class="back-btn" id="backToChannelType">&#8592; Back</button>
+      <div class="sel-grid">
+        <div class="sel-card content-type-card" data-type="shorts">
+          <div class="sel-check">&#10003;</div>
+          <span class="sel-icon">&#128250;</span>
+          <h3>YouTube Shorts</h3>
+          <p>30-60 seconds &middot; Fast pacing &middot; Quick hooks &middot; High retention</p>
+        </div>
+        <div class="sel-card content-type-card" data-type="longform">
+          <div class="sel-check">&#10003;</span>
+          <span class="sel-icon">&#127909;</span>
+          <h3>Long Form Videos</h3>
+          <p>8-20 minutes &middot; Deep storytelling &middot; Emotional narratives</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── VIEW: HAS 50 VIDEOS ────────────────────────────── -->
+    <section class="view" id="view-has-50">
+      <div class="page-hero">
+        <div class="badge">&#128270; Step 3</div>
+        <h1>Do you have 50+ videos uploaded?</h1>
+        <p>This helps us determine how much data we have to analyze.</p>
+      </div>
+      <button class="back-btn" id="backToContentType">&#8592; Back</button>
+      <div class="sel-grid">
+        <div class="sel-card has50-card" data-value="yes">
+          <div class="sel-check">&#10003;</div>
+          <span class="sel-icon">&#9989;</span>
+          <h3>Yes, 50+ Videos</h3>
+          <p>Great! We can do deep performance analysis and find viral patterns.</p>
+        </div>
+        <div class="sel-card has50-card" data-value="no">
+          <div class="sel-check">&#10003;</div>
+          <span class="sel-icon">&#128200;</span>
+          <h3>Under 50 Videos</h3>
+          <p>No problem! We'll analyze what you have and find growth opportunities.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── VIEW: CHANNEL URL (50+) ────────────────────────── -->
+    <section class="view" id="view-channel-url">
+      <div class="page-hero">
+        <div class="badge">&#128269; Step 3</div>
+        <h1>Enter Your Channel Details</h1>
+        <p>We'll analyze your channel and build a custom creator profile.</p>
+      </div>
+      <button class="back-btn" id="backToHas50">&#8592; Back</button>
+      <div class="form-card">
+        <form id="channelForm">
+          <div class="form-group">
+            <label for="channelUrl">YouTube Channel URL</label>
+            <input type="url" id="channelUrl" placeholder="https://youtube.com/@yourchannel" required />
+            <div class="form-hint">Works with youtube.com/@handle, youtube.com/channel/ID, or just the channel name</div>
+          </div>
+          <div class="form-group">
+            <label for="channelName">Channel Name (optional)</label>
+            <input type="text" id="channelName" placeholder="e.g. TechWithAlex" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" id="analyzeBtn">Analyze Channel</button>
+          </div>
+        </form>
+        <div id="channelResults"></div>
+      </div>
+    </section>
+
+    <!-- ─── VIEW: CHANNEL URL SIMPLE (under 50) ──────────── -->
+    <section class="view" id="view-channel-url-simple">
+      <div class="page-hero">
+        <div class="badge">&#128269; Step 3</div>
+        <h1>Enter Your Channel URL</h1>
+        <p>We'll analyze your existing videos and suggest improvements.</p>
+      </div>
+      <button class="back-btn" id="backToHas50">&#8592; Back</button>
+      <div class="form-card">
+        <form id="channelFormSimple">
+          <div class="form-group">
+            <label for="channelUrlSimple">YouTube Channel URL</label>
+            <input type="url" id="channelUrlSimple" placeholder="https://youtube.com/@yourchannel" required />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" id="analyzeBtnSimple">Analyze Channel</button>
+          </div>
+        </form>
+        <div id="channelResultsSimple"></div>
+      </div>
+    </section>
+
+    <!-- ─── VIEW: NEW CHANNEL ──────────────────────────────── -->
+    <section class="view" id="view-new-channel">
+      <div class="page-hero">
+        <div class="badge">&#127793; Step 3</div>
+        <h1>Tell Us About Your Channel</h1>
+        <p>We'll research your niche and find winning content patterns.</p>
+      </div>
+      <button class="back-btn" id="backToContentType">&#8592; Back</button>
+      <div class="form-card">
+        <form id="newChannelForm">
+          <div class="form-group">
+            <label for="newNiche">Your Niche / Topic</label>
+            <input type="text" id="newNiche" placeholder="e.g. Tech Reviews, Fitness, Cooking" required />
+          </div>
+          <div class="form-group">
+            <label for="newAudience">Target Audience</label>
+            <input type="text" id="newAudience" placeholder="e.g. Indian college students, working professionals" />
+            <div class="form-hint">Who do you want to reach?</div>
+          </div>
+          <div class="form-group">
+            <label for="newLanguage">Language</label>
+            <select id="newLanguage">
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+              <option value="en-hi">Hinglish</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="newCountry">Target Country</label>
+            <input type="text" id="newCountry" placeholder="e.g. India, US, UK" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" id="newChannelBtn">Research Niche</button>
+          </div>
+        </form>
+        <div id="competitorResults"></div>
+      </div>
+    </section>
+
+    <!-- ─── VIEW: NICHE ANALYSIS ───────────────────────────── -->
+    <section class="view" id="view-niche-analysis">
+      <div class="page-hero">
+        <div class="badge">&#127793; Choose Topic</div>
+        <h1>What's your video about?</h1>
+        <p>Pick a niche or describe your topic for a tailored script.</p>
+      </div>
+      <button class="back-btn" id="startOverBtn">&#8592; Start Over</button>
+      <div class="niche-grid" id="nicheGrid" style="max-width:680px;margin:0 auto;">
         <button class="niche-card" data-niche="dark mystery"><span class="niche-icon">&#128373;</span><span class="niche-name">Dark Mystery</span></button>
         <button class="niche-card" data-niche="finance"><span class="niche-icon">&#128176;</span><span class="niche-name">Finance</span></button>
         <button class="niche-card" data-niche="motivation"><span class="niche-icon">&#128170;</span><span class="niche-name">Motivation</span></button>
@@ -366,192 +499,93 @@
       </div>
     </section>
 
-    <!-- Step 2: Topic Ideas -->
-    <section class="section" id="step-2" hidden>
-      <div class="hero">
-        <h1 class="hero-title">5 Viral Video Ideas</h1>
-        <p class="hero-sub">AI-generated topic ideas based on your niche. Pick one to write a full script.</p>
+    <!-- ─── VIEW: IDEAS ────────────────────────────────────── -->
+    <section class="view" id="view-ideas">
+      <div class="page-hero">
+        <div class="badge">&#128161; Step 4</div>
+        <h1>Content Ideas</h1>
+        <p>AI-generated viral topic ideas. Pick one to generate a full script.</p>
       </div>
+      <button class="back-btn" id="backToIdeas">&#8592; Back to Topics</button>
       <div id="ideasContainer"></div>
-      <div class="text-center mt20">
-        <button class="btn-ghost" id="regenIdeasBtn">Regenerate Ideas</button>
-      </div>
     </section>
 
-    <!-- Step 3: Script -->
-    <section class="section" id="step-3" hidden>
-      <div class="hero">
-        <h1 class="hero-title">Your Video Script</h1>
-        <p class="hero-sub">A 400-600 word retention-optimized script with Hook, Problem, Story, Reveal, and CTA.</p>
+    <!-- ─── VIEW: SCRIPT ───────────────────────────────────── -->
+    <section class="view" id="view-script">
+      <div class="page-hero">
+        <div class="badge">&#9997; Step 5</div>
+        <h1>Your Script</h1>
+        <p>Premium retention-optimized script with storytelling frameworks.</p>
       </div>
       <div class="script-display" id="scriptContainer"></div>
-      <div class="text-center mt20">
-        <button class="btn-ghost" id="scriptBackBtn">&#8592; Back to Ideas</button>
-        <button class="btn-primary" id="toThumbnailBtn">Generate Thumbnail &#8594;</button>
-      </div>
+      <div id="factCheckResults" style="display:none;margin-top:16px;"></div>
     </section>
 
-    <!-- Step 4: Thumbnail -->
-    <section class="section" id="step-4" hidden>
-      <div class="hero">
-        <h1 class="hero-title">AI Thumbnail</h1>
-        <p class="hero-sub">A custom thumbnail generated from your script. Download or regenerate.</p>
+    <!-- ─── VIEW: THUMBNAIL ────────────────────────────────── -->
+    <section class="view" id="view-thumbnail">
+      <div class="page-hero">
+        <div class="badge">&#127912; Step 6</div>
+        <h1>AI Thumbnail</h1>
+        <p>Viral-style thumbnail generated from your content.</p>
       </div>
       <div class="thumbnail-display" id="thumbnailContainer"></div>
-      <div class="text-center mt20">
-        <button class="btn-ghost" id="thumbBackBtn">&#8592; Back to Script</button>
-        <button class="btn-ghost" id="newProjectBtn">New Project</button>
-      </div>
     </section>
+
+    <!-- ─── VIEW: DASHBOARD ────────────────────────────────── -->
+    <section class="view" id="view-dashboard">
+      <div class="page-hero">
+        <div class="badge">&#128202; Overview</div>
+        <h1>Your Dashboard</h1>
+        <p>Track your generated content and channel growth.</p>
+      </div>
+      <div id="dashboardContent"></div>
+    </section>
+
   </div>
 
-  <footer style="margin-top:auto; border-top:1px solid var(--border); background:var(--bg-card); padding:20px 24px;">
-    <div style="max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-      <span style="font-size:clamp(11px, 2.5vw, 13px); color:var(--text-muted);">Made in India &middot; <strong style="color:var(--accent);">ScriptSpark.in</strong></span>
-      <div style="display:flex; gap:20px;">
-        <a href="docs.html" style="font-size:clamp(11px, 2.5vw, 13px); color:var(--text-dim); text-decoration:none;">Docs</a>
-        <a href="policy.html" style="font-size:clamp(11px, 2.5vw, 13px); color:var(--text-dim); text-decoration:none;">Privacy</a>
-        <a href="mailto:hello@scriptspark.in" style="font-size:clamp(11px, 2.5vw, 13px); color:var(--text-dim); text-decoration:none;">Contact</a>
+  <footer style="border-top:1px solid var(--border);background:var(--bg-card);padding:16px 24px;">
+    <div style="max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <span style="font-size:0.75rem;color:var(--text-muted);">Made in India &middot; <strong style="color:var(--accent);">ScriptSpark V3</strong></span>
+      <div style="display:flex;gap:16px;">
+        <a href="docs.html" style="font-size:0.75rem;color:var(--text-dim);text-decoration:none;">Docs</a>
+        <a href="policy.html" style="font-size:0.75rem;color:var(--text-dim);text-decoration:none;">Privacy</a>
       </div>
     </div>
   </footer>
 
-  <!-- Toast -->
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <!-- Settings Modal -->
-  <div class="modal-backdrop" id="settingsModal" hidden>
-    <div class="modal modal-lg" role="dialog" aria-modal="true">
-      <div class="modal-header"><h2>Settings</h2><button class="icon-btn" id="closeSettings" aria-label="Close">&#10005;</button></div>
-      <div class="modal-body">
-        <h3>API Key</h3>
-        <p class="modal-hint">Add your free Groq API key to generate content. <b>Your key stays in your browser, never sent to our servers.</b></p>
-        <label class="field-label" for="groqKey">Groq API Key <span class="badge-inline">Required</span></label>
-        <div style="display:flex; gap:6px;"><input type="password" id="groqKey" placeholder="gsk_..." autocomplete="off" /><button class="btn-ghost btn-sm" id="toggleGroqKey" title="Show/hide">Show</button></div>
-        <p class="modal-hint" style="margin-top:6px;">Get your free key at <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a></p>
-        <hr />
-        <h3>Sound</h3>
-        <button class="sound-toggle" id="soundToggle">&#9835; Sound Effects</button>
-        <p class="modal-hint" style="margin-top:6px;">Subtle audio feedback for interactions. Muted by default.</p>
-        <hr />
-        <h3>Language</h3>
-        <label class="field-label" for="langSelect">Script language</label>
-        <select id="langSelect"><option value="en">English</option><option value="hi">Hindi</option></select>
-        <hr />
-        <h3>Data</h3>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn-ghost" id="exportDataBtn">Export Data</button><button class="btn-ghost" id="clearDataBtn" style="color:var(--error);">Clear All</button></div>
-        <p class="modal-hint">All data is stored locally in your browser.</p>
-        <div class="modal-actions"><button class="btn-primary" id="saveSettingsBtn">Save Settings</button></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Projects Modal -->
-  <div class="modal-backdrop" id="projectsModal" hidden>
-    <div class="modal modal-lg" role="dialog" aria-modal="true">
-      <div class="modal-header"><h2>My Projects</h2><button class="icon-btn" id="closeProjects" aria-label="Close">&#10005;</button></div>
-      <div class="modal-body">
-        <p class="modal-hint">All your projects are <b>auto-saved</b> in your browser.</p>
-        <div id="projectsList" class="projects-list"></div>
-        <div class="modal-actions"><button class="btn-ghost" id="newProjectBtnModal">Start New Project</button></div>
-      </div>
-    </div>
-  </div>
-
-  <script src="pipeline.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
   <script src="particles.js"></script>
   <script src="animations.js"></script>
   <script src="sound.js"></script>
-  <script src="script.js"></script>
   <script>
     (function(){
       /* ── Hamburger ────────────────────────────────────────── */
-      var btn = document.getElementById('hamburgerBtn');
-      var nav = document.getElementById('navbarActions');
+      const btn = document.getElementById('hamburgerBtn');
+      const nav = document.getElementById('navbarActions');
       if(btn && nav){
-        btn.addEventListener('click', function(e){
-          var open = nav.classList.toggle('open');
+        btn.addEventListener('click', () => {
+          const open = nav.classList.toggle('open');
           btn.classList.toggle('open');
           btn.setAttribute('aria-expanded', open);
         });
-        nav.querySelectorAll('a, button').forEach(function(el){
-          el.addEventListener('click', function(){
-            nav.classList.remove('open');
-            btn.classList.remove('open');
-            btn.setAttribute('aria-expanded','false');
-          });
-          el.addEventListener('touchstart', function(){
-            nav.classList.remove('open');
-            btn.classList.remove('open');
-            btn.setAttribute('aria-expanded','false');
-          }, { passive: true });
+        nav.querySelectorAll('a, button').forEach(el => {
+          el.addEventListener('click', () => { nav.classList.remove('open'); btn.classList.remove('open'); btn.setAttribute('aria-expanded','false'); });
+          el.addEventListener('touchstart', () => { nav.classList.remove('open'); btn.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }, { passive: true });
         });
       }
 
-      /* ── Mobile stepper ───────────────────────────────────── */
-      var stepLabels = {1:'Niche',2:'Ideas',3:'Script',4:'Thumbnail'};
-      var currentStep = 1;
-      var label = document.getElementById('mobileStepLabel');
-      var prev = document.getElementById('mobileStepPrev');
-      var next = document.getElementById('mobileStepNext');
-      function updateMobileStepper(){
-        if(label) label.textContent='Step '+currentStep+' of 4 \u00B7 '+stepLabels[currentStep];
-        if(prev) prev.disabled=(currentStep<=1);
-        if(next) next.disabled=(currentStep>=4);
-      }
-      if(prev) prev.addEventListener('click',function(){
-        if(currentStep>1){ currentStep--; updateMobileStepper(); window.showStep(currentStep); }
+      document.getElementById('navDashboard')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if(window.app) { window.app.showView('view-dashboard'); window.app.loadDashboard(); }
       });
-      if(next) next.addEventListener('click',function(){
-        if(currentStep<4){ currentStep++; updateMobileStepper(); window.showStep(currentStep); }
+      document.getElementById('navNewScript')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if(window.app) window.app.startOver();
       });
-
-      /* ── Animated showStep ────────────────────────────────── */
-      function showStep(n){
-        var current = document.querySelector('.section.active');
-        var nextEl = document.getElementById('step-'+n);
-        if (current && current !== nextEl) {
-          current.style.animation = 'slideOutLeft 0.25s ease forwards';
-          setTimeout(function(){
-            current.classList.remove('active');
-            current.hidden = true;
-            current.style.animation = '';
-            if(nextEl){
-              nextEl.classList.add('active');
-              nextEl.hidden = false;
-              nextEl.style.animation = 'slideInRight 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards';
-            }
-            document.querySelectorAll('.step-item').forEach(function(s){
-              var sn=parseInt(s.dataset.step);
-              s.classList.remove('active','done');
-              if(sn===n) s.classList.add('active');
-              else if(sn<n) s.classList.add('done');
-            });
-            currentStep=n;
-            updateMobileStepper();
-          }, 200);
-        } else if (nextEl) {
-          nextEl.classList.add('active');
-          nextEl.hidden = false;
-          nextEl.style.animation = 'slideInRight 0.3s ease forwards';
-          document.querySelectorAll('.step-item').forEach(function(s){
-            var sn=parseInt(s.dataset.step);
-            s.classList.remove('active','done');
-            if(sn===n) s.classList.add('active');
-            else if(sn<n) s.classList.add('done');
-          });
-          currentStep=n;
-          updateMobileStepper();
-        }
-      }
-      window.showStep = showStep;
-      showStep(1);
-
-      document.querySelectorAll('.step-item').forEach(function(item){
-        item.addEventListener('click',function(){
-          var step=parseInt(item.dataset.step);
-          if(step>=1&&step<=4) showStep(step);
-        });
+      document.getElementById('navLoginBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if(window.app) window.app.showView('view-login');
       });
 
       /* ── Custom Cursor ────────────────────────────────────── */
@@ -573,7 +607,7 @@
             cursorMain.style.display = 'block';
             cursorPointer.style.display = 'none';
           });
-          var hoverTargets = 'button, a, .niche-card, [role="button"], input, select, textarea, label';
+          var hoverTargets = 'button, a, [role="button"], .sel-card, .channel-type-card, .content-type-card, .has50-card, .niche-card, .idea-card, input, select, textarea, label';
           document.querySelectorAll(hoverTargets).forEach(function(el){
             el.addEventListener('mouseenter', function(){
               cursorMain.style.display = 'none';
@@ -595,54 +629,6 @@
         }
       })();
 
-      /* ── Init particles, sound, animations ──────────────── */
-      if (window.Particles) Particles.start();
-
-      if (window.Animations) {
-        Animations.init();
-        Animations.initCardTilt('.niche-card, .idea-card, .feat-card, .trust-card');
-      }
-
-      /* ── Sound toggle in settings ───────────────────────── */
-      var soundToggle = document.getElementById('soundToggle');
-      if (soundToggle && window.Sound) {
-        var soundPref = localStorage.getItem('ss-sound') === 'on';
-        Sound.setEnabled(soundPref);
-        if (soundPref) soundToggle.classList.add('active');
-
-        soundToggle.addEventListener('click', function () {
-          var on = !Sound.isEnabled();
-          Sound.setEnabled(on);
-          localStorage.setItem('ss-sound', on ? 'on' : 'off');
-          this.classList.toggle('active');
-          if (on) Sound.click();
-        });
-      }
-
-      /* ── Celebrate events ───────────────────────────────── */
-      document.addEventListener('scriptGenerated', function () {
-        if (window.Sound) Sound.success();
-        if (window.Particles) {
-          Particles.emitCelebration(window.innerWidth / 2, window.innerHeight / 2);
-        }
-        document.querySelector('.celebrate-flash') && setTimeout(function () {
-          var el = document.querySelector('.celebrate-flash');
-          el && el.classList.remove('celebrate-flash');
-        }, 800);
-      });
-
-      document.addEventListener('thumbnailGenerated', function () {
-        if (window.Sound) Sound.chime();
-        if (window.Particles) {
-          Particles.emitCelebration(window.innerWidth / 2, window.innerHeight / 2);
-        }
-      });
-
-      /* ── Hook loading overlay into fetch functions ───────── */
-      var origFetchIdeas = window._origFetchIdeas;
-      var origFetchScript = window._origFetchScript;
-      var origGenerateThumb = window._origGenerateThumb;
-
       /* ── Button Ripple ───────────────────────────────────── */
       document.querySelectorAll('button').forEach(function(btn){
         btn.addEventListener('click', function(e){
@@ -650,19 +636,22 @@
           var rect = this.getBoundingClientRect();
           var size = Math.max(rect.width, rect.height);
           var ripple = document.createElement('span');
-          ripple.style.cssText =
-            'position:absolute; border-radius:50%;' +
-            'width:' + size + 'px; height:' + size + 'px;' +
-            'left:' + (e.clientX - rect.left - size/2) + 'px;' +
-            'top:' + (e.clientY - rect.top - size/2) + 'px;' +
-            'background:rgba(255,255,255,0.25);' +
-            'transform:scale(0); animation:ripple 0.5s ease-out forwards;' +
-            'pointer-events:none;';
+          ripple.style.cssText = 'position:absolute; border-radius:50%; width:' + size + 'px; height:' + size + 'px; left:' + (e.clientX - rect.left - size/2) + 'px; top:' + (e.clientY - rect.top - size/2) + 'px; background:rgba(255,255,255,0.25); transform:scale(0); animation:ripple 0.5s ease-out forwards; pointer-events:none;';
           this.appendChild(ripple);
           setTimeout(function(){ ripple.remove(); }, 500);
         });
       });
 
+      /* ── Sound toggle ───────────────────────────────────── */
+      var soundPref = localStorage.getItem('ss-sound') === 'on';
+      if (window.Sound) Sound.setEnabled(soundPref);
+
+      /* ── Init particles, animations ──────────────────── */
+      if (window.Particles) Particles.start();
+      if (window.Animations) {
+        Animations.init();
+        Animations.initCardTilt('.sel-card, .niche-card, .idea-card, .analysis-card');
+      }
     })();
   </script>
 </body>
