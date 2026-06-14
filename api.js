@@ -1,4 +1,10 @@
-const API_BASE = '/api';
+const API_BASE = (function(){
+  if (location.protocol === 'file:') {
+    console.warn('ScriptSpark: opened from file:// — API calls go to localhost:3001');
+    return 'http://localhost:3001/api';
+  }
+  return '/api';
+})();
 
 function getToken() {
   try { return localStorage.getItem('ss-session') || ''; } catch (e) { return ''; }
