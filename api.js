@@ -1,6 +1,8 @@
 const API_BASE = (function(){
   if (location.protocol === 'file:') {
-    console.warn('ScriptSpark: opened from file:// — API calls go to localhost:3001');
+    return 'http://localhost:3001/api';
+  }
+  if (location.port && location.port !== '3001') {
     return 'http://localhost:3001/api';
   }
   return '/api';

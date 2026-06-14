@@ -30,7 +30,7 @@
     t._timer = setTimeout(() => t.classList.remove('show'), duration);
   }
 
-  function showView(id) {
+  function showView(id, pushState = true) {
     views.forEach(v => {
       v.classList.remove('active');
       v.style.display = 'none';
@@ -41,6 +41,9 @@
       el.classList.add('active');
       el.style.animation = 'slideInRight 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards';
       currentView = id;
+      if (pushState) {
+        history.pushState({ view: id }, '', `#${id}`);
+      }
     }
   }
 
@@ -809,6 +812,18 @@
     document.addEventListener('auth:expired', () => {
       showToast('Session expired. Please login again.');
       showView('view-login');
+    });
+
+    window.addEventListener('popstate', (e) => {
+      if (e.state && e.state.view) {
+        showView(e.state.view, false);
+      } else {
+        if (API.isLoggedIn()) {
+          showView('view-channel-type', false);
+        } else {
+          showView('view-login', false);
+        }
+      }
     });
   }
 

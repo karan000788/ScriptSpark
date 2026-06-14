@@ -43,14 +43,15 @@ router.post('/generate', requireAuth, async (req, res) => {
     const { error: dbError } = await supabase.from('thumbnails').insert(record);
     if (dbError) console.error('Save thumbnail error:', dbError);
 
-    await supabase.from('generation_history').insert({
+    const { error: histError } = await supabase.from('generation_history').insert({
       user_id: req.user.id,
       type: 'thumbnail',
       niche,
       input: { title, niche },
       output: { prompt, image_url: thumbnailUrl, provider },
       created_at: new Date().toISOString()
-    }).catch(e => null);
+    });
+    if (histError) console.error('History error:', histError);
 
     const altPrompt = prompt + ' (alternative version with warmer tones and different composition)';
     let altThumbnailUrl = null;

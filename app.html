@@ -53,6 +53,10 @@
     button:active { transform: scale(0.96); }
     button:active::after { transform: scale(2); opacity: 0; transition: 0s; }
     @keyframes ripple { to { transform: scale(2.5); opacity: 0; } }
+    @keyframes sparkAnim {
+      0% { transform: translate(0, 0) scale(1.5); opacity: 1; }
+      100% { transform: translate(var(--vx), var(--vy)) scale(0); opacity: 0; }
+    }
 
     /* ── Content z-index ────────────────────────── */
     .app-wrapper, .view, footer, .toast, .navbar { position: relative; z-index: 1; }
@@ -352,7 +356,7 @@
           <p>30-60 seconds &middot; Fast pacing &middot; Quick hooks &middot; High retention</p>
         </div>
         <div class="sel-card content-type-card" data-type="longform">
-          <div class="sel-check">&#10003;</span>
+          <div class="sel-check">&#10003;</div>
           <span class="sel-icon">&#127909;</span>
           <h3>Long Form Videos</h3>
           <p>8-20 minutes &middot; Deep storytelling &middot; Emotional narratives</p>
@@ -446,6 +450,15 @@
           <div class="form-group">
             <label for="newNiche">Your Niche / Topic</label>
             <input type="text" id="newNiche" placeholder="e.g. Tech Reviews, Fitness, Cooking" required />
+            <div class="tag-list" style="margin-top: 8px;">
+              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Tech Reviews</span>
+              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Finance</span>
+              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">True Crime</span>
+              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Motivation</span>
+              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Gaming</span>
+              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Vlogs</span>
+              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Education</span>
+            </div>
           </div>
           <div class="form-group">
             <label for="newAudience">Target Audience</label>
@@ -553,7 +566,7 @@
     </div>
   </footer>
 
-  <script src="api.js"></script>
+  <script src="api.js?v=3"></script>
   <script src="app.js"></script>
   <script src="particles.js"></script>
   <script src="animations.js"></script>
@@ -619,17 +632,21 @@
             });
           });
           document.addEventListener('mousedown', function(){
-            cursorMain.style.transform = 'translate(-50%, -50%) scale(0.85)';
-            cursorPointer.style.transform = 'translate(-50%, -50%) scale(0.85)';
+            cursorMain.style.transform = 'translate(-50%, -50%) scale(0.7)';
+            cursorPointer.style.transform = 'translate(-50%, -50%) scale(0.7)';
+            cursorMain.style.filter = 'hue-rotate(90deg)';
+            cursorPointer.style.filter = 'hue-rotate(90deg)';
           });
           document.addEventListener('mouseup', function(){
             cursorMain.style.transform = 'translate(-50%, -50%) scale(1)';
             cursorPointer.style.transform = 'translate(-50%, -50%) scale(1)';
+            cursorMain.style.filter = 'none';
+            cursorPointer.style.filter = 'none';
           });
         }
       })();
 
-      /* ── Button Ripple ───────────────────────────────────── */
+      /* ── Button Ripple & Spark ───────────────────────────────────── */
       document.querySelectorAll('button').forEach(function(btn){
         btn.addEventListener('click', function(e){
           if (window.Sound) Sound.click();
@@ -639,6 +656,20 @@
           ripple.style.cssText = 'position:absolute; border-radius:50%; width:' + size + 'px; height:' + size + 'px; left:' + (e.clientX - rect.left - size/2) + 'px; top:' + (e.clientY - rect.top - size/2) + 'px; background:rgba(255,255,255,0.25); transform:scale(0); animation:ripple 0.5s ease-out forwards; pointer-events:none;';
           this.appendChild(ripple);
           setTimeout(function(){ ripple.remove(); }, 500);
+          
+          // Spark Animation
+          for(let i=0; i<8; i++) {
+            let spark = document.createElement('div');
+            let angle = (Math.PI * 2 * i) / 8 + (Math.random() * 0.5 - 0.25);
+            let dist = 30 + Math.random() * 20;
+            let vx = Math.cos(angle) * dist;
+            let vy = Math.sin(angle) * dist;
+            let colors = ['#7C3AED', '#3B82F6', '#06B6D4', '#ffffff'];
+            let color = colors[Math.floor(Math.random() * colors.length)];
+            spark.style.cssText = `position:fixed; left:${e.clientX}px; top:${e.clientY}px; width:5px; height:5px; background:${color}; border-radius:50%; pointer-events:none; z-index:999999; --vx:${vx}px; --vy:${vy}px; animation: sparkAnim 0.6s ease-out forwards; box-shadow: 0 0 8px ${color};`;
+            document.body.appendChild(spark);
+            setTimeout(() => spark.remove(), 600);
+          }
         });
       });
 

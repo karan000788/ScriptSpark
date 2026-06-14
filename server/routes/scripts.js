@@ -37,7 +37,7 @@ router.post('/generate', requireAuth, async (req, res) => {
 
     if (error) console.error('Save script error:', error);
 
-    await supabase.from('generation_history').insert({
+    const { error: histError } = await supabase.from('generation_history').insert({
       user_id: req.user.id,
       type: 'script',
       niche,
@@ -45,7 +45,8 @@ router.post('/generate', requireAuth, async (req, res) => {
       input: { topic, niche },
       output: { title: script.title, wordCount: script.wordCount },
       created_at: new Date().toISOString()
-    }).catch(e => console.error('History error:', e));
+    });
+    if (histError) console.error('History error:', histError);
 
     res.json(script);
   } catch (err) {
@@ -67,7 +68,7 @@ router.post('/ideas', requireAuth, async (req, res) => {
       count: count || 5
     });
 
-    const { error } = await supabase.from('generation_history').insert({
+    const { error: histError2 } = await supabase.from('generation_history').insert({
       user_id: req.user.id,
       type: 'ideas',
       niche,
@@ -75,7 +76,8 @@ router.post('/ideas', requireAuth, async (req, res) => {
       input: { niche },
       output: { ideas: ideas.map(i => ({ title: i.title, hook: i.hook })) },
       created_at: new Date().toISOString()
-    }).catch(e => null);
+    });
+    if (histError2) console.error('History error:', histError2);
 
     res.json(ideas);
   } catch (err) {

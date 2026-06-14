@@ -21,7 +21,15 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || origin === 'null') {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
 app.use(express.json({ limit: '5mb' }));
 
 const apiLimiter = rateLimit({

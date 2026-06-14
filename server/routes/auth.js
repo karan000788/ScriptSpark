@@ -13,34 +13,39 @@ router.post('/signup', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    const { data, error } = await supabase.auth.signUp({
+    // Try admin API first (bypasses rate limits, auto-confirms email)
+    const { data: adminData, error: adminError } = await supabase.auth.admin.createUser({
       email,
       password,
-      options: {
-        data: { display_name: displayName || email.split('@')[0] }
-      }
+      email_confirm: true,
+      user_metadata: { display_name: displayName || email.split('@')[0] }
     });
 
-    if (error) throw error;
+    if (adminError) throw adminError;
 
-    if (data.user?.identities?.length === 0) {
-      return res.status(409).json({ error: 'An account with this email already exists' });
-    }
+    const userId = adminData.user.id;
 
-    if (data.user) {
-      await supabase.from('users').upsert({
-        id: data.user.id,
-        email: data.user.email,
-        display_name: displayName || email.split('@')[0],
-        created_at: new Date().toISOString()
-      }, { onConflict: 'id' });
-    }
+    // Create profile in users table
+    await supabase.from('users').upsert({
+      id: userId,
+      email: adminData.user.email,
+      display_name: displayName || email.split('@')[0],
+      created_at: new Date().toISOString()
+    }, { onConflict: 'id' });
+
+    // Sign them in immediately to get a session
+    const { data: { session }, error: sessionError } = await supabase.auth.admin.createSession({
+      user_id: userId
+    });
+
+    if (sessionError) throw sessionError;
 
     res.json({
-      user: data.user,
-      session: data.session,
-      message: 'Check your email for confirmation link'
+      user: adminData.user,
+      session,
+      message: 'Account created successfully'
     });
+
   } catch (err) {
     console.error('Signup error:', err);
     res.status(500).json({ error: err.message || 'Signup failed' });

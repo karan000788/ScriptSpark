@@ -15,14 +15,28 @@
     #cursor-main { width:40px; height:40px; position:fixed; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); background-image:url('https://cdn.custom-cursor.com/db/7600/32/stain-of-paint-cursor.png'); background-size:contain; background-repeat:no-repeat; background-position:center; transition:transform 0.1s ease; }
     #cursor-pointer { width:40px; height:40px; position:fixed; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); background-image:url('https://cdn.custom-cursor.com/db/7599/32/stain-of-paint-pointer.png'); background-size:contain; background-repeat:no-repeat; background-position:center; display:none; }
     button, a, [role="button"] { position: relative; }
-    button::before, a::before, [role="button"]::before {
       content: ''; position: absolute; inset: -15px; border-radius: inherit;
+    }
+    
+    /* ── Orb Backgrounds ────────────────────────── */
+    .orb { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; animation: orbFloat linear infinite; }
+    .orb-1 { width:400px; height:400px; background:rgba(108,71,255,0.08); top:-100px; left:-100px; animation-duration:20s; }
+    .orb-2 { width:300px; height:300px; background:rgba(255,107,53,0.06); bottom:-50px; right:-50px; animation-duration:25s; animation-delay:-10s; }
+    .orb-3 { width:200px; height:200px; background:rgba(108,71,255,0.05); top:40%; left:60%; animation-duration:18s; animation-delay:-5s; }
+    @keyframes orbFloat { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.05); } 66% { transform: translate(-20px,30px) scale(0.95); } }
+    
+    @keyframes sparkAnim {
+      0% { transform: translate(0, 0) scale(1.5); opacity: 1; }
+      100% { transform: translate(var(--vx), var(--vy)) scale(0); opacity: 0; }
     }
   </style>
 </head>
 <body>
   <div id="cursor-main"></div>
   <div id="cursor-pointer"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
 
   <header class="navbar">
     <a href="index.html" class="logo">
@@ -256,12 +270,34 @@
           });
         });
         document.addEventListener('mousedown', function(){
-          cursorMain.style.transform = 'translate(-50%, -50%) scale(0.85)';
-          cursorPointer.style.transform = 'translate(-50%, -50%) scale(0.85)';
+          cursorMain.style.transform = 'translate(-50%, -50%) scale(0.7)';
+          cursorPointer.style.transform = 'translate(-50%, -50%) scale(0.7)';
+          cursorMain.style.filter = 'hue-rotate(90deg)';
+          cursorPointer.style.filter = 'hue-rotate(90deg)';
         });
         document.addEventListener('mouseup', function(){
           cursorMain.style.transform = 'translate(-50%, -50%) scale(1)';
           cursorPointer.style.transform = 'translate(-50%, -50%) scale(1)';
+          cursorMain.style.filter = 'none';
+          cursorPointer.style.filter = 'none';
+        });
+
+        // Spark Animation
+        document.querySelectorAll('button, a').forEach(function(btn){
+          btn.addEventListener('click', function(e){
+            for(let i=0; i<8; i++) {
+              let spark = document.createElement('div');
+              let angle = (Math.PI * 2 * i) / 8 + (Math.random() * 0.5 - 0.25);
+              let dist = 30 + Math.random() * 20;
+              let vx = Math.cos(angle) * dist;
+              let vy = Math.sin(angle) * dist;
+              let colors = ['#7C3AED', '#3B82F6', '#06B6D4', '#ffffff'];
+              let color = colors[Math.floor(Math.random() * colors.length)];
+              spark.style.cssText = `position:fixed; left:${e.clientX}px; top:${e.clientY}px; width:5px; height:5px; background:${color}; border-radius:50%; pointer-events:none; z-index:999999; --vx:${vx}px; --vy:${vy}px; animation: sparkAnim 0.6s ease-out forwards; box-shadow: 0 0 8px ${color};`;
+              document.body.appendChild(spark);
+              setTimeout(() => spark.remove(), 600);
+            }
+          });
         });
       }
     })();
