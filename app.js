@@ -654,7 +654,7 @@
         <div style="margin-top:16px;">
           <h4 style="font-size:0.85rem;margin-bottom:8px;">Alternative Version</h4>
           <div class="thumbnail-img-wrap">
-            <img src="${data.altImageUrl}" alt="Alternative Thumbnail" class="thumbnail-image" crossorigin="anonymous">
+            <img src="${data.altImageUrl}" alt="Alternative Thumbnail" class="thumbnail-image" crossorigin="anonymous" onerror="this.closest('.thumbnail-img-wrap').innerHTML='<p style=\\'padding:40px;color:var(--text-dim);\\'>Alternative image failed to load</p>'">
           </div>
         </div>` : ''}`;
 
