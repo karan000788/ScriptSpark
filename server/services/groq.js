@@ -226,10 +226,18 @@ export async function generateScriptIdeas({ channelAnalysis, niche, contentType,
 }
 
 export async function generateCreatorProfile({ channelAnalysis, niche, contentType }) {
+  const simplifiedData = {
+    performance: channelAnalysis.performance,
+    viralTopics: channelAnalysis.viralTopics,
+    titlePatterns: channelAnalysis.titlePatterns,
+    bestVideos: channelAnalysis.bestVideos?.map(v => ({ title: v.title, views: v.viewCount })).slice(0, 10),
+    worstVideos: channelAnalysis.worstVideos?.map(v => ({ title: v.title, views: v.viewCount })).slice(0, 5)
+  };
+
   const systemPrompt = `You are a YouTube channel audit expert. Based on the following channel analysis data, create a detailed Creator Profile.
 
 Channel Data:
-${JSON.stringify(channelAnalysis, null, 2)}
+${JSON.stringify(simplifiedData, null, 2)}
 
 Niche: ${niche}
 Content Type: ${contentType}
