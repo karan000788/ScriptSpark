@@ -40,6 +40,7 @@ async function callGroq(systemPrompt, userMessage, modelIndex = 0) {
   }
 
   // --- Try Groq First (25s timeout, retry with next model) ---
+  let anyRateLimited = false;
   for (let attempt = modelIndex; attempt < MODELS.length; attempt++) {
     try {
       const model = MODELS[attempt];
@@ -62,31 +63,32 @@ async function callGroq(systemPrompt, userMessage, modelIndex = 0) {
       });
 
       if (resp.status === 429) {
+        anyRateLimited = true;
         console.warn(`Groq model ${model} rate-limited, trying next...`);
         continue;
       }
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
-        console.warn(`Groq model ${model} failed (HTTP ${resp.status}), trying next...`);
-        continue;
+        throw new Error(err.error?.message || `Groq HTTP ${resp.status}`);
       }
 
       const data = await resp.json();
       const text = data.choices?.[0]?.message?.content;
-      if (!text) {
-        console.warn(`Groq model ${model} returned empty, trying next...`);
-        continue;
-      }
+      if (!text) throw new Error('GROQ_EMPTY');
 
       return text;
 
     } catch (err) {
+      if (err.message === 'GROQ_EMPTY' || err.name === 'AbortError') {
+        console.warn(`Groq model ${MODELS[attempt]} ${err.message}, trying next...`);
+        continue;
+      }
       console.warn(`Groq model ${MODELS[attempt]} error: ${err.message}, trying next...`);
     }
   }
 
-  console.warn('All Groq models failed, falling back to OpenRouter...');
+  console.warn('All Groq models failed, switching to OpenRouter...');
 
   // --- Fallback to OpenRouter (30s timeout) ---
   try {
