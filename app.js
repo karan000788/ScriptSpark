@@ -1226,9 +1226,11 @@
     const nicheDisplay = $('competitorNicheDisplay');
     if (nicheDisplay) nicheDisplay.textContent = niche;
     const listContainer = $('competitorList');
+    if (!listContainer) return console.error('competitorList element not found');
     const resultsContainer = $('competitorResults');
     if (resultsContainer) resultsContainer.innerHTML = '';
     const btn = $('findCompetitorsBtn');
+    if (!btn) return console.error('findCompetitorsBtn not found');
     btn.disabled = true;
     btn.textContent = 'Searching...';
     listContainer.innerHTML = '<div class="analysis-loading" style="padding:20px;"><div class="loading-spinner"></div><p style="color:var(--text-dim);font-size:0.85rem;margin-top:12px;">Finding top channels in your niche...</p></div>';
@@ -1237,22 +1239,24 @@
       const audience = appState.channelAnalysis?.performance?.audience || appState.creatorProfile?.audienceTone || '';
       const language = appState.language || 'en';
       const data = await withTimeout(API.searchCompetitors(niche, audience, language, ''), 45000);
-      const channels = data?.topChannels || [];
+      var channels = [];
+      if (data && data.topChannels) channels = data.topChannels;
       if (!channels.length) {
         listContainer.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:12px;">No competitors found. Try a different niche or add one manually.</p>';
         btn.disabled = false;
         btn.textContent = 'Find My Competitors';
         return;
       }
-      listContainer.innerHTML = '<div style="margin-top:12px;"><span class="insight-label" style="display:block;margin-bottom:8px;">Click a channel to analyze:</span><div class="competitor-list">' +
-        channels.slice(0, 6).map(function(ch) {
-          var name = ch.title || ch.channelTitle || ch.name || 'Unknown';
-          var thumb = ch.thumbnail || ch.thumbnails?.default?.url || '';
-          var chUrl = ch.channelId ? 'https://www.youtube.com/channel/' + ch.channelId : '';
-          return '<div class="competitor-list-item" data-url="' + chUrl + '">' +
-            (thumb ? '<img src="' + thumb + '" alt="" onerror="this.style.display=\'none\'" />' : '<div class="competitor-list-avatar">' + name.charAt(0).toUpperCase() + '</div>') +
-            '<span>' + name + '</span></div>';
-        }).join('') + '</div></div>';
+      var itemsHtml = channels.slice(0, 6).map(function(ch) {
+        var name = ch.title || ch.channelTitle || ch.name || 'Unknown';
+        var thumb = ch.thumbnail || (ch.thumbnails && ch.thumbnails.default && ch.thumbnails.default.url) || '';
+        var chUrl = ch.channelId ? 'https://www.youtube.com/channel/' + ch.channelId : '';
+        var avatarHtml = thumb
+          ? '<img src="' + thumb + '" alt="" onerror="this.style.display=\'none\'" />'
+          : '<div class="competitor-list-avatar">' + name.charAt(0).toUpperCase() + '</div>';
+        return '<div class="competitor-list-item" data-url="' + chUrl + '">' + avatarHtml + '<span>' + name + '</span></div>';
+      }).join('');
+      listContainer.innerHTML = '<div style="margin-top:12px;"><span class="insight-label" style="display:block;margin-bottom:8px;">Click a channel to analyze:</span><div class="competitor-list">' + itemsHtml + '</div></div>';
 
       listContainer.querySelectorAll('.competitor-list-item').forEach(function(item) {
         item.addEventListener('click', function() {
@@ -1261,6 +1265,7 @@
         });
       });
     } catch (err) {
+      console.error('findCompetitors error:', err);
       listContainer.innerHTML = '<div style="padding:12px;text-align:center;"><p style="color:var(--error);font-size:0.85rem;">' + err.message + '</p></div>';
     } finally {
       btn.disabled = false;
@@ -1279,6 +1284,7 @@
     }
 
     const resultsContainer = $('competitorResults');
+    if (!resultsContainer) return console.error('competitorResults element not found');
     resultsContainer.innerHTML = '<div class="analysis-loading" style="padding:20px;"><div class="loading-spinner"></div><p style="color:var(--text-dim);font-size:0.85rem;margin-top:12px;">Analyzing competitor channel...</p></div>';
 
     try {
@@ -1292,71 +1298,65 @@
       const data = await withTimeout(API.analyzeCompetitor(url, userChannelName), 30000);
       window.Animations?.hideLoading();
 
-      const { competitorName, competitorVideos, insights } = data;
+      if (!data || !data.insights) {
+        resultsContainer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:0.85rem;"><p>Could not analyze this channel. Try another one.</p><button class="btn-ghost btn-sm" style="margin-top:8px;" onclick="window.app.retryCompetitor()">Try Again</button></div>';
+        return;
+      }
+
+      const competitorName = data.competitorName || '';
+      const competitorVideos = data.competitorVideos || [];
+      const insights = data.insights || {};
+
       const safeName = competitorName || '';
 
       const sanitizedInsights = {
-        commonTopics: (insights.commonTopics || []).map(t => sanitizeOutput(t, safeName, userChannelName)),
-        titlePatterns: (insights.titlePatterns || []).map(t => sanitizeOutput(t, safeName, userChannelName)),
+        commonTopics: (insights.commonTopics || []).map(function(t) { return sanitizeOutput(t, safeName, userChannelName); }),
+        titlePatterns: (insights.titlePatterns || []).map(function(t) { return sanitizeOutput(t, safeName, userChannelName); }),
         emotionType: insights.emotionType || 'curiosity',
         avgTitleLength: insights.avgTitleLength || 'medium',
         languageStyle: insights.languageStyle || 'English',
-        contentGaps: (insights.contentGaps || []).map(g => sanitizeOutput(g, safeName, userChannelName)),
+        contentGaps: (insights.contentGaps || []).map(function(g) { return sanitizeOutput(g, safeName, userChannelName); }),
         thumbnailStyle: insights.thumbnailStyle || 'mixed',
-        hookWords: (insights.hookWords || []).map(w => sanitizeOutput(w, safeName, userChannelName)),
+        hookWords: (insights.hookWords || []).map(function(w) { return sanitizeOutput(w, safeName, userChannelName); }),
         whatIsWorking: sanitizeOutput(insights.whatIsWorking || '', safeName, userChannelName)
       };
 
-      resultsContainer.innerHTML = `
-        <div class="competitor-results">
-          <div class="premium-preview-banner">&#9889; This feature is FREE during beta. It will become a premium feature soon — use it while you can!</div>
-          <div class="competitor-insights">
-            <h4>&#128269; Competitor Channel Analysis</h4>
-            <div class="insight-grid">
-              <div class="insight-card">
-                <span class="insight-label">&#127919; Common Topics</span>
-                <div class="tag-list">${sanitizedInsights.commonTopics.map(t => '<span class="tag">' + t + '</span>').join('')}</div>
-              </div>
-              <div class="insight-card">
-                <span class="insight-label">&#128221; Title Patterns</span>
-                <div class="tag-list">${sanitizedInsights.titlePatterns.map(t => '<span class="tag">' + t + '</span>').join('')}</div>
-              </div>
-              <div class="insight-card">
-                <span class="insight-label">&#128578; Emotion Type</span>
-                <div class="insight-value">${sanitizedInsights.emotionType}</div>
-              </div>
-              <div class="insight-card">
-                <span class="insight-label">&#128207; Title Length</span>
-                <div class="insight-value">${sanitizedInsights.avgTitleLength}</div>
-              </div>
-              <div class="insight-card">
-                <span class="insight-label">&#128266; Language</span>
-                <div class="insight-value">${sanitizedInsights.languageStyle}</div>
-              </div>
-              <div class="insight-card">
-                <span class="insight-label">&#128444; Thumbnail Style</span>
-                <div class="insight-value">${sanitizedInsights.thumbnailStyle}</div>
-              </div>
-              <div class="insight-card">
-                <span class="insight-label">&#128218; Content Gaps (Your Opportunity)</span>
-                <div class="tag-list">${sanitizedInsights.contentGaps.map(g => '<span class="tag">' + g + '</span>').join('')}</div>
-              </div>
-              <div class="insight-card">
-                <span class="insight-label">&#128240; Hook Words</span>
-                <div class="tag-list">${sanitizedInsights.hookWords.map(w => '<span class="tag">' + w + '</span>').join('')}</div>
-              </div>
-              <div class="insight-card insight-full">
-                <span class="insight-label">&#128200; What's Working</span>
-                <div class="insight-text">${sanitizedInsights.whatIsWorking}</div>
-              </div>
-            </div>
-            ${competitorVideos.length ? '<div style="margin-top:12px;"><span class="insight-label" style="display:block;margin-bottom:8px;">&#127916; Recent Videos (style reference only)</span><div class="thumbnail-strip">' + competitorVideos.slice(0, 10).map(function(v) { return '<img src="' + v.thumbnailUrl + '" alt="Video thumbnail" loading="lazy" onerror="this.style.display=\'none\'" />'; }).join('') + '</div></div>' : ''}
-            <p style="font-size:0.72rem;color:var(--text-muted);margin-top:16px;">&#9432; Analysis is for inspiration only. All generated content is 100% original and tailored to your channel.</p>
-          </div>
-        </div>`;
+      var videosHtml = '';
+      if (competitorVideos.length) {
+        var thumbs = competitorVideos.slice(0, 10).map(function(v) {
+          var src = v.thumbnailUrl || '';
+          return '<img src="' + src + '" alt="Video thumbnail" loading="lazy" onerror="this.style.display=\'none\'" />';
+        }).join('');
+        videosHtml = '<div style="margin-top:12px;"><span class="insight-label" style="display:block;margin-bottom:8px;">&#127916; Recent Videos (style reference only)</span><div class="thumbnail-strip">' + thumbs + '</div></div>';
+      }
+
+      resultsContainer.innerHTML =
+        '<div class="competitor-results">' +
+          '<div class="premium-preview-banner">&#9889; This feature is FREE during beta. It will become a premium feature soon — use it while you can!</div>' +
+          '<div class="competitor-insights">' +
+            '<h4>&#128269; Competitor Channel Analysis</h4>' +
+            '<div class="insight-grid">' +
+              '<div class="insight-card"><span class="insight-label">&#127919; Common Topics</span><div class="tag-list">' + sanitizedInsights.commonTopics.map(function(t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div></div>' +
+              '<div class="insight-card"><span class="insight-label">&#128221; Title Patterns</span><div class="tag-list">' + sanitizedInsights.titlePatterns.map(function(t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div></div>' +
+              '<div class="insight-card"><span class="insight-label">&#128578; Emotion Type</span><div class="insight-value">' + sanitizedInsights.emotionType + '</div></div>' +
+              '<div class="insight-card"><span class="insight-label">&#128207; Title Length</span><div class="insight-value">' + sanitizedInsights.avgTitleLength + '</div></div>' +
+              '<div class="insight-card"><span class="insight-label">&#128266; Language</span><div class="insight-value">' + sanitizedInsights.languageStyle + '</div></div>' +
+              '<div class="insight-card"><span class="insight-label">&#128444; Thumbnail Style</span><div class="insight-value">' + sanitizedInsights.thumbnailStyle + '</div></div>' +
+              '<div class="insight-card"><span class="insight-label">&#128218; Content Gaps (Your Opportunity)</span><div class="tag-list">' + sanitizedInsights.contentGaps.map(function(g) { return '<span class="tag">' + g + '</span>'; }).join('') + '</div></div>' +
+              '<div class="insight-card"><span class="insight-label">&#128240; Hook Words</span><div class="tag-list">' + sanitizedInsights.hookWords.map(function(w) { return '<span class="tag">' + w + '</span>'; }).join('') + '</div></div>' +
+              '<div class="insight-card insight-full"><span class="insight-label">&#128200; What\'s Working</span><div class="insight-text">' + sanitizedInsights.whatIsWorking + '</div></div>' +
+            '</div>' +
+            videosHtml +
+            '<p style="font-size:0.72rem;color:var(--text-muted);margin-top:16px;">&#9432; Analysis is for inspiration only. All generated content is 100% original and tailored to your channel.</p>' +
+          '</div>' +
+        '</div>';
     } catch (err) {
+      console.error('analyzeCompetitor error:', err);
       window.Animations?.hideLoading();
-      resultsContainer.innerHTML = '<div style="padding:16px;text-align:center;"><p style="color:var(--error);font-size:0.85rem;">' + err.message + '</p><button class="btn-ghost btn-sm" style="margin-top:8px;" onclick="window.app.retryCompetitor()">Try Again</button></div>';
+      var errContainer = $('competitorResults');
+      if (errContainer) {
+        errContainer.innerHTML = '<div style="padding:16px;text-align:center;"><p style="color:var(--error);font-size:0.85rem;">' + err.message + '</p><button class="btn-ghost btn-sm" style="margin-top:8px;" onclick="window.app.retryCompetitor()">Try Again</button></div>';
+      }
     }
   }
 
