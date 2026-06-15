@@ -118,6 +118,17 @@ async function callGroq(systemPrompt, userMessage, modelIndex = 0) {
   }
 }
 
+async function callGroqJson(systemPrompt, userMessage, modelIndex = 0) {
+  const result = await callGroq(systemPrompt, userMessage, modelIndex);
+  try {
+    return JSON.parse(cleanJsonString(result));
+  } catch (parseErr) {
+    const strictPrompt = systemPrompt + `\n\nCRITICAL: Your previous response was NOT valid JSON. Return ONLY valid JSON. No explanations, no markdown, no text before or after the JSON.`;
+    const retryResult = await callGroq(strictPrompt, userMessage, modelIndex);
+    return JSON.parse(cleanJsonString(retryResult));
+  }
+}
+
 function cleanJsonString(raw) {
   let s = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
   try { JSON.parse(s); return s; } catch (_) { }
@@ -144,6 +155,10 @@ function cleanJsonString(raw) {
   try { JSON.parse(result); return result; } catch (_) { }
   result = result.replace(/,\s*([}\]])/g, '$1');
   try { JSON.parse(result); return result; } catch (_) { }
+  const jsonMatch = s.match(/[\[{].*[\]}]/s);
+  if (jsonMatch) {
+    try { JSON.parse(jsonMatch[0]); return jsonMatch[0]; } catch (_) { }
+  }
   return s;
 }
 
@@ -271,8 +286,7 @@ ${channelContext}${profileContext}${marketContext}
 Output ONLY valid JSON: {"title":"click-optimized under 70 chars","script":"full script with section labels and [0:00] markers","wordCount":number,"hook":"opening line","estimatedDuration":"","cta":""}`;
 
   const langHint = language === 'hi' ? ' (in Hindi)' : language === 'en-hi' ? ' (in Hinglish)' : '';
-  const result = await callGroq(systemPrompt, `Write a ${isShorts ? 'Shorts' : 'long form'} script for: ${topic} (Niche: ${cat}, Content Type: ${contentType})${langHint}`);
-  return JSON.parse(cleanJsonString(result));
+  return callGroqJson(systemPrompt, `Write a ${isShorts ? 'Shorts' : 'long form'} script for: ${topic} (Niche: ${cat}, Content Type: ${contentType})${langHint}`);
 }
 
 export async function generateIdeas({ niche, channelAnalysis, marketIntelligence, contentType, count = 5, recentTitles = [] }) {
@@ -289,8 +303,7 @@ STRICT: Do NOT suggest any of these recent video topics (channel already made th
 ${channelContext}${marketContext}${avoidContext}
 Output ONLY valid JSON array: [{"title":"under 70 chars","hook":"one-sentence hook","whyViral":"1-2 sentences","estimatedViews":""}]`;
 
-  const result = await callGroq(systemPrompt, `Generate ${count} viral ${contentType} topic ideas for niche: ${niche}`);
-  return JSON.parse(cleanJsonString(result));
+  return callGroqJson(systemPrompt, `Generate ${count} viral ${contentType} topic ideas for niche: ${niche}`);
 }
 
 export async function generateThumbnailPrompt({ title, niche, analysis, channelCategory }) {
@@ -376,8 +389,7 @@ Detect their thumbnail style pattern and return ONLY a JSON object:
 }
 Return ONLY the JSON. No explanation.`;
 
-  const result = await callGroq(systemPrompt, 'Detect thumbnail style from titles');
-  return JSON.parse(cleanJsonString(result));
+  return callGroqJson(systemPrompt, 'Detect thumbnail style from titles');
 }
 
 export async function generateScriptIdeas({ channelAnalysis, niche, contentType, count = 5 }) {
@@ -415,8 +427,7 @@ Content: ${contentType}
 
 Output JSON: {bestTopics[], bestHooks[], bestTitleStyles[], thumbnailStyle, uploadPattern, averageEngagement, recommendedContentType, growthOpportunities[3-5], contentGaps[]}. ONLY valid JSON.`;
 
-  const result = await callGroq(systemPrompt, 'Create a detailed creator profile from the channel analysis data.');
-  return JSON.parse(cleanJsonString(result));
+  return callGroqJson(systemPrompt, 'Create a detailed creator profile from the channel analysis data.');
 }
 
 export async function factCheckContent(script, topic) {
@@ -424,6 +435,5 @@ export async function factCheckContent(script, topic) {
 
 Output JSON: {accuracy_score:0-100, verified_claims[], questionable_claims[{claim, concern, suggested_correction, suggested_source}], overall_assessment}. ONLY valid JSON.`;
 
-  const result = await callGroq(systemPrompt, `Fact-check this script:\n\n${script}`);
-  return JSON.parse(cleanJsonString(result));
+  return callGroqJson(systemPrompt, `Fact-check this script:\n\n${script}`);
 }
