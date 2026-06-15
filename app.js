@@ -31,11 +31,18 @@
     'Gaming': '🎮',
     'True Crime': '🔪',
     'Tech': '💻',
+    'Technology': '💻',
     'Motivation': '🔥',
     'Education': '📚',
+    'History': '🏛',
     'Food': '🍳',
     'Travel': '✈️',
     'Health': '💪',
+    'Relationships': '💕',
+    'Business': '💼',
+    'Mythology': '⚔️',
+    'Astrology': '⭐',
+    'Science': '🔬',
     'General': '🎬'
   };
 
@@ -45,11 +52,18 @@
     'Gaming': 'gaming',
     'True Crime': 'true crime',
     'Tech': 'tech',
+    'Technology': 'tech',
     'Motivation': 'motivation',
     'Education': 'education',
+    'History': 'history',
     'Food': 'food',
     'Travel': 'travel',
     'Health': 'health',
+    'Relationships': 'relationships',
+    'Business': 'business',
+    'Mythology': 'mythology',
+    'Astrology': 'astrology',
+    'Science': 'science',
     'General': null
   };
 
@@ -833,15 +847,40 @@
     'Finance': '#00FF88',
     'Gaming': '#00FFFF',
     'Motivation': '#FFD700',
+    'Education': '#4A90E2',
+    'History': '#C9A84C',
+    'Technology': '#00CFFF',
+    'Tech': '#00CFFF',
+    'Health': '#7ED321',
+    'Food': '#FF6B35',
+    'Travel': '#F5A623',
+    'Relationships': '#FF6B9D',
+    'Business': '#FFFFFF',
+    'Mythology': '#9B59B6',
+    'Astrology': '#C39BD3',
+    'General': '#FFFFFF',
     'Default': '#FFFFFF'
   };
 
-  const EMOTION_TO_COLOR = {
-    'fear': '#FF0000',
-    'curiosity': '#FFD700',
-    'shock': '#FF4444',
-    'inspiration': '#FFD700',
-    'humor': '#FFFFFF'
+  const THUMB_BG_COLORS = {
+    'Dark Mystery': '#1a0a2e',
+    'True Crime': '#1a0a1a',
+    'Finance': '#0a2e1a',
+    'Gaming': '#0a0a2e',
+    'Motivation': '#2e1a0a',
+    'Education': '#0a1a2e',
+    'History': '#2e1a0a',
+    'Technology': '#0a0a1a',
+    'Tech': '#0a0a1a',
+    'Health': '#0a2e0a',
+    'Food': '#2e1a0a',
+    'Travel': '#1a2e2e',
+    'Relationships': '#2e0a1a',
+    'Business': '#1a1a2e',
+    'Mythology': '#1a0a2e',
+    'Astrology': '#0a0a2e',
+    'General': '#1a1a2e',
+    'Default': '#1a1a2e'
   };
 
   async function generateThumbnail(title) {
@@ -861,7 +900,7 @@
           analysis: appState.channelAnalysis,
           channelCategory: appState.channelCategory
         }), 60000),
-        API.generateThumbnailText(title).catch(() => null)
+        API.generateThumbnailText(title, appState.channelCategory).catch(() => null)
       ]);
 
       appState.thumbnail = data;
@@ -887,9 +926,8 @@
       canvas.height = 720;
       const ctx = canvas.getContext('2d');
 
-      const bgColor = appState.channelCategory === 'Dark Mystery' || appState.channelCategory === 'True Crime' ? '#1a0a2e' :
-                      appState.channelCategory === 'Finance' ? '#0a2e1a' :
-                      appState.channelCategory === 'Gaming' ? '#0a0a2e' : '#1a1a2e';
+      const cat = appState.channelCategory || 'Default';
+      const bgColor = THUMB_BG_COLORS[cat] || THUMB_BG_COLORS['Default'];
 
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, 1280, 720);
@@ -926,11 +964,8 @@
     if (!shortText) return;
 
     const fs = fontSize || 96;
-    const category = appState.channelCategory;
-    const emotion = appState._channelThumbnailStyle?.emotionType;
-
-    let defaultColor = THUMB_TEXT_COLORS[category] || THUMB_TEXT_COLORS['Default'];
-    if (emotion && EMOTION_TO_COLOR[emotion]) defaultColor = EMOTION_TO_COLOR[emotion];
+    const cat = appState.channelCategory || 'Default';
+    const defaultColor = THUMB_TEXT_COLORS[cat] || THUMB_TEXT_COLORS['Default'];
     const color = textColor || defaultColor;
 
     ctx.textAlign = 'left';
@@ -971,9 +1006,7 @@
   }
 
   function getThumbCategoryColor() {
-    const cat = appState.channelCategory;
-    const emotion = appState._channelThumbnailStyle?.emotionType;
-    if (emotion && EMOTION_TO_COLOR[emotion]) return EMOTION_TO_COLOR[emotion];
+    const cat = appState.channelCategory || 'Default';
     return THUMB_TEXT_COLORS[cat] || THUMB_TEXT_COLORS['Default'];
   }
 
@@ -1100,7 +1133,7 @@
         btn.disabled = true;
         btn.textContent = 'Generating...';
         try {
-          const res = await API.generateThumbnailText(title);
+          const res = await API.generateThumbnailText(title, appState.channelCategory);
           if (res?.thumbText) {
             appState._thumbShortText = res.thumbText;
             $('thumbTextInput').value = res.thumbText.replace(/"/g, '&quot;');

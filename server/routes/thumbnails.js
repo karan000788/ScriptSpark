@@ -89,9 +89,9 @@ router.post('/prompt-only', requireAuth, async (req, res) => {
 
 router.post('/text', requireAuth, async (req, res) => {
   try {
-    const { title } = req.body;
+    const { title, channelCategory } = req.body;
     if (!title) return res.status(400).json({ error: 'Title required' });
-    const thumbText = await generateThumbnailText(title);
+    const thumbText = await generateThumbnailText(title, channelCategory);
     res.json({ thumbText });
   } catch (err) {
     res.status(500).json({ error: err.message });

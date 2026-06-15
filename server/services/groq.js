@@ -98,6 +98,88 @@ function cleanJsonString(raw) {
   return s;
 }
 
+const SCRIPT_TONE = {
+  'Dark Mystery': 'suspense-driven, slow build, dramatic pauses, eerie atmosphere',
+  'True Crime': 'journalistic, timeline-based, factual but gripping',
+  'Finance': 'confident, data-backed, relatable examples, actionable',
+  'Gaming': 'energetic, casual, second-person, slang-friendly',
+  'Motivation': 'inspiring, emotional, personal story driven, uplifting',
+  'Education': 'clear, structured, example-based, curiosity-driven',
+  'History': 'storytelling, cinematic narration, era-specific tone',
+  'Technology': 'analytical, forward-thinking, jargon explained simply',
+  'Tech': 'analytical, forward-thinking, jargon explained simply',
+  'Health': 'empathetic, evidence-based, practical, reassuring',
+  'Food': 'sensory, warm, descriptive, conversational',
+  'Travel': 'adventurous, vivid descriptions, personal experience',
+  'Relationships': 'emotional, relatable, honest, conversational',
+  'Business': 'strategic, case-study driven, direct, ambitious',
+  'Mythology': 'epic, poetic, ancient storytelling style',
+  'Astrology': 'mystical, personal, belief-respectful, curious tone',
+  'General': 'conversational, curious, well-structured, engaging',
+  'Default': 'conversational, curious, well-structured, engaging'
+};
+
+const HOOK_STYLE = {
+  'Dark Mystery': 'Start with an unsettling fact or unexplained event',
+  'True Crime': 'Start with the exact moment the crime happened',
+  'Finance': 'Start with a shocking money statistic or common mistake',
+  'Gaming': 'Start with the most insane moment or secret in the game',
+  'Motivation': 'Start with a relatable failure or low point',
+  'Education': 'Start with a surprising fact that contradicts common belief',
+  'History': 'Start with the most dramatic moment of the historical event',
+  'Technology': 'Start with what this tech can do that seems impossible',
+  'Tech': 'Start with what this tech can do that seems impossible',
+  'Health': 'Start with a symptom or habit most people ignore',
+  'Food': 'Start with a sensory description that makes viewer hungry',
+  'Travel': 'Start with the most unexpected thing about the destination',
+  'Relationships': 'Start with a situation every viewer has experienced',
+  'Business': 'Start with a decision that made or lost someone a fortune',
+  'Mythology': 'Start with the most dramatic moment of the myth',
+  'Astrology': 'Start with a specific prediction or cosmic event',
+  'General': 'Start with the most surprising or counterintuitive point',
+  'Default': 'Start with the most surprising or counterintuitive point'
+};
+
+const STORY_ELEMENTS = {
+  'Dark Mystery': 'shadow silhouette in background, missing poster texture, abandoned location, fog effect',
+  'True Crime': 'newspaper clipping texture overlay, police tape element, dark alley, crime scene tape',
+  'Finance': 'stock chart in background, money blur effect, office setting, green screen glow',
+  'Gaming': 'neon glow effects, controller silhouette, game UI elements, keyboard backlight',
+  'Motivation': 'sunrise background, crowd silhouette, stadium lighting, golden hour glow',
+  'Education': 'bookshelf background, chalkboard texture, infographic elements, clean desk',
+  'History': 'vintage map texture, ancient artifact, period-appropriate setting, parchment overlay',
+  'Technology': 'circuit board pattern, holographic UI elements, futuristic cityscape, blue LED glow',
+  'Health': 'nature background, fresh ingredients, workout setting, clean white medical environment',
+  'Food': 'steam rising from dish, kitchen counter setup, colorful ingredients, restaurant ambiance',
+  'Travel': 'landmark in background, passport texture, suitcase element, scenic vista',
+  'Relationships': 'warm candlelit setting, couple silhouette, cozy indoor environment',
+  'Business': 'city skyline boardroom, graph charts, office tower, minimalist professional setting',
+  'Mythology': 'ancient temple ruins, celestial sky, godly silhouette, divine light rays',
+  'Astrology': 'night sky with stars, zodiac symbols, moon phase, cosmic nebula background',
+  'General': 'clean dynamic composition, gradient background, subtle texture overlay',
+  'Default': 'clean dynamic composition, gradient background, subtle texture overlay'
+};
+
+const THUMB_LIGHTING = {
+  'Dark Mystery': 'dark single spotlight from above, deep shadows',
+  'True Crime': 'cold blue dramatic light, harsh shadows',
+  'Finance': 'bright clean office lighting, soft shadows',
+  'Gaming': 'neon RGB glow from below, colorful ambient light',
+  'Motivation': 'sunrise golden hour light, warm rim light',
+  'Education': 'bright neutral studio light, even illumination',
+  'History': 'sepia cinematic light, warm side lighting',
+  'Technology': 'futuristic blue glow, cool rim light',
+  'Health': 'clean bright natural light, soft diffusion',
+  'Food': 'warm soft restaurant lighting, golden side light',
+  'Travel': 'golden hour outdoor light, warm sun flare',
+  'Relationships': 'warm soft indoor light, subtle candle glow',
+  'Business': 'sharp contrast boardroom light, cool overhead',
+  'Mythology': 'epic god-rays from above, golden backlight',
+  'Astrology': 'cosmic starfield glow, soft moonlight',
+  'General': 'clean neutral lighting, soft rim light',
+  'Default': 'clean neutral lighting, soft rim light'
+};
+
 export async function generatePremiumScript({ topic, niche, contentType, channelAnalysis, creatorProfile, marketIntelligence, channelName, channelCategory, language }) {
   const isShorts = contentType === 'shorts';
 
@@ -112,39 +194,35 @@ MARKET: titles=${(marketIntelligence.viralTopics || []).slice(0, 5).join(', ')},
 
   const lengthInfo = isShorts ? '30-60 sec (150-250 words)' : '8-20 min (1500-3000 words)';
 
-  const categoryStyleGuide = channelCategory ? {
-    'Dark Mystery': '- Build suspense slowly, use dramatic pauses, Hindi/Hinglish phrases\n- Use ominous, atmospheric language\n- End with a chilling question',
-    'Finance': '- Confident, authoritative tone with data points\n- Use relatable financial examples\n- Break down complex concepts simply',
-    'Gaming': '- Energetic, conversational with gaming slang\n- Use second-person ("tu", "tum", "aap")\n- Fast-paced, excited delivery',
-    'True Crime': '- Journalistic, measured tone\n- Timeline-based narration\n- Present facts dramatically but respectfully',
-    'Tech': '- Clear, explanatory tone\n- Balance depth with accessibility\n- Use comparison frameworks',
-    'Motivation': '- Inspirational, powerful tone\n- Personal story-driven\n- Call to action at emotional peak',
-    'General': '- Conversational, engaging tone\n- Match the topic\'s natural energy'
-  }[channelCategory] || '- Conversational, engaging tone' : '- Conversational, engaging tone';
+  const cat = channelCategory || niche || 'General';
+  const tone = SCRIPT_TONE[cat] || SCRIPT_TONE['Default'];
+  const hook = HOOK_STYLE[cat] || HOOK_STYLE['Default'];
 
-  const systemPrompt = `You are a professional YouTube scriptwriter who deeply understands viral content.
+  const systemPrompt = `You are a professional YouTube scriptwriter.
 
 Channel Name: ${channelName || 'the creator'}
-Channel Category: ${channelCategory || niche || 'General'}
 Video Topic: ${topic}
 Format: ${isShorts ? 'Shorts' : 'Long Form'}
 Language: ${language || 'en'}
 Length: ${lengthInfo}
+Niche: ${cat}
+Tone: ${tone}
+Hook style: ${hook}
+
+Write entirely in the ${cat} style. Do not use dramatic horror narration for non-horror niches. Do not use casual gaming language for serious niches. Match the tone exactly to the niche above.
 
 STRICT RULES:
-1. Write the script in the creator's actual niche style (${channelCategory || niche || 'General'}).
-${categoryStyleGuide}
-2. Use the channel name "${channelName || 'the creator'}" naturally in the script where suitable (e.g., in the CTA).
-3. Open with a HOOK that creates immediate curiosity. No filler. No "Namaste doston".
-4. Use open loops — raise a question early, answer it late.
-5. CTA must say: "${channelName || 'this channel'} pe subscribe karo" or in English if language is English.
-6. DO NOT use generic lines. Every line must serve the story.
-7. Structure with clear labels: HOOK, SETUP, BUILD, CLIMAX, RESOLUTION, CTA
+1. Use the channel name "${channelName || 'the creator'}" naturally in the script where suitable (e.g., in the CTA).
+2. Open with a HOOK that creates immediate curiosity. No filler. No "Namaste doston".
+3. Use open loops — raise a question early, answer it late.
+4. CTA must say: "${channelName || 'this channel'} pe subscribe karo" or in English if language is English.
+5. DO NOT use generic lines. Every line must serve the story.
+6. Structure with clear labels: HOOK, SETUP, BUILD, CLIMAX, RESOLUTION, CTA
 ${channelContext}${profileContext}${marketContext}
 Output ONLY valid JSON: {"title":"click-optimized under 70 chars","script":"full script with section labels and [0:00] markers","wordCount":number,"hook":"opening line","estimatedDuration":"","cta":""}`;
 
   const langHint = language === 'hi' ? ' (in Hindi)' : language === 'en-hi' ? ' (in Hinglish)' : '';
-  const result = await callGroq(systemPrompt, `Write a ${isShorts ? 'Shorts' : 'long form'} script for: ${topic} (Niche: ${niche}, Content Type: ${contentType})${langHint}`);
+  const result = await callGroq(systemPrompt, `Write a ${isShorts ? 'Shorts' : 'long form'} script for: ${topic} (Niche: ${cat}, Content Type: ${contentType})${langHint}`);
   return JSON.parse(cleanJsonString(result));
 }
 
@@ -166,20 +244,13 @@ Output ONLY valid JSON array: [{"title":"under 70 chars","hook":"one-sentence ho
   return JSON.parse(cleanJsonString(result));
 }
 
-const STORY_ELEMENTS = {
-  'Dark Mystery': 'shadow silhouette in background, missing poster texture, abandoned location, fog effect',
-  'True Crime': 'newspaper clipping texture overlay, police tape element, dark alley, crime scene tape',
-  'Finance': 'stock chart in background, money blur effect, office setting, green screen glow',
-  'Gaming': 'neon glow effects, controller silhouette, game UI elements, keyboard backlight',
-  'Motivation': 'sunrise background, crowd silhouette, stadium lighting, golden hour glow',
-  'Default': 'dramatic lighting, dark background with spotlight, cinematic fog'
-};
-
 export async function generateThumbnailPrompt({ title, niche, analysis, channelCategory }) {
   const bestPerforming = analysis?.viralTopics?.slice(0, 3).join(', ') || '';
-  const storyElem = STORY_ELEMENTS[channelCategory] || STORY_ELEMENTS['Default'];
+  const cat = channelCategory || niche || 'General';
+  const storyElem = STORY_ELEMENTS[cat] || STORY_ELEMENTS['Default'];
+  const lighting = THUMB_LIGHTING[cat] || THUMB_LIGHTING['Default'];
 
-  const systemPrompt = `You are an elite YouTube thumbnail designer. Create a thumbnail image prompt for "${title}" (Niche: ${niche}, Category: ${channelCategory || niche || 'General'}).
+  const systemPrompt = `You are an elite YouTube thumbnail designer. Create a thumbnail image prompt for "${title}" (Niche: ${niche}, Category: ${cat}).
 
 VISUAL STYLE:
 - Photorealistic, ultra detailed, cinematic composition
@@ -191,7 +262,7 @@ FACE REQUIREMENTS:
 - face 30% brighter than background
 - strong rim lighting or screen glow on face
 - eyes clearly visible and expressive
-- dark background with single light source on subject
+- ${lighting}
 
 STORY ELEMENT:
 ${storyElem}
@@ -203,13 +274,35 @@ Return ONLY the prompt string. Max 100 words. No markdown.`;
   return result.replace(/```/g, '').trim();
 }
 
-export async function generateThumbnailText(fullTitle) {
+const THUMB_EMOTION = {
+  'Dark Mystery': 'fear and curiosity',
+  'True Crime': 'shock and intrigue',
+  'Finance': 'aspiration and greed',
+  'Gaming': 'excitement and FOMO',
+  'Motivation': 'inspiration and urgency',
+  'Education': 'curiosity and surprise',
+  'History': 'awe and fascination',
+  'Technology': 'fascination and wonder',
+  'Tech': 'fascination and wonder',
+  'Health': 'trust and concern',
+  'Food': 'desire and craving',
+  'Travel': 'wanderlust and adventure',
+  'Relationships': 'empathy and recognition',
+  'Business': 'ambition and curiosity',
+  'Mythology': 'awe and mystery',
+  'Astrology': 'mystery and personal relevance',
+  'General': 'curiosity and surprise',
+  'Default': 'curiosity and surprise'
+};
+
+export async function generateThumbnailText(fullTitle, channelCategory) {
   const cleanTitle = fullTitle.split('|')[0].trim();
+  const emotion = THUMB_EMOTION[channelCategory] || THUMB_EMOTION['Default'];
   const systemPrompt = `Given this YouTube video title: "${cleanTitle}"
 Return ONLY 2-3 word dramatic thumbnail text in the same language.
 Rules:
 - Max 3 words
-- Must create curiosity or fear
+- Must create ${emotion}
 - No emoji
 - Capitalize all words
 - Return only the text, nothing else`;

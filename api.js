@@ -182,10 +182,10 @@ const API = {
     });
   },
 
-  async generateThumbnailText(title) {
+  async generateThumbnailText(title, channelCategory) {
     return apiRequest('/thumbnails/text', {
       method: 'POST',
-      body: JSON.stringify({ title })
+      body: JSON.stringify({ title, channelCategory })
     });
   },
 

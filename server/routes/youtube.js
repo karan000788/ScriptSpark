@@ -133,9 +133,14 @@ router.post('/auto-fetch', requireAuth, async (req, res) => {
       'Tech': ['tech', 'review', 'gadget', 'mobile', 'iphone', 'android', 'laptop', 'unboxing', 'technology'],
       'Motivation': ['motivation', 'inspire', 'success', 'life', 'mindset', 'goal', 'discipline', 'powerful'],
       'Education': ['education', 'learn', 'science', 'history', 'knowledge', 'fact', 'study', 'course'],
+      'History': ['history', 'ancient', 'battle', 'empire', 'war', 'medieval', 'historic', 'archaeology'],
       'Food': ['food', 'recipe', 'cooking', 'kitchen', 'tasty', 'delicious', 'street food', 'restaurant'],
       'Travel': ['travel', 'vlog', 'trip', 'journey', 'wander', 'explore', 'traveling', 'holiday'],
-      'Health': ['health', 'fitness', 'yoga', 'exercise', 'workout', 'diet', 'weight loss', 'healthy']
+      'Health': ['health', 'fitness', 'yoga', 'exercise', 'workout', 'diet', 'weight loss', 'healthy'],
+      'Relationships': ['relationship', 'love', 'dating', 'breakup', 'crush', 'couple', 'emotional', 'heart'],
+      'Business': ['business', 'startup', 'entrepreneur', 'hustle', 'business idea', 'marketing', 'sales', 'brand'],
+      'Mythology': ['mythology', 'myth', 'god', 'goddess', 'demon', 'legend', 'epic', 'ancient story'],
+      'Astrology': ['astrology', 'zodiac', 'horoscope', 'rashi', 'kundli', 'planet', 'star', 'astro']
     };
 
     let detectedCategory = 'General';
