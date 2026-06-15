@@ -31,7 +31,6 @@ function truncateToTokenLimit(systemPrompt, userMessage, maxTokens = 5000) {
 
 async function callGroq(systemPrompt, userMessage, modelIndex = 0) {
   if (!GROQ_API_KEY) throw new Error('GROQ_API_KEY not configured on server');
-  const model = MODELS[modelIndex] || MODELS[0];
 
   userMessage = truncateToTokenLimit(systemPrompt, userMessage);
   const promptText = systemPrompt + (userMessage || '');
@@ -39,34 +38,81 @@ async function callGroq(systemPrompt, userMessage, modelIndex = 0) {
     console.warn(`Prompt still ~${estimateTokens(promptText)} tokens after truncation`);
   }
 
-  const resp = await fetch(GROQ_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${GROQ_API_KEY}`
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage }
-      ],
-      temperature: 0.8,
-      max_tokens: 8000
-    })
-  });
+  // --- Try Groq First ---
+  try {
+    const model = MODELS[modelIndex] || MODELS[0];
+    const resp = await fetch(GROQ_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage }
+        ],
+        temperature: 0.8,
+        max_tokens: 8000
+      })
+    });
 
-  if (resp.status === 404 && modelIndex < MODELS.length - 1) {
-    return callGroq(systemPrompt, userMessage, modelIndex + 1);
+    if (resp.status === 404 && modelIndex < MODELS.length - 1) {
+      return callGroq(systemPrompt, userMessage, modelIndex + 1);
+    }
+
+    if (resp.status === 429) throw new Error('GROQ_QUOTA');
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || `AI request failed (HTTP ${resp.status})`);
+    }
+
+    const data = await resp.json();
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error('GROQ_EMPTY');
+
+    return text;
+
+  } catch (err) {
+    console.warn('Groq unavailable, switching to Gemini...', err.message);
   }
 
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(err.error?.message || `AI request failed (HTTP ${resp.status})`);
-  }
+  // --- Fallback to Gemini ---
+  try {
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not configured');
 
-  const data = await resp.json();
-  return data.choices?.[0]?.message?.content || '';
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: systemPrompt + '\n\n' + userMessage
+            }]
+          }],
+          generationConfig: {
+            maxOutputTokens: 2000,
+            temperature: 0.8
+          }
+        })
+      }
+    );
+
+    const geminiData = await geminiRes.json();
+    const geminiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!geminiText) throw new Error('GEMINI_EMPTY');
+
+    return geminiText;
+
+  } catch (err) {
+    console.error('Gemini also failed:', err.message);
+    throw new Error('\u26A0\uFE0F Servers are busy right now. Please try again in 2 minutes.');
+  }
 }
 
 function cleanJsonString(raw) {
