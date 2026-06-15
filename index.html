@@ -322,6 +322,7 @@
       .wf-arrow { transform: rotate(90deg); padding: 8px 0; }
       .preview-steps { flex-wrap: wrap; }
       .preview-cards { grid-template-columns: 1fr; }
+      #real-results > div:first-of-type { grid-template-columns: 1fr !important; }
       .footer-grid { grid-template-columns: 1fr; }
       .footer-bottom { flex-direction: column; text-align: center; }
       .section { padding: 60px 16px; }
@@ -526,6 +527,60 @@
         <h3>Fact-Checked</h3>
         <p>Educational scripts get automatic fact-checking. Build trust with your audience.</p>
       </div>
+    </div>
+  </section>
+
+  <!-- REAL RESULTS -->
+  <section class="section reveal" id="real-results" style="background:var(--bg-card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:relative;">
+    <div style="position:absolute;inset:0;pointer-events:none;border:1px solid rgba(139,92,246,0.15);border-radius:0;box-shadow:0 0 60px rgba(139,92,246,0.05),inset 0 0 60px rgba(139,92,246,0.03);"></div>
+    <h2 class="section-title">Real Results from <span class="gradient-text">ScriptSpark</span></h2>
+    <p class="section-sub">See what creators like you are generating every day.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1100px;margin:0 auto;position:relative;z-index:1;">
+      <!-- Card 1: Script Sample -->
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;transition:all 300ms var(--ease);" onmouseover="this.style.borderColor='rgba(139,92,246,0.3)';this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 40px rgba(0,0,0,0.5)';" onmouseout="this.style.borderColor='';this.style.transform='';this.style.boxShadow='';">
+        <div style="padding:16px 20px;background:var(--bg-elevated);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-weight:700;font-size:0.85rem;">🎬 Generated Script — Dark Mystery</span>
+          <span style="font-size:0.7rem;padding:4px 10px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:999px;color:var(--success);font-weight:600;">✅ Generated in 8 seconds</span>
+        </div>
+        <div style="padding:20px;position:relative;">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:40px;background:var(--bg-elevated);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:20px 0;gap:16px;font-size:0.7rem;color:var(--text-muted);font-family:'SF Mono','Consolas',monospace;user-select:none;">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
+          </div>
+          <pre style="margin:0;margin-left:40px;font-family:'SF Mono','Consolas',monospace;font-size:0.78rem;line-height:1.7;color:var(--text-dim);white-space:pre-wrap;background:transparent;border:none;padding:0;"><span style="color:var(--accent);">🎙️ HOOK (0–15 sec)</span>
+"Ek raat... ek gaon... aur ek raaz jo aaj bhi ansulajha hai."
+
+<span style="color:var(--accent);">📖 STORY SETUP</span>
+Rajasthan ke ek chhote se gaon mein, 1987 mein ek ajeeb ghatna hui...
+[Script continues with full storytelling arc...]
+
+<span style="color:var(--accent);">🔚 CTA</span>
+"Agar yeh video ne aapko sochne par majboor kiya, toh subscribe zaroor karo."</pre>
+        </div>
+      </div>
+      <!-- Card 2: Thumbnail Sample -->
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;display:flex;flex-direction:column;transition:all 300ms var(--ease);" onmouseover="this.style.borderColor='rgba(139,92,246,0.3)';this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 40px rgba(0,0,0,0.5)';" onmouseout="this.style.borderColor='';this.style.transform='';this.style.boxShadow='';">
+        <div style="padding:16px 20px;background:var(--bg-elevated);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-weight:700;font-size:0.85rem;">🖼️ Generated Thumbnail — True Crime</span>
+          <span style="font-size:0.7rem;padding:4px 10px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:999px;color:var(--success);font-weight:600;">✅ Downloaded in 1 click</span>
+        </div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:16px;">
+          <div style="width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#1a0a2e,#16213e,#0f3460);border-radius:var(--r-lg);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 30%,rgba(139,92,246,0.15),transparent 50%);"></div>
+            <div style="position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(0deg,rgba(0,0,0,0.6),transparent);"></div>
+            <div style="position:relative;z-index:1;text-align:center;padding:20px;">
+              <div style="font-size:clamp(1.2rem,3vw,2rem);font-weight:900;color:#ff4444;text-shadow:3px 3px 0 #000,6px 6px 12px rgba(0,0,0,0.8);line-height:1.2;margin-bottom:16px;font-family:'Impact','Arial Black',sans-serif;letter-spacing:-0.02em;">सच जो<br>छुपाया गया 😱</div>
+              <div style="width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffccaa,#8B4513);margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,0.5);position:relative;">
+                <div style="position:absolute;top:20%;left:50%;transform:translateX(-50%);width:28px;height:8px;background:#333;border-radius:4px;"></div>
+                <div style="position:absolute;bottom:20%;left:50%;transform:translateX(-50%);width:20px;height:12px;background:#222;border-radius:0 0 10px 10px;"></div>
+              </div>
+            </div>
+            <div style="position:absolute;bottom:8px;right:12px;z-index:2;font-size:0.6rem;color:rgba(255,255,255,0.5);font-weight:500;">@DarkMysteryChannel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:40px;position:relative;z-index:1;">
+      <p style="color:var(--text-muted);font-size:0.9rem;font-style:italic;">"500+ creators use ScriptSpark to generate scripts and thumbnails every week."</p>
     </div>
   </section>
 

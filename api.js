@@ -9,18 +9,33 @@ const API_BASE = (function(){
 })();
 
 function getToken() {
-  try { return localStorage.getItem('ss-session') || ''; } catch (e) { return ''; }
+  try {
+    const token = sessionStorage.getItem('ss-session') || localStorage.getItem('ss-session-persist') || '';
+    return token;
+  } catch (e) { return ''; }
 }
 
-function setToken(token) {
-  try { localStorage.setItem('ss-session', token); } catch (e) {}
+function setToken(token, remember) {
+  try {
+    if (remember) {
+      localStorage.setItem('ss-session-persist', token);
+      sessionStorage.removeItem('ss-session');
+    } else {
+      sessionStorage.setItem('ss-session', token);
+      localStorage.removeItem('ss-session-persist');
+    }
+  } catch (e) {}
 }
 
 function clearToken() {
-  try { localStorage.removeItem('ss-session'); } catch (e) {}
+  try {
+    localStorage.removeItem('ss-session');
+    localStorage.removeItem('ss-session-persist');
+    sessionStorage.removeItem('ss-session');
+  } catch (e) {}
 }
 
-async function apiRequest(endpoint, options = {}) {
+  async function apiRequest(endpoint, options = {}) {
   const token = getToken();
   const headers = {
     'Content-Type': 'application/json',
@@ -52,24 +67,24 @@ async function apiRequest(endpoint, options = {}) {
 
 const API = {
   // Auth
-  async signup(email, password, displayName) {
+  async signup(email, password, displayName, remember) {
     const data = await apiRequest('/auth/signup', {
       method: 'POST',
       body: JSON.stringify({ email, password, displayName })
     });
     if (data.session?.access_token) {
-      setToken(data.session.access_token);
+      setToken(data.session.access_token, remember);
     }
     return data;
   },
 
-  async login(email, password) {
+  async login(email, password, remember) {
     const data = await apiRequest('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
     if (data.session?.access_token) {
-      setToken(data.session.access_token);
+      setToken(data.session.access_token, remember);
     }
     return data;
   },
@@ -92,6 +107,13 @@ const API = {
 
   isLoggedIn() {
     return !!getToken();
+  },
+
+  async autoFetchChannel(url) {
+    return apiRequest('/youtube/auto-fetch', {
+      method: 'POST',
+      body: JSON.stringify({ url })
+    });
   },
 
   getToken,
@@ -119,17 +141,17 @@ const API = {
   },
 
   // Scripts
-  async generateScript({ topic, niche, contentType, channelAnalysis, creatorProfile, marketIntelligence }) {
+  async generateScript({ topic, niche, contentType, channelAnalysis, creatorProfile, marketIntelligence, channelName, channelCategory, language }) {
     return apiRequest('/scripts/generate', {
       method: 'POST',
-      body: JSON.stringify({ topic, niche, contentType, channelAnalysis, creatorProfile, marketIntelligence })
+      body: JSON.stringify({ topic, niche, contentType, channelAnalysis, creatorProfile, marketIntelligence, channelName, channelCategory, language })
     });
   },
 
-  async generateIdeas({ niche, channelAnalysis, marketIntelligence, contentType, count }) {
+  async generateIdeas({ niche, channelAnalysis, marketIntelligence, contentType, count, recentTitles }) {
     return apiRequest('/scripts/ideas', {
       method: 'POST',
-      body: JSON.stringify({ niche, channelAnalysis, marketIntelligence, contentType, count })
+      body: JSON.stringify({ niche, channelAnalysis, marketIntelligence, contentType, count, recentTitles })
     });
   },
 

@@ -98,7 +98,7 @@ function cleanJsonString(raw) {
   return s;
 }
 
-export async function generatePremiumScript({ topic, niche, contentType, channelAnalysis, creatorProfile, marketIntelligence }) {
+export async function generatePremiumScript({ topic, niche, contentType, channelAnalysis, creatorProfile, marketIntelligence, channelName, channelCategory, language }) {
   const isShorts = contentType === 'shorts';
 
   const channelContext = channelAnalysis ? `
@@ -112,36 +112,54 @@ MARKET: titles=${(marketIntelligence.viralTopics || []).slice(0, 5).join(', ')},
 
   const lengthInfo = isShorts ? '30-60 sec (150-250 words)' : '8-20 min (1500-3000 words)';
 
-  const systemPrompt = `You are the world's best YouTube scriptwriter. Write a ${isShorts ? 'SHORTS' : 'LONG FORM'} script for "${topic}" (${niche}).
+  const categoryStyleGuide = channelCategory ? {
+    'Dark Mystery': '- Build suspense slowly, use dramatic pauses, Hindi/Hinglish phrases\n- Use ominous, atmospheric language\n- End with a chilling question',
+    'Finance': '- Confident, authoritative tone with data points\n- Use relatable financial examples\n- Break down complex concepts simply',
+    'Gaming': '- Energetic, conversational with gaming slang\n- Use second-person ("tu", "tum", "aap")\n- Fast-paced, excited delivery',
+    'True Crime': '- Journalistic, measured tone\n- Timeline-based narration\n- Present facts dramatically but respectfully',
+    'Tech': '- Clear, explanatory tone\n- Balance depth with accessibility\n- Use comparison frameworks',
+    'Motivation': '- Inspirational, powerful tone\n- Personal story-driven\n- Call to action at emotional peak',
+    'General': '- Conversational, engaging tone\n- Match the topic\'s natural energy'
+  }[channelCategory] || '- Conversational, engaging tone' : '- Conversational, engaging tone';
 
-Length: ${lengthInfo}.
+  const systemPrompt = `You are a professional YouTube scriptwriter who deeply understands viral content.
 
-Requirements:
-- Hook (first ${isShorts ? '3-5s' : '15-30s'}): pattern interrupt, curiosity gap, emotional trigger
-- Retention: open loops, curiosity gaps, pattern interrupts, emotional escalation
-- Framework: Hero's Journey / Before-After / Problem-Solution / Mystery-Reveal / Contrarian
-- Natural conversational tone. NEVER "in today's video", "let's dive in", "without further ado"
-- Vary sentence length. Use rhetorical questions.
-${isShorts ? `
-Structure: 0-5s Hook | 5-20s Setup | 20-40s Escalation | 40-55s Twist | 55-60s CTA` : `
-Structure: Act 1 (0-2min) Hook+Setup | Act 2 (2-8min) Escalation | Act 3 (8-15min) Twist | Act 4 (15-20min) Conclusion+CTA`}
-- Ending: deliver on hook's promise, natural subscribe CTA, engagement prompt
+Channel Name: ${channelName || 'the creator'}
+Channel Category: ${channelCategory || niche || 'General'}
+Video Topic: ${topic}
+Format: ${isShorts ? 'Shorts' : 'Long Form'}
+Language: ${language || 'en'}
+Length: ${lengthInfo}
+
+STRICT RULES:
+1. Write the script in the creator's actual niche style (${channelCategory || niche || 'General'}).
+${categoryStyleGuide}
+2. Use the channel name "${channelName || 'the creator'}" naturally in the script where suitable (e.g., in the CTA).
+3. Open with a HOOK that creates immediate curiosity. No filler. No "Namaste doston".
+4. Use open loops — raise a question early, answer it late.
+5. CTA must say: "${channelName || 'this channel'} pe subscribe karo" or in English if language is English.
+6. DO NOT use generic lines. Every line must serve the story.
+7. Structure with clear labels: HOOK, SETUP, BUILD, CLIMAX, RESOLUTION, CTA
 ${channelContext}${profileContext}${marketContext}
-Output ONLY valid JSON: {"title":"click-optimized under 70 chars","script":"full script with [0:00] markers","wordCount":number,"hook":"opening line","estimatedDuration":"","cta":""}`;
+Output ONLY valid JSON: {"title":"click-optimized under 70 chars","script":"full script with section labels and [0:00] markers","wordCount":number,"hook":"opening line","estimatedDuration":"","cta":""}`;
 
-  const result = await callGroq(systemPrompt, `Write a ${isShorts ? 'Shorts' : 'long form'} script for: ${topic} (Niche: ${niche}, Content Type: ${contentType})`);
+  const langHint = language === 'hi' ? ' (in Hindi)' : language === 'en-hi' ? ' (in Hinglish)' : '';
+  const result = await callGroq(systemPrompt, `Write a ${isShorts ? 'Shorts' : 'long form'} script for: ${topic} (Niche: ${niche}, Content Type: ${contentType})${langHint}`);
   return JSON.parse(cleanJsonString(result));
 }
 
-export async function generateIdeas({ niche, channelAnalysis, marketIntelligence, contentType, count = 5 }) {
+export async function generateIdeas({ niche, channelAnalysis, marketIntelligence, contentType, count = 5, recentTitles = [] }) {
   const channelContext = channelAnalysis ? `
 Channel: bestVideos=${(channelAnalysis.bestVideos || []).slice(0, 3).map(v => v.title).join(', ')}, viralTopics=${(channelAnalysis.viralTopics || []).slice(0, 3).join(', ')}` : '';
 
   const marketContext = marketIntelligence ? `
 Market: competitorTopics=${(marketIntelligence.viralTopics || []).slice(0, 5).join(', ')}` : '';
 
+  const avoidContext = recentTitles.length ? `
+STRICT: Do NOT suggest any of these recent video topics (channel already made them): ${recentTitles.slice(0, 10).map(t => `"${t}"`).join(', ')}` : '';
+
   const systemPrompt = `You are a viral YouTube content strategist. Generate ${count} ${contentType === 'shorts' ? 'Shorts' : 'video'} topic ideas for "${niche}". Each must be trending, curiosity-driven, emotionally charged, high CTR.
-${channelContext}${marketContext}
+${channelContext}${marketContext}${avoidContext}
 Output ONLY valid JSON array: [{"title":"under 70 chars","hook":"one-sentence hook","whyViral":"1-2 sentences","estimatedViews":""}]`;
 
   const result = await callGroq(systemPrompt, `Generate ${count} viral ${contentType} topic ideas for niche: ${niche}`);

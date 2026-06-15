@@ -8,17 +8,49 @@
   let appState = {
     user: null,
     profile: null,
-    channelType: null, // 'new' | 'existing'
-    contentType: null, // 'shorts' | 'longform'
-    has50Videos: null, // true | false
+    channelType: null,
+    contentType: null,
+    has50Videos: null,
     channelAnalysis: null,
     creatorProfile: null,
     marketIntelligence: null,
     niche: null,
+    channelName: null,
+    channelCategory: null,
+    language: null,
     ideas: [],
     selectedIdea: null,
     script: null,
+    originalScript: null,
     thumbnail: null
+  };
+
+  const CATEGORY_EMOJI_MAP = {
+    'Dark Mystery': '😱',
+    'Finance': '💰',
+    'Gaming': '🎮',
+    'True Crime': '🔪',
+    'Tech': '💻',
+    'Motivation': '🔥',
+    'Education': '📚',
+    'Food': '🍳',
+    'Travel': '✈️',
+    'Health': '💪',
+    'General': '🎬'
+  };
+
+  const CATEGORY_NICHE_MAP = {
+    'Dark Mystery': 'dark mystery',
+    'Finance': 'finance',
+    'Gaming': 'gaming',
+    'True Crime': 'true crime',
+    'Tech': 'tech',
+    'Motivation': 'motivation',
+    'Education': 'education',
+    'Food': 'food',
+    'Travel': 'travel',
+    'Health': 'health',
+    'General': null
   };
 
   function showToast(msg, duration = 3000) {
@@ -107,13 +139,14 @@
     e.preventDefault();
     const email = $('loginEmail').value.trim();
     const password = $('loginPassword').value;
+    const remember = $('rememberMe')?.checked || false;
     const btn = $('loginBtn');
     if (!email || !password) return showToast('Please fill in all fields');
 
     btn.disabled = true;
     btn.textContent = 'Signing in...';
     try {
-      await API.login(email, password);
+      await API.login(email, password, remember);
       appState.user = (await API.getMe()).user;
       showToast('Welcome back!');
       navigateAfterAuth();
@@ -130,6 +163,7 @@
     const email = $('signupEmail').value.trim();
     const password = $('signupPassword').value;
     const displayName = $('signupName').value.trim() || email.split('@')[0];
+    const remember = $('rememberMeSignup')?.checked || false;
     const btn = $('signupBtn');
 
     if (!email || !password) return showToast('Please fill in all fields');
@@ -138,7 +172,7 @@
     btn.disabled = true;
     btn.textContent = 'Creating account...';
     try {
-      const data = await API.signup(email, password, displayName);
+      const data = await API.signup(email, password, displayName, remember);
       if (data.session) {
         appState.user = (await API.getMe()).user;
         showToast('Account created!');
@@ -160,8 +194,9 @@
     appState = {
       user: null, profile: null, channelType: null, contentType: null,
       has50Videos: null, channelAnalysis: null, creatorProfile: null,
-      marketIntelligence: null, niche: null, ideas: [], selectedIdea: null,
-      script: null, thumbnail: null
+      marketIntelligence: null, niche: null, channelName: null, channelCategory: null, language: null,
+      ideas: [], selectedIdea: null, script: null, originalScript: null,
+      thumbnail: null
     };
     showView('view-login');
     showToast('Logged out');
@@ -173,7 +208,7 @@
       localStorage.removeItem('ss-last-view');
       showView(saved);
     } else {
-      showView('view-channel-type');
+      showView('view-channel-url');
     }
     updateNavbar();
   }
@@ -204,18 +239,6 @@
     }
   }
 
-  // ─── CHANNEL TYPE ─────────────────────────────────────────
-  function initChannelType() {
-    document.querySelectorAll('.channel-type-card').forEach(card => {
-      card.addEventListener('click', () => {
-        document.querySelectorAll('.channel-type-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        appState.channelType = card.dataset.type;
-        setTimeout(() => showView('view-content-type'), 300);
-      });
-    });
-  }
-
   // ─── CONTENT TYPE ────────────────────────────────────────
   function initContentType() {
     document.querySelectorAll('.content-type-card').forEach(card => {
@@ -223,35 +246,26 @@
         document.querySelectorAll('.content-type-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         appState.contentType = card.dataset.type;
-        if (appState.channelType === 'existing') {
-          setTimeout(() => showView('view-has-50'), 300);
-        } else {
-          setTimeout(() => showView('view-new-channel'), 300);
-        }
-      });
-    });
-  }
-
-  // ─── HAS 50 VIDEOS ───────────────────────────────────────
-  function initHas50() {
-    document.querySelectorAll('.has50-card').forEach(card => {
-      card.addEventListener('click', () => {
-        document.querySelectorAll('.has50-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        appState.has50Videos = card.dataset.value === 'yes';
         setTimeout(() => {
-          showView(appState.has50Videos ? 'view-channel-url' : 'view-channel-url-simple');
+          if (appState.niche || appState.channelCategory || appState.channelAnalysis) {
+            showView('view-ideas');
+            fetchIdeas();
+          } else {
+            showView('view-niche-analysis');
+          }
         }, 300);
       });
     });
   }
 
-  // ─── CHANNEL URL (50+ videos) ────────────────────────────
+  // ─── CHANNEL URL (Primary Entry) ─────────────────────────
   async function handleChannelAnalysis(e) {
     e.preventDefault();
     const url = $('channelUrl').value.trim();
     const name = $('channelName').value.trim();
     if (!url) return showToast('Channel URL is required');
+
+    appState.channelName = name || appState.channelName || null;
 
     const results = $('channelResults');
     results.innerHTML = `
@@ -273,6 +287,15 @@
       const data = await withTimeout(API.analyzeChannel(url, name, appState.contentType), 60000);
       appState.channelAnalysis = data.analysis;
       appState.creatorProfile = data.creatorProfile;
+      appState.channelName = appState.channelName || data.analysis.channelInfo.name;
+
+      if (!appState.channelCategory) {
+        const autoFetchData = await API.autoFetchChannel(url).catch(() => null);
+        if (autoFetchData && autoFetchData.detectedCategory) {
+          appState.channelCategory = autoFetchData.detectedCategory;
+          appState._recentTitles = autoFetchData.recentTitles || [];
+        }
+      }
 
       const a = data.analysis;
       const steps = results.querySelectorAll('.loading-step');
@@ -325,72 +348,134 @@
                   </a>`).join('')}
                 </div>
               </div>` : ''}
-            <button class="btn-primary" id="proceedFromAnalysis">Continue to Script &#8594;</button>
+            <button class="btn-primary" id="proceedFromAnalysis">Continue to Format Selection &#8594;</button>
           </div>`;
         results.querySelector('#proceedFromAnalysis')?.addEventListener('click', () => {
-          showView('view-niche-analysis');
+          showView('view-content-type');
         });
       }, 4000);
     } catch (err) {
       showError(results, err.message, () => handleChannelAnalysis(e));
+      $('channelFallbackFields').style.display = 'block';
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Analyze Channel';
+      btn.textContent = 'Fetch Channel';
     }
   }
 
-  // ─── CHANNEL URL SIMPLE (under 50 videos) ────────────────
-  async function handleSimpleAnalysis(e) {
-    e.preventDefault();
-    const url = $('channelUrlSimple').value.trim();
-    if (!url) return showToast('Channel URL is required');
+  // ─── AUTO FETCH CHANNEL ────────────────────────────────
+  let autoFetchTimeout = null;
+  function setupAutoFetch(inputId, bannerId) {
+    const input = $(inputId);
+    if (!input) return;
+    input.addEventListener('input', function() {
+      clearTimeout(autoFetchTimeout);
+      this.dataset.autoFetchDone = 'false';
+      $('channelDetectCard').style.display = 'none';
+    });
+    input.addEventListener('blur', function() {
+      const url = this.value.trim();
+      if (!url || this.dataset.autoFetchDone === 'true') return;
+      clearTimeout(autoFetchTimeout);
+      autoFetchTimeout = setTimeout(() => doAutoFetch(url, bannerId), 800);
+    });
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const url = this.value.trim();
+        if (!url || this.dataset.autoFetchDone === 'true') return;
+        clearTimeout(autoFetchTimeout);
+        doAutoFetch(url, bannerId);
+      }
+    });
+  }
 
-    const results = $('channelResultsSimple');
-    showLoading(results);
-    const btn = $('analyzeBtnSimple');
-    btn.disabled = true;
-    btn.textContent = 'Analyzing...';
-
+  async function doAutoFetch(url, bannerId) {
+    const banner = $(bannerId);
+    if (!banner) return;
+    banner.innerHTML = '<div style="padding:12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r);text-align:center;font-size:0.85rem;color:var(--text-muted);">🔍 Fetching channel info...</div>';
     try {
-      const data = await withTimeout(API.analyzeChannel(url, '', appState.contentType), 45000);
-      appState.channelAnalysis = data.analysis;
-      appState.creatorProfile = data.creatorProfile;
+      const data = await withTimeout(API.autoFetchChannel(url), 15000);
+      appState.channelName = data.name;
+      appState.channelCategory = data.detectedCategory;
+      appState._channelVideoCount = data.totalVideos || 0;
+      if (data.recentTitles && data.recentTitles.length) {
+        appState._recentTitles = data.recentTitles;
+      }
+      const catEmoji = CATEGORY_EMOJI_MAP[data.detectedCategory] || '🎬';
+      const nicheMatch = CATEGORY_NICHE_MAP[data.detectedCategory];
+      if (nicheMatch) appState.niche = nicheMatch;
 
-      const a = data.analysis;
-      results.innerHTML = `
-        <div class="analysis-card">
-          <div class="analysis-header">
-            <img src="${a.channelInfo.thumbnail || ''}" alt="" class="analysis-avatar" onerror="this.style.display='none'">
-            <div>
-              <h3>${a.channelInfo.name}</h3>
-              <div class="analysis-meta">
-                <span>&#128065; ${formatNum(a.channelInfo.subscribers)} subscribers</span>
-                <span>&#128196; ${formatNum(a.channelInfo.totalViews)} views</span>
-              </div>
-            </div>
+      banner.innerHTML = '';
+      const detectCard = $('channelDetectCard');
+      detectCard.style.display = 'block';
+      detectCard.innerHTML = `
+        <div class="analysis-card" style="padding:20px;text-align:center;">
+          <div style="font-size:2rem;margin-bottom:8px;">✅</div>
+          <h3 style="margin-bottom:4px;">Channel Detected</h3>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center;margin:12px 0;font-size:0.9rem;">
+            <span>📺 <strong>${data.name}</strong></span>
+            <span>🎭 Category: ${catEmoji} ${data.detectedCategory}</span>
+            <span>📊 Videos: ${data.totalVideos || 'N/A'} · Subscribers: ${data.subscribers ? formatNum(data.subscribers) : 'N/A'}</span>
           </div>
-          <div class="analysis-stats">
-            <div class="stat-box">
-              <div class="stat-value">${formatNum(a.performance.averageViews)}</div>
-              <div class="stat-label">Avg Views</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-value">${a.performance.engagementRate}%</div>
-              <div class="stat-label">Engagement</div>
-            </div>
+          ${data.recentTitles?.length ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">Recent: ${data.recentTitles.slice(0, 3).join(' · ')}${data.recentTitles.length > 3 ? '...' : ''}</div>` : ''}
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
+            <button class="btn-primary btn-sm" id="confirmChannelBtn">Looks correct? Continue →</button>
+            <button class="btn-ghost btn-sm" id="changeChannelBtn">Wrong? Enter manually</button>
           </div>
-          <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:16px;">
-            Based on your current ${a.performance.totalAnalyzed} videos. As you grow, we'll refine your profile.
-          </p>
-          <button class="btn-primary" id="proceedSimple">Continue to Script &#8594;</button>
         </div>`;
-      results.querySelector('#proceedSimple')?.addEventListener('click', () => showView('view-niche-analysis'));
+      detectCard.querySelector('#confirmChannelBtn').addEventListener('click', () => {
+        $('channelUrlFormCard').style.display = 'none';
+        detectCard.style.display = 'none';
+        banner.innerHTML = `<div style="padding:10px 14px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:var(--r);font-size:0.82rem;color:var(--success);display:flex;align-items:center;gap:8px;">✅ ${data.name} · ${catEmoji} ${data.detectedCategory} · ${data.totalVideos || '?'} videos</div>`;
+        showView('view-content-type');
+      });
+      detectCard.querySelector('#changeChannelBtn').addEventListener('click', () => {
+        detectCard.style.display = 'none';
+        $('channelFallbackFields').style.display = 'block';
+      });
+      const nameInput = $('channelName');
+      if (nameInput && !nameInput.value) nameInput.value = data.name;
     } catch (err) {
-      showError(results, err.message, () => handleSimpleAnalysis(e));
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Analyze Channel';
+      banner.innerHTML = `<div style="padding:12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:var(--r);font-size:0.82rem;color:var(--error);display:flex;align-items:center;gap:8px;">⚠️ Couldn't fetch channel data. You can enter details manually.</div>`;
+      $('channelFallbackFields').style.display = 'block';
     }
+  }
+
+  // ─── MANUAL FALLBACK / NEW CHANNEL ───────────────────────
+  function showManualChannelForm() {
+    $('channelUrlFormCard').style.display = 'none';
+    $('channelDetectCard').style.display = 'none';
+    const fallback = $('channelFallbackFields');
+    fallback.style.display = 'block';
+    fallback.querySelector('#manualChannelConfirm')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      const name = $('manualChannelName')?.value.trim();
+      const cat = $('manualChannelCategory')?.value;
+      if (!name) return showToast('Please enter a channel name');
+      appState.channelName = name;
+      appState.channelCategory = cat || 'General';
+      const nicheMatch = CATEGORY_NICHE_MAP[cat];
+      if (nicheMatch) appState.niche = nicheMatch;
+      fallback.style.display = 'none';
+      showToast('Channel info saved');
+      setTimeout(() => {
+        if (!appState.contentType) {
+          showView('view-content-type');
+        } else if (!appState.niche) {
+          showView('view-niche-analysis');
+        } else {
+          showView('view-ideas');
+          fetchIdeas();
+        }
+      }, 300);
+    });
+    fallback.querySelector('#manualChannelSkip')?.addEventListener('click', function() {
+      fallback.style.display = 'none';
+      appState.channelCategory = 'General';
+      appState.channelName = 'Your Channel';
+      showView('view-niche-analysis');
+    });
   }
 
   // ─── NEW CHANNEL ─────────────────────────────────────────
@@ -404,6 +489,7 @@
     if (!niche) return showToast('Please enter your niche');
 
     appState.niche = niche;
+    appState.language = language;
     const results = $('competitorResults');
     results.innerHTML = `
       <div class="analysis-loading">
@@ -485,13 +571,14 @@
       </div>`;
 
     try {
-      const niche = appState.niche || appState.channelAnalysis?.channelInfo?.name || 'your niche';
+      const niche = appState.niche || appState.channelCategory || appState.channelAnalysis?.channelInfo?.name || 'your niche';
       const ideas = await withTimeout(API.generateIdeas({
         niche,
         channelAnalysis: appState.channelAnalysis?.performance,
         marketIntelligence: appState.marketIntelligence?.marketPatterns,
         contentType: appState.contentType,
-        count: 5
+        count: 5,
+        recentTitles: appState._recentTitles || []
       }), 30000);
 
       appState.ideas = ideas;
@@ -529,48 +616,172 @@
       </div>`;
 
     try {
+      const lang = appState.language || $('newLanguage')?.value || 'en';
       const script = await withTimeout(API.generateScript({
         topic: idea.title,
         niche: appState.niche || appState.channelAnalysis?.channelInfo?.name || 'general',
         contentType: appState.contentType,
         channelAnalysis: appState.channelAnalysis?.performance,
         creatorProfile: appState.creatorProfile,
-        marketIntelligence: appState.marketIntelligence?.marketPatterns
+        marketIntelligence: appState.marketIntelligence?.marketPatterns,
+        channelName: appState.channelName,
+        channelCategory: appState.channelCategory,
+        language: lang
       }), 45000);
 
       appState.script = script;
+      appState.originalScript = script.script || '';
       renderScript(script);
     } catch (err) {
       showError(container, err.message, () => generateScript(idea));
     }
   }
 
+  function formatTitle(topic, channelName) {
+    const catEmoji = CATEGORY_EMOJI_MAP[appState.channelCategory] || '🎬';
+    const chName = channelName || appState.channelName || appState.channelAnalysis?.channelInfo?.name || appState.creatorProfile?.bestTopics?.[0] || 'Creatora';
+    const prefix = `${topic} ${catEmoji}`;
+    const maxPrefixLen = 60;
+    const truncatedPrefix = prefix.length > maxPrefixLen ? prefix.slice(0, maxPrefixLen - 1) + '…' : prefix;
+    return `${truncatedPrefix} | ${chName}`;
+  }
+
+  function estimateReadTime(text, isShorts) {
+    if (isShorts) return '~60 sec Shorts';
+    const words = text.trim().split(/\s+/).length;
+    const mins = Math.max(1, Math.round(words / 150));
+    return `~${mins} min video`;
+  }
+
   function renderScript(script) {
     const container = $('scriptContainer');
     if (!container) return;
     const body = script.script || '';
+    const wordCount = script.wordCount || body.split(/\s+/).length;
+    const readTime = estimateReadTime(body, appState.contentType === 'shorts');
+    const isShorts = appState.contentType === 'shorts';
+    const channelName = appState.channelName || appState.channelAnalysis?.channelInfo?.name || '';
+    const formattedTitle = formatTitle(script.title || 'Untitled', channelName);
+
+    const savedBody = localStorage.getItem('ss-edited-script-body');
+    const savedTitle = localStorage.getItem('ss-edited-script-title');
+    const displayBody = savedBody || body;
+    const displayTitle = savedTitle || formattedTitle;
+
     container.innerHTML = `
-      <div class="script-title-display">${script.title || 'Untitled'}</div>
-      <div class="script-meta">
-        ${script.wordCount || body.split(/\s+/).length} words
-        &middot; ${appState.contentType === 'shorts' ? 'Shorts' : 'Long Form'}
-        ${script.estimatedDuration ? '&middot; ' + script.estimatedDuration : ''}
+      <div class="script-editor-toolbar">
+        <button class="btn-ghost btn-sm script-tool-btn" data-cmd="bold" title="Bold"><strong>B</strong></button>
+        <button class="btn-ghost btn-sm script-tool-btn" data-cmd="italic" title="Italic"><em>I</em></button>
+        <span style="color:var(--border);width:1px;height:20px;background:var(--border);display:inline-block;"></span>
+        <button class="btn-ghost btn-sm script-tool-btn" data-cmd="clear" title="Clear Formatting">Clear</button>
+        <button class="btn-ghost btn-sm script-tool-btn" data-cmd="reset" title="Reset to Original">Reset</button>
+        <span style="flex:1;"></span>
+        <span class="script-word-count" style="font-size:0.75rem;color:var(--text-muted);padding:4px 8px;">${wordCount} words · ${readTime}</span>
       </div>
-      <div class="script-body">${body}</div>
-      <div class="script-actions">
-        <button class="btn-ghost btn-sm" id="copyScriptBtn">Copy Script</button>
+      <div class="script-title-edit" style="margin-bottom:12px;">
+        <input type="text" id="scriptTitleInput" value="${displayTitle.replace(/"/g, '&quot;')}" style="width:100%;padding:12px 14px;background:white;border:1px solid #ddd;border-radius:8px;color:#111;font-size:1.05rem;font-weight:700;outline:none;" />
+        <div style="display:flex;justify-content:space-between;margin-top:4px;">
+          <span style="font-size:0.7rem;color:var(--text-muted);">Topic chars: <span id="titleCharCount">${(displayTitle.split(' | ')[0] || displayTitle).length}</span>/60 before |</span>
+          <span style="font-size:0.7rem;color:var(--text-muted);">Format: Topic ${CATEGORY_EMOJI_MAP[appState.channelCategory] || '🎬'} | ChannelName</span>
+        </div>
+      </div>
+      <textarea id="scriptEditor" style="width:100%;min-height:400px;padding:20px;background:white;color:#111;border:1px solid #ddd;border-radius:8px;font-size:15px;line-height:1.8;font-family:'Inter','SF Mono',monospace;resize:vertical;box-shadow:0 4px 20px rgba(0,0,0,0.08);">${displayBody.replace(/</g, '&lt;')}</textarea>
+      <div class="sticky-bottom-bar">
+        <button class="btn-ghost btn-sm" id="copyScriptBtn">📋 Copy Script</button>
+        <button class="btn-ghost btn-sm" id="copyTitleBtn">📋 Copy Title</button>
+        <button class="btn-ghost btn-sm" id="copyTopicBtn">📋 Copy Topic</button>
         <button class="btn-ghost btn-sm" id="factCheckBtn">Fact Check</button>
+        <button class="btn-primary btn-sm" id="regenerateIdeasBtn">🔄 Regenerate Ideas</button>
         <button class="btn-primary btn-sm" id="generateThumbBtn">Generate Thumbnail &#8594;</button>
       </div>`;
 
-    $('copyScriptBtn')?.addEventListener('click', () => {
-      navigator.clipboard.writeText(body);
-      showToast('Script copied!');
+    const editor = $('scriptEditor');
+    const titleInput = $('scriptTitleInput');
+    const charCount = $('titleCharCount');
+
+    const autoSave = () => {
+      if (editor) localStorage.setItem('ss-edited-script-body', editor.value);
+      if (titleInput) localStorage.setItem('ss-edited-script-title', titleInput.value);
+      appState.script.script = editor?.value || body;
+      if (charCount && titleInput) {
+        const beforePipe = titleInput.value.split(' | ')[0] || titleInput.value;
+        charCount.textContent = beforePipe.length;
+      }
+    };
+
+    editor?.addEventListener('input', autoSave);
+    titleInput?.addEventListener('input', autoSave);
+
+    container.querySelectorAll('.script-tool-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const cmd = this.dataset.cmd;
+        if (cmd === 'bold') {
+          const start = editor.selectionStart;
+          const end = editor.selectionEnd;
+          const selected = editor.value.substring(start, end);
+          if (selected) {
+            editor.value = editor.value.substring(0, start) + '**' + selected + '**' + editor.value.substring(end);
+            editor.selectionStart = start + 2;
+            editor.selectionEnd = end + 2;
+            editor.focus();
+            autoSave();
+          }
+        } else if (cmd === 'italic') {
+          const start = editor.selectionStart;
+          const end = editor.selectionEnd;
+          const selected = editor.value.substring(start, end);
+          if (selected) {
+            editor.value = editor.value.substring(0, start) + '*' + selected + '*' + editor.value.substring(end);
+            editor.selectionStart = start + 1;
+            editor.selectionEnd = end + 1;
+            editor.focus();
+            autoSave();
+          }
+        } else if (cmd === 'clear') {
+          const start = editor.selectionStart;
+          const end = editor.selectionEnd;
+          let selected = editor.value.substring(start, end);
+          if (selected) {
+            selected = selected.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
+            editor.value = editor.value.substring(0, start) + selected + editor.value.substring(end);
+            autoSave();
+          }
+        } else if (cmd === 'reset') {
+          if (confirm('Reset to the original generated script? Your edits will be lost.')) {
+            editor.value = body;
+            titleInput.value = formattedTitle;
+            if (charCount) charCount.textContent = formattedTitle.length;
+            localStorage.removeItem('ss-edited-script-body');
+            localStorage.removeItem('ss-edited-script-title');
+            autoSave();
+          }
+        }
+      });
     });
-    $('factCheckBtn')?.addEventListener('click', () => factCheck(body, script.title));
+
+    $('copyScriptBtn')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(editor?.value || body);
+      showToast('✅ Script copied!');
+    });
+    $('copyTitleBtn')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(titleInput?.value || formattedTitle);
+      showToast('✅ Title copied!');
+    });
+    $('copyTopicBtn')?.addEventListener('click', () => {
+      const topic = appState.selectedIdea?.title || script.title || '';
+      navigator.clipboard.writeText(topic);
+      showToast('✅ Topic copied!');
+    });
+    $('factCheckBtn')?.addEventListener('click', () => factCheck(editor?.value || body, script.title));
     $('generateThumbBtn')?.addEventListener('click', () => {
       showView('view-thumbnail');
-      generateThumbnail(script.title);
+      generateThumbnail(titleInput?.value || formattedTitle);
+    });
+    $('regenerateIdeasBtn')?.addEventListener('click', () => {
+      localStorage.removeItem('ss-edited-script-body');
+      localStorage.removeItem('ss-edited-script-title');
+      showView('view-ideas');
+      fetchIdeas();
     });
   }
 
@@ -632,43 +843,221 @@
     }
   }
 
+  let thumbCanvasData = null;
+
+  function drawThumbnailOnCanvas(imgUrl, text, textColor, fontSize) {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1280;
+      canvas.height = 720;
+      const ctx = canvas.getContext('2d');
+
+      const bgColor = appState.channelCategory === 'Dark Mystery' || appState.channelCategory === 'True Crime' ? '#1a0a2e' :
+                      appState.channelCategory === 'Finance' ? '#0a2e1a' :
+                      appState.channelCategory === 'Gaming' ? '#0a0a2e' : '#1a1a2e';
+
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, 1280, 720);
+
+      ctx.fillStyle = 'rgba(139,92,246,0.05)';
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(200 + i * 400, 100 + i * 200, 300, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        ctx.drawImage(img, 0, 0, 1280, 720);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fillRect(0, 0, 1280, 720);
+        drawTextOverlay(ctx, text, textColor, fontSize);
+        resolve(canvas);
+      };
+      img.onerror = function() {
+        drawTextOverlay(ctx, text, textColor, fontSize);
+        resolve(canvas);
+      };
+      img.src = imgUrl;
+    });
+  }
+
+  function drawTextOverlay(ctx, text, textColor, fontSize) {
+    const words = text.split(' ');
+    const maxWords = 6;
+    const shortText = words.slice(0, maxWords).join(' ');
+    const lines = [];
+    let line = '';
+    for (const word of shortText.split(' ')) {
+      if ((line + ' ' + word).length > 20) { lines.push(line.trim()); line = word; }
+      else line += (line ? ' ' : '') + word;
+    }
+    if (line) lines.push(line.trim());
+    if (!lines.length) lines.push(shortText);
+
+    const fs = fontSize || 72;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const textY = lines.length > 1 ? 720 / 2 - 30 : 720 / 2;
+
+    let defaultColor;
+    if (appState.channelCategory === 'Dark Mystery' || appState.channelCategory === 'True Crime') defaultColor = '#ff4444';
+    else if (appState.channelCategory === 'Finance') defaultColor = '#22c55e';
+    else if (appState.channelCategory === 'Gaming') defaultColor = '#00ffff';
+    else defaultColor = '#ffffff';
+
+    const color = textColor || defaultColor;
+
+    lines.forEach((lineText, i) => {
+      const y = textY + i * (fs * 1.2);
+      if (appState.channelCategory === 'Dark Mystery' || appState.channelCategory === 'True Crime') {
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetX = 4;
+        ctx.shadowOffsetY = 4;
+      } else {
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = fs / 12;
+        ctx.lineJoin = 'round';
+        ctx.strokeText(lineText, 640, y);
+        ctx.shadowColor = 'transparent';
+      }
+      ctx.fillStyle = color;
+      ctx.font = `900 ${fs}px "Impact","Anton",sans-serif`;
+      ctx.fillText(lineText, 640, y);
+    });
+
+    ctx.shadowColor = 'transparent';
+    ctx.font = '20px "Inter",sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    const channelName = appState.channelName || appState.channelAnalysis?.channelInfo?.name || '';
+    if (channelName) {
+      ctx.fillText('@' + channelName, 1260, 710);
+    }
+  }
+
   function renderThumbnail(data, title) {
     const container = $('thumbnailContainer');
     if (!container) return;
 
+    const channelName = appState.channelName || appState.channelAnalysis?.channelInfo?.name || '';
+    const topicSlug = (title || 'thumbnail').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().slice(0, 40);
+
     container.innerHTML = `
       <div class="thumbnail-prompt-box">${data.prompt || 'Generating thumbnail...'}</div>
       ${data.imageUrl ? `
-        <div class="thumbnail-img-wrap">
-          <img src="${data.imageUrl}" alt="Thumbnail" class="thumbnail-image" crossorigin="anonymous" onerror="this.closest('.thumbnail-img-wrap').innerHTML='<p style=\\'padding:40px;color:var(--text-dim);\\'>Image failed to load</p>'">
+        <div class="thumbnail-img-wrap" id="thumbnailCanvasWrap">
+          <canvas id="thumbnailCanvas" width="1280" height="720" style="width:100%;height:auto;aspect-ratio:16/9;border-radius:var(--r-lg);display:block;"></canvas>
         </div>` : `
         <div class="thumbnail-placeholder">
           <p>Thumbnail generation is processing. The prompt has been saved.</p>
         </div>`}
       <div class="thumbnail-actions">
-        ${data.imageUrl ? `<button class="btn-primary btn-sm" id="downloadThumbBtn">Download</button>` : ''}
+        ${data.imageUrl ? `<button class="btn-primary btn-sm" id="downloadThumbBtn">⬇️ Download Thumbnail</button>` : ''}
         <button class="btn-ghost btn-sm" id="copyPromptBtn">Copy Prompt</button>
-        <button class="btn-ghost btn-sm" id="regenThumbBtn">Regenerate</button>
+        <button class="btn-ghost btn-sm" id="regenThumbBtn">🔄 Regenerate</button>
       </div>
+      ${data.imageUrl ? `
+      <div class="thumb-edit-panel" id="thumbEditPanel">
+        <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:8px;">✏️ Edit Thumbnail Text</h4>
+        <label for="thumbTextInput">Overlay Text (max 6 words)</label>
+        <input type="text" id="thumbTextInput" value="${(title || '').replace(/"/g, '&quot;').split(' ').slice(0, 6).join(' ')}" />
+        <label for="thumbColorInput">Text Color</label>
+        <input type="color" id="thumbColorInput" value="${appState.channelCategory === 'Dark Mystery' || appState.channelCategory === 'True Crime' ? '#ff4444' : appState.channelCategory === 'Finance' ? '#22c55e' : appState.channelCategory === 'Gaming' ? '#00ffff' : '#ffffff'}" />
+        <label for="thumbFontSize">Font Size: <span id="thumbFontSizeLabel">72</span>px</label>
+        <input type="range" id="thumbFontSize" min="36" max="120" value="72" />
+        <div class="form-actions" style="margin-top:12px;">
+          <button class="btn-primary btn-sm" id="regenCanvasBtn">🔄 Update Thumbnail</button>
+        </div>
+      </div>` : ''}
       ${data.altImageUrl ? `
         <div style="margin-top:16px;">
           <h4 style="font-size:0.85rem;margin-bottom:8px;">Alternative Version</h4>
           <div class="thumbnail-img-wrap">
             <img src="${data.altImageUrl}" alt="Alternative Thumbnail" class="thumbnail-image" crossorigin="anonymous" onerror="this.closest('.thumbnail-img-wrap').innerHTML='<p style=\\'padding:40px;color:var(--text-dim);\\'>Alternative image failed to load</p>'">
           </div>
-        </div>` : ''}`;
+        </div>` : ''}
+      <div class="sticky-bottom-bar">
+        <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">📦 Download Package</span>
+        <button class="btn-ghost btn-sm" id="copyScriptBtn2">📋 Copy Script</button>
+        <button class="btn-ghost btn-sm" id="copyTitleBtn2">📋 Copy Title</button>
+        <button class="btn-ghost btn-sm" id="copyTopicBtn2">📋 Copy Topic</button>
+      </div>`;
 
-    $('downloadThumbBtn')?.addEventListener('click', () => {
-      const a = document.createElement('a');
-      a.href = data.imageUrl;
-      a.download = 'creatora-thumbnail.jpg';
-      a.click();
-    });
+    if (data.imageUrl) {
+      drawThumbnailOnCanvas(data.imageUrl, title, null, 72).then(canvas => {
+        const destCanvas = $('thumbnailCanvas');
+        if (destCanvas) {
+          const ctx = destCanvas.getContext('2d');
+          ctx.clearRect(0, 0, 1280, 720);
+          ctx.drawImage(canvas, 0, 0, 1280, 720);
+          thumbCanvasData = canvas;
+        }
+      });
+
+      $('downloadThumbBtn')?.addEventListener('click', () => {
+        if (thumbCanvasData) {
+          const link = document.createElement('a');
+          link.download = `thumbnail_${channelName || 'creator'}_${topicSlug}.png`;
+          link.href = thumbCanvasData.toDataURL('image/png');
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          const sizeInfo = Math.round(thumbCanvasData.toDataURL('image/png').length * 0.75 / 1024);
+          showToast(`Downloaded: ~${sizeInfo} KB`);
+        } else {
+          const a = document.createElement('a');
+          a.href = data.imageUrl;
+          a.download = `thumbnail_${channelName || 'creator'}_${topicSlug}.png`;
+          a.click();
+        }
+      });
+
+      $('regenCanvasBtn')?.addEventListener('click', () => {
+        const newText = $('thumbTextInput')?.value || title;
+        const newColor = $('thumbColorInput')?.value || '#ffffff';
+        const newSize = parseInt($('thumbFontSize')?.value || '72');
+        drawThumbnailOnCanvas(data.imageUrl, newText, newColor, newSize).then(canvas => {
+          const destCanvas = $('thumbnailCanvas');
+          if (destCanvas) {
+            const ctx = destCanvas.getContext('2d');
+            ctx.clearRect(0, 0, 1280, 720);
+            ctx.drawImage(canvas, 0, 0, 1280, 720);
+            thumbCanvasData = canvas;
+          }
+          showToast('✅ Thumbnail updated!');
+        });
+      });
+
+      $('thumbFontSize')?.addEventListener('input', function() {
+        $('thumbFontSizeLabel').textContent = this.value;
+      });
+    }
+
     $('copyPromptBtn')?.addEventListener('click', () => {
       navigator.clipboard.writeText(data.prompt || '');
-      showToast('Prompt copied!');
+      showToast('✅ Prompt copied!');
     });
     $('regenThumbBtn')?.addEventListener('click', () => generateThumbnail(title));
+    $('copyScriptBtn2')?.addEventListener('click', () => {
+      const body = appState.script?.script || appState.originalScript || '';
+      navigator.clipboard.writeText(body);
+      showToast('✅ Script copied!');
+    });
+    $('copyTitleBtn2')?.addEventListener('click', () => {
+      const t = appState.script?.title || title || '';
+      navigator.clipboard.writeText(t);
+      showToast('✅ Title copied!');
+    });
+    $('copyTopicBtn2')?.addEventListener('click', () => {
+      const topic = appState.selectedIdea?.title || title || '';
+      navigator.clipboard.writeText(topic);
+      showToast('✅ Topic copied!');
+    });
   }
 
   // ─── NICHE ANALYSIS ──────────────────────────────────────
@@ -697,12 +1086,27 @@
     appState.creatorProfile = null;
     appState.marketIntelligence = null;
     appState.niche = null;
+    appState.channelName = null;
+    appState.channelCategory = null;
+    appState.language = null;
     appState.ideas = [];
     appState.selectedIdea = null;
     appState.script = null;
+    appState.originalScript = null;
     appState.thumbnail = null;
-    document.querySelectorAll('.channel-type-card, .content-type-card, .has50-card, .niche-card').forEach(c => c.classList.remove('selected'));
-    showView('view-channel-type');
+    appState._recentTitles = null;
+    appState._channelVideoCount = null;
+    $('channelUrlFormCard').style.display = 'block';
+    $('channelDetectCard').style.display = 'none';
+    $('channelFallbackFields').style.display = 'none';
+    $('channelResults').innerHTML = '';
+    $('autoFetchBanner').innerHTML = '';
+    $('channelUrl').value = '';
+    $('channelName').value = '';
+    document.querySelectorAll('.content-type-card, .niche-card').forEach(c => c.classList.remove('selected'));
+    localStorage.removeItem('ss-edited-script-body');
+    localStorage.removeItem('ss-edited-script-title');
+    showView('view-channel-url');
   }
 
   // ─── HELPERS ─────────────────────────────────────────────
@@ -769,6 +1173,10 @@
   // ─── INIT ────────────────────────────────────────────────
   async function init() {
     const isLoggedIn = await checkAuth();
+    if (isLoggedIn && !window._justLoggedIn) {
+      const displayName = appState.profile?.display_name || appState.user?.email || 'User';
+      setTimeout(() => showToast('Welcome back, ' + displayName + '!'), 500);
+    }
 
     $('loginForm')?.addEventListener('submit', handleLogin);
     $('signupForm')?.addEventListener('submit', handleSignup);
@@ -778,21 +1186,24 @@
     $('authTabLogin')?.addEventListener('click', () => showAuthForm('login'));
     $('authTabSignup')?.addEventListener('click', () => showAuthForm('signup'));
 
-    initChannelType();
     initContentType();
-    initHas50();
     initNicheSelection();
+    setupAutoFetch('channelUrl', 'autoFetchBanner');
 
     $('channelForm')?.addEventListener('submit', handleChannelAnalysis);
-    $('channelFormSimple')?.addEventListener('submit', handleSimpleAnalysis);
     $('newChannelForm')?.addEventListener('submit', handleNewChannelSubmit);
+    $('newChannelLink')?.addEventListener('click', (e) => { e.preventDefault(); $('channelUrlFormCard').style.display = 'none'; $('newChannelFormCard').style.display = 'block'; });
+    $('showUrlFallback')?.addEventListener('click', (e) => { e.preventDefault(); showManualChannelForm(); });
 
-    $('backToContentType')?.addEventListener('click', () => showView('view-content-type'));
-    $('backToChannelType')?.addEventListener('click', () => showView('view-channel-type'));
-    $('backToHas50')?.addEventListener('click', () => showView('view-has-50'));
-    $('backToChannelUrl')?.addEventListener('click', () => showView('view-channel-url'));
-    $('backToIdeas')?.addEventListener('click', () => showView('view-ideas'));
-
+    $('backToContentType')?.addEventListener('click', () => { appState.contentType = null; showView('view-channel-url'); });
+    $('backToNiche')?.addEventListener('click', () => { showView('view-channel-url'); });
+    $('backToIdeas')?.addEventListener('click', () => {
+      if (!appState.niche && !appState.channelCategory) {
+        showView('view-niche-analysis');
+      } else {
+        showView('view-content-type');
+      }
+    });
     $('startOverBtn')?.addEventListener('click', startOver);
     $('logoLink')?.addEventListener('click', (e) => { e.preventDefault(); showView('view-dashboard'); loadDashboard(); });
 
@@ -819,7 +1230,7 @@
         showView(e.state.view, false);
       } else {
         if (API.isLoggedIn()) {
-          showView('view-channel-type', false);
+          showView('view-channel-url', false);
         } else {
           showView('view-login', false);
         }

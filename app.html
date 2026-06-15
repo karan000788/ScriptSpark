@@ -25,7 +25,7 @@
   " />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Anton&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <style>
     /* ── Custom Cursor ──────────────────────────── */
@@ -233,6 +233,38 @@
     .back-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-muted); cursor: pointer; transition: all 150ms var(--ease); margin-bottom: 16px; padding: 6px 12px; border-radius: var(--r); border: 1px solid var(--border); background: var(--bg-card); }
     .back-btn:hover { border-color: var(--border-accent); color: var(--accent); }
 
+    /* Script Editor */
+    .script-editor-toolbar { display:flex;align-items:center;gap:6px;padding:10px 14px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-lg) var(--r-lg) 0 0;flex-wrap:wrap; }
+    .script-tool-btn { font-size:0.85rem;padding:6px 10px;min-width:32px;justify-content:center; }
+    .script-tool-btn:active { transform:scale(0.92); }
+    .script-word-count { white-space:nowrap; }
+    #scriptTitleInput:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,92,246,0.1); }
+    #scriptEditor:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,92,246,0.1); }
+    .results-panel { background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-top:24px; }
+    .results-panel h3 { font-size:0.95rem;font-weight:700;margin-bottom:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em; }
+
+    /* Thumbnail editor */
+    .thumb-edit-panel { background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-top:16px; }
+    .thumb-edit-panel label { display:block;font-size:0.82rem;font-weight:600;color:var(--text-dim);margin-bottom:6px;margin-top:12px; }
+    .thumb-edit-panel input[type="text"], .thumb-edit-panel input[type="color"], .thumb-edit-panel input[type="range"] { width:100%;padding:10px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:0.9rem;outline:none; }
+    .thumb-edit-panel input:focus { border-color:var(--accent); }
+    .thumb-edit-panel input[type="color"] { height:44px;padding:4px;cursor:pointer; }
+    .thumb-edit-panel input[type="range"] { padding:0;height:6px;appearance:none;background:var(--border);border-radius:3px; }
+    .thumb-edit-panel input[type="range"]::-webkit-slider-thumb { appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer; }
+
+    /* Sticky Bottom Bar */
+    .sticky-bottom-bar { position:sticky;bottom:0;z-index:100;background:var(--bg-card);border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;backdrop-filter:blur(20px);margin-top:24px;border-radius:var(--r-lg); }
+    .sticky-bottom-bar .btn-primary, .sticky-bottom-bar .btn-ghost { font-size:0.82rem;padding:8px 16px; }
+    @media (max-width:640px) {
+      .sticky-bottom-bar { flex-direction:column;width:100%; }
+      .sticky-bottom-bar .btn-primary, .sticky-bottom-bar .btn-ghost { width:100%; }
+    }
+
+    /* Remember Me */
+    .remember-me-row { display:flex;align-items:center;gap:8px;margin-top:12px; }
+    .remember-me-row input[type="checkbox"] { width:16px;height:16px;accent-color:var(--accent);cursor:pointer; }
+    .remember-me-row label { font-size:0.82rem;color:var(--text-dim);cursor:pointer; }
+
     /* Responsive */
     @media (max-width: 640px) {
       .view { padding: 16px 12px 40px; }
@@ -297,6 +329,10 @@
             <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" />
             <label for="loginPassword">Password</label>
             <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" />
+            <div class="remember-me-row">
+              <input type="checkbox" id="rememberMe" checked />
+              <label for="rememberMe">☑ Remember me</label>
+            </div>
             <button type="submit" class="btn-primary" id="loginBtn">Sign In</button>
           </form>
           <form class="auth-form" id="signupForm">
@@ -306,6 +342,10 @@
             <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email" />
             <label for="signupPassword">Password <span style="font-size:0.7rem;color:var(--text-muted);">(min 6 chars)</span></label>
             <input type="password" id="signupPassword" placeholder="Create a password" autocomplete="new-password" />
+            <div class="remember-me-row">
+              <input type="checkbox" id="rememberMeSignup" checked />
+              <label for="rememberMeSignup">☑ Remember me</label>
+            </div>
             <button type="submit" class="btn-primary" id="signupBtn">Create Account</button>
           </form>
           <div class="auth-toggle" id="authToggle">
@@ -315,147 +355,79 @@
       </div>
     </section>
 
-    <!-- ─── VIEW: CHANNEL TYPE ─────────────────────────────── -->
-    <section class="view" id="view-channel-type">
-      <div class="page-hero">
-        <div class="badge">&#128640; Step 1</div>
-        <h1>What type of channel do you have?</h1>
-        <p>We'll tailor the experience based on your channel.</p>
-      </div>
-      <div class="sel-grid">
-        <div class="sel-card channel-type-card" data-type="new">
-          <div class="sel-check">&#10003;</div>
-          <span class="sel-icon">&#127793;</span>
-          <h3>New Channel</h3>
-          <p>Starting fresh? We'll research your niche and find winning strategies from top creators.</p>
-        </div>
-        <div class="sel-card channel-type-card" data-type="existing">
-          <div class="sel-check">&#10003;</div>
-          <span class="sel-icon">&#128200;</span>
-          <h3>Existing Channel</h3>
-          <p>Already have a channel? We'll analyze your data to optimize your content strategy.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ─── VIEW: CONTENT TYPE ─────────────────────────────── -->
-    <section class="view" id="view-content-type">
-      <div class="page-hero">
-        <div class="badge">&#127916; Step 2</div>
-        <h1>What content do you create?</h1>
-        <p>We use different frameworks for Shorts vs Long Form.</p>
-      </div>
-      <button class="back-btn" id="backToChannelType">&#8592; Back</button>
-      <div class="sel-grid">
-        <div class="sel-card content-type-card" data-type="shorts">
-          <div class="sel-check">&#10003;</div>
-          <span class="sel-icon">&#128250;</span>
-          <h3>YouTube Shorts</h3>
-          <p>30-60 seconds &middot; Fast pacing &middot; Quick hooks &middot; High retention</p>
-        </div>
-        <div class="sel-card content-type-card" data-type="longform">
-          <div class="sel-check">&#10003;</div>
-          <span class="sel-icon">&#127909;</span>
-          <h3>Long Form Videos</h3>
-          <p>8-20 minutes &middot; Deep storytelling &middot; Emotional narratives</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ─── VIEW: HAS 50 VIDEOS ────────────────────────────── -->
-    <section class="view" id="view-has-50">
-      <div class="page-hero">
-        <div class="badge">&#128270; Step 3</div>
-        <h1>Do you have 50+ videos uploaded?</h1>
-        <p>This helps us determine how much data we have to analyze.</p>
-      </div>
-      <button class="back-btn" id="backToContentType">&#8592; Back</button>
-      <div class="sel-grid">
-        <div class="sel-card has50-card" data-value="yes">
-          <div class="sel-check">&#10003;</div>
-          <span class="sel-icon">&#9989;</span>
-          <h3>Yes, 50+ Videos</h3>
-          <p>Great! We can do deep performance analysis and find viral patterns.</p>
-        </div>
-        <div class="sel-card has50-card" data-value="no">
-          <div class="sel-check">&#10003;</div>
-          <span class="sel-icon">&#128200;</span>
-          <h3>Under 50 Videos</h3>
-          <p>No problem! We'll analyze what you have and find growth opportunities.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ─── VIEW: CHANNEL URL (50+) ────────────────────────── -->
+    <!-- ─── VIEW: CHANNEL URL (Step 1 - Primary Entry) ─────── -->
     <section class="view" id="view-channel-url">
       <div class="page-hero">
-        <div class="badge">&#128269; Step 3</div>
-        <h1>Enter Your Channel Details</h1>
-        <p>We'll analyze your channel and build a custom creator profile.</p>
+        <div class="badge">&#128269; Step 1</div>
+        <h1>Enter Your YouTube Channel</h1>
+        <p>We'll auto-detect your niche and suggest viral topic ideas in seconds.</p>
       </div>
-      <button class="back-btn" id="backToHas50">&#8592; Back</button>
-      <div class="form-card">
+      <div class="form-card" id="channelUrlFormCard">
         <form id="channelForm">
           <div class="form-group">
             <label for="channelUrl">YouTube Channel URL</label>
             <input type="url" id="channelUrl" placeholder="https://youtube.com/@yourchannel" required />
-            <div class="form-hint">Works with youtube.com/@handle, youtube.com/channel/ID, or just the channel name</div>
+            <div class="form-hint">Paste your channel URL or handle (@name). We'll auto-fetch everything.</div>
           </div>
-          <div class="form-group">
-            <label for="channelName">Channel Name (optional)</label>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="channelName">Channel Name (optional, for manual entry)</label>
             <input type="text" id="channelName" placeholder="e.g. TechWithAlex" />
           </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-primary" id="analyzeBtn">Analyze Channel</button>
+          <div id="autoFetchBanner" style="margin-bottom:12px;"></div>
+          <div id="channelDetectCard" style="display:none;margin-bottom:16px;"></div>
+          <div id="channelFallbackFields" style="display:none;margin-bottom:12px;padding:16px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-lg);">
+            <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px;">Enter channel details manually:</p>
+            <div class="form-group">
+              <label for="manualChannelName">Channel Name</label>
+              <input type="text" id="manualChannelName" placeholder="e.g. TechWithAlex" />
+            </div>
+            <div class="form-group">
+              <label for="manualChannelCategory">Category</label>
+              <select id="manualChannelCategory">
+                <option value="Dark Mystery">Dark Mystery</option>
+                <option value="Finance">Finance</option>
+                <option value="Gaming">Gaming</option>
+                <option value="True Crime">True Crime</option>
+                <option value="Tech">Tech</option>
+                <option value="Motivation">Motivation</option>
+                <option value="Education">Education</option>
+                <option value="Food">Food</option>
+                <option value="Travel">Travel</option>
+                <option value="Health">Health</option>
+                <option value="General" selected>General</option>
+              </select>
+            </div>
+            <div class="form-actions" style="margin-top:12px;">
+              <button type="button" class="btn-primary btn-sm" id="manualChannelConfirm">Confirm & Continue</button>
+              <button type="button" class="btn-ghost btn-sm" id="manualChannelSkip">Skip (pick niche later)</button>
+            </div>
+          </div>
+          <div class="form-actions" id="channelUrlActions">
+            <button type="submit" class="btn-primary" id="analyzeBtn">Fetch Channel &#8594;</button>
           </div>
         </form>
         <div id="channelResults"></div>
+        <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+          <a href="#" id="newChannelLink" style="font-size:0.85rem;color:var(--text-muted);">Don't have a channel yet? &#8594; Start with new channel setup</a>
+        </div>
       </div>
-    </section>
-
-    <!-- ─── VIEW: CHANNEL URL SIMPLE (under 50) ──────────── -->
-    <section class="view" id="view-channel-url-simple">
-      <div class="page-hero">
-        <div class="badge">&#128269; Step 3</div>
-        <h1>Enter Your Channel URL</h1>
-        <p>We'll analyze your existing videos and suggest improvements.</p>
-      </div>
-      <button class="back-btn" id="backToHas50">&#8592; Back</button>
-      <div class="form-card">
-        <form id="channelFormSimple">
-          <div class="form-group">
-            <label for="channelUrlSimple">YouTube Channel URL</label>
-            <input type="url" id="channelUrlSimple" placeholder="https://youtube.com/@yourchannel" required />
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-primary" id="analyzeBtnSimple">Analyze Channel</button>
-          </div>
-        </form>
-        <div id="channelResultsSimple"></div>
-      </div>
-    </section>
-
-    <!-- ─── VIEW: NEW CHANNEL ──────────────────────────────── -->
-    <section class="view" id="view-new-channel">
-      <div class="page-hero">
-        <div class="badge">&#127793; Step 3</div>
-        <h1>Tell Us About Your Channel</h1>
-        <p>We'll research your niche and find winning content patterns.</p>
-      </div>
-      <button class="back-btn" id="backToContentType">&#8592; Back</button>
-      <div class="form-card">
+      <div class="form-card" id="newChannelFormCard" style="display:none;">
         <form id="newChannelForm">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <button type="button" class="back-btn" id="backToChannelUrl" style="margin-bottom:0;">&#8592; Back</button>
+            <span style="font-size:0.82rem;color:var(--text-muted);">New Channel Setup</span>
+          </div>
           <div class="form-group">
             <label for="newNiche">Your Niche / Topic</label>
             <input type="text" id="newNiche" placeholder="e.g. Tech Reviews, Fitness, Cooking" required />
             <div class="tag-list" style="margin-top: 8px;">
-              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Tech Reviews</span>
-              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Finance</span>
-              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">True Crime</span>
-              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Motivation</span>
-              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Gaming</span>
-              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Vlogs</span>
-              <span class="tag" style="cursor: pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Education</span>
+              <span class="tag" style="cursor:pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Tech Reviews</span>
+              <span class="tag" style="cursor:pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Finance</span>
+              <span class="tag" style="cursor:pointer;" onclick="document.getElementById('newNiche').value=this.innerText">True Crime</span>
+              <span class="tag" style="cursor:pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Motivation</span>
+              <span class="tag" style="cursor:pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Gaming</span>
+              <span class="tag" style="cursor:pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Vlogs</span>
+              <span class="tag" style="cursor:pointer;" onclick="document.getElementById('newNiche').value=this.innerText">Education</span>
             </div>
           </div>
           <div class="form-group">
@@ -476,21 +448,45 @@
             <input type="text" id="newCountry" placeholder="e.g. India, US, UK" />
           </div>
           <div class="form-actions">
-            <button type="submit" class="btn-primary" id="newChannelBtn">Research Niche</button>
+            <button type="submit" class="btn-primary" id="newChannelBtn">Research Niche &#8594;</button>
           </div>
         </form>
         <div id="competitorResults"></div>
       </div>
     </section>
 
-    <!-- ─── VIEW: NICHE ANALYSIS ───────────────────────────── -->
+    <!-- ─── VIEW: CONTENT TYPE (Step 2) ────────────────────── -->
+    <section class="view" id="view-content-type">
+      <div class="page-hero">
+        <div class="badge">&#127916; Step 2</div>
+        <h1>Pick your format</h1>
+        <p>We use different frameworks for Shorts vs Long Form.</p>
+      </div>
+      <button class="back-btn" id="backToStep1">&#8592; Back</button>
+      <div class="sel-grid">
+        <div class="sel-card content-type-card" data-type="shorts">
+          <div class="sel-check">&#10003;</div>
+          <span class="sel-icon">&#128250;</span>
+          <h3>YouTube Shorts</h3>
+          <p>30-60 seconds &middot; Fast pacing &middot; Quick hooks &middot; High retention</p>
+        </div>
+        <div class="sel-card content-type-card" data-type="longform">
+          <div class="sel-check">&#10003;</div>
+          <span class="sel-icon">&#127909;</span>
+          <h3>Long Form Videos</h3>
+          <p>8-20 minutes &middot; Deep storytelling &middot; Emotional narratives</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── VIEW: NICHE ANALYSIS (Step 2.5 - manual pick) ─── -->
     <section class="view" id="view-niche-analysis">
       <div class="page-hero">
-        <div class="badge">&#127793; Choose Topic</div>
-        <h1>What's your video about?</h1>
-        <p>Pick a niche or describe your topic for a tailored script.</p>
+        <div class="badge">&#127793; Pick Your Niche</div>
+        <h1>What's your niche?</h1>
+        <p>We couldn't auto-detect your category. Choose one below.</p>
       </div>
-      <button class="back-btn" id="startOverBtn">&#8592; Start Over</button>
+      <button class="back-btn" id="backToNiche">&#8592; Back</button>
       <div class="niche-grid" id="nicheGrid" style="max-width:680px;margin:0 auto;">
         <button class="niche-card" data-niche="dark mystery"><span class="niche-icon">&#128373;</span><span class="niche-name">Dark Mystery</span></button>
         <button class="niche-card" data-niche="finance"><span class="niche-icon">&#128176;</span><span class="niche-name">Finance</span></button>
@@ -513,18 +509,18 @@
     <!-- ─── VIEW: IDEAS ────────────────────────────────────── -->
     <section class="view" id="view-ideas">
       <div class="page-hero">
-        <div class="badge">&#128161; Step 4</div>
+        <div class="badge">&#128161; Step 3</div>
         <h1>Content Ideas</h1>
         <p>AI-generated viral topic ideas. Pick one to generate a full script.</p>
       </div>
-      <button class="back-btn" id="backToIdeas">&#8592; Back to Topics</button>
+      <button class="back-btn" id="backToIdeas">&#8592; Back</button>
       <div id="ideasContainer"></div>
     </section>
 
     <!-- ─── VIEW: SCRIPT ───────────────────────────────────── -->
     <section class="view" id="view-script">
       <div class="page-hero">
-        <div class="badge">&#9997; Step 5</div>
+        <div class="badge">&#9997; Step 4</div>
         <h1>Your Script</h1>
         <p>Premium retention-optimized script with storytelling frameworks.</p>
       </div>
@@ -535,7 +531,7 @@
     <!-- ─── VIEW: THUMBNAIL ────────────────────────────────── -->
     <section class="view" id="view-thumbnail">
       <div class="page-hero">
-        <div class="badge">&#127912; Step 6</div>
+        <div class="badge">&#127912; Step 5</div>
         <h1>AI Thumbnail</h1>
         <p>Viral-style thumbnail generated from your content.</p>
       </div>

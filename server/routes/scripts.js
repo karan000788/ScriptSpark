@@ -7,7 +7,7 @@ const router = Router();
 
 router.post('/generate', requireAuth, async (req, res) => {
   try {
-    const { topic, niche, contentType, channelAnalysis, creatorProfile, marketIntelligence } = req.body;
+    const { topic, niche, contentType, channelAnalysis, creatorProfile, marketIntelligence, channelName, channelCategory, language } = req.body;
     if (!topic || !niche) {
       return res.status(400).json({ error: 'Topic and niche required' });
     }
@@ -18,7 +18,10 @@ router.post('/generate', requireAuth, async (req, res) => {
       contentType: contentType || 'longform',
       channelAnalysis,
       creatorProfile,
-      marketIntelligence
+      marketIntelligence,
+      channelName,
+      channelCategory,
+      language
     });
 
     const { data, error } = await supabase.from('scripts').insert({
@@ -57,7 +60,7 @@ router.post('/generate', requireAuth, async (req, res) => {
 
 router.post('/ideas', requireAuth, async (req, res) => {
   try {
-    const { niche, channelAnalysis, marketIntelligence, contentType, count } = req.body;
+    const { niche, channelAnalysis, marketIntelligence, contentType, count, recentTitles } = req.body;
     if (!niche) return res.status(400).json({ error: 'Niche required' });
 
     const ideas = await generateIdeas({
@@ -65,7 +68,8 @@ router.post('/ideas', requireAuth, async (req, res) => {
       channelAnalysis,
       marketIntelligence,
       contentType: contentType || 'longform',
-      count: count || 5
+      count: count || 5,
+      recentTitles: recentTitles || []
     });
 
     const { error: histError2 } = await supabase.from('generation_history').insert({
