@@ -439,3 +439,25 @@ Output JSON: {accuracy_score:0-100, verified_claims[], questionable_claims[{clai
 
   return callGroqJson(systemPrompt, `Fact-check this script:\n\n${script}`);
 }
+
+export async function analyzeCompetitorTitles(titles, channelName) {
+  const systemPrompt = `You are a YouTube competitor analysis expert. Analyze these ${titles.length} video titles from a competitor channel:
+
+${titles.join('\n')}
+
+Return ONLY a JSON object with EXACTLY these fields (no markdown, no explanation):
+{
+  "commonTopics": ["topic1", "topic2", "topic3"],
+  "titlePatterns": ["pattern1", "pattern2"],
+  "emotionType": "fear | curiosity | shock | inspiration | humor",
+  "avgTitleLength": "short | medium | long",
+  "languageStyle": "Hindi | English | Hinglish",
+  "contentGaps": ["topic not covered 1", "topic not covered 2"],
+  "thumbnailStyle": "face-based | text-based | scene-based | mixed",
+  "hookWords": ["word1", "word2", "word3"],
+  "whatIsWorking": "one sentence summary of their winning formula"
+}
+Return ONLY valid JSON. No explanation. No markdown.`;
+
+  return callGroqJson(systemPrompt, 'Analyze these competitor YouTube titles and return the JSON analysis.');
+}

@@ -5,7 +5,7 @@ import {
   getChannelIdFromUrl, analyzeChannel, getChannelStats, getChannelVideos,
   searchTopChannels, generateMarketIntelligence
 } from '../services/youtube.js';
-import { generateCreatorProfile, generateIdeas } from '../services/groq.js';
+import { generateCreatorProfile, generateIdeas, analyzeCompetitorTitles } from '../services/groq.js';
 
 const router = Router();
 
@@ -164,6 +164,36 @@ router.post('/auto-fetch', requireAuth, async (req, res) => {
     res.json({ channelId: stats.channelId, name: stats.title, description: stats.description, subscribers: stats.subscribers, totalVideos: stats.totalVideos, thumbnail: stats.thumbnail, recentTitles, detectedCategory, recentThumbnails });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+router.post('/analyze-competitor', requireAuth, async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) return res.status(400).json({ error: 'Competitor URL required' });
+
+    const competitorChannelId = await getChannelIdFromUrl(url);
+    const stats = await getChannelStats(competitorChannelId);
+
+    const competitorName = stats.title;
+    const userChannelName = req.body.userChannelName || '';
+    if (userChannelName && competitorName.toLowerCase().replace(/[^a-z0-9]/g, '') === userChannelName.toLowerCase().replace(/[^a-z0-9]/g, '')) {
+      return res.status(400).json({ error: "That's your own channel! Please enter a competitor's channel URL." });
+    }
+
+    const videos = await getChannelVideos(competitorChannelId, 20);
+    const competitorVideos = videos.map(v => ({
+      title: v.title,
+      thumbnailUrl: v.thumbnails?.high?.url || v.thumbnails?.medium?.url || ''
+    }));
+    const titles = videos.map(v => v.title);
+
+    const insights = await analyzeCompetitorTitles(titles, competitorName);
+
+    res.json({ competitorName, competitorVideos, insights });
+  } catch (err) {
+    console.error('Competitor analysis error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

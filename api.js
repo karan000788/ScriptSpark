@@ -133,6 +133,13 @@ const API = {
     });
   },
 
+  async analyzeCompetitor(url, userChannelName) {
+    return apiRequest('/youtube/analyze-competitor', {
+      method: 'POST',
+      body: JSON.stringify({ url, userChannelName })
+    });
+  },
+
   async searchCompetitors(niche, targetAudience, language, country) {
     return apiRequest('/youtube/search-competitors', {
       method: 'POST',

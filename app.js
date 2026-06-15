@@ -111,6 +111,25 @@
     container.innerHTML = '<div class="skeleton" style="height:200px;width:100%;border-radius:12px;"></div>';
   }
 
+  function showLoader(msg) {
+    let el = document.getElementById('appLoaderOverlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'appLoaderOverlay';
+      el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;';
+      document.body.appendChild(el);
+      const style = document.createElement('style');
+      style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+      document.head.appendChild(style);
+    }
+    el.innerHTML = '<div style="background:#1a1a2e;padding:28px 36px;border-radius:16px;text-align:center;color:#fff;font-size:1rem;box-shadow:0 8px 40px rgba(0,0,0,0.5);"><div style="width:36px;height:36px;border:3px solid #333;border-top-color:#a78bfa;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px;"></div>'+msg+'</div>';
+    el.style.display = 'flex';
+  }
+  function hideLoader() {
+    const el = document.getElementById('appLoaderOverlay');
+    if (el) el.style.display = 'none';
+  }
+
   function withTimeout(promise, ms = 30000) {
     return Promise.race([
       promise,
@@ -627,6 +646,27 @@
   }
 
   // ─── SCRIPT GENERATION ──────────────────────────────────
+  function checkScriptQuality(scriptText, channelName) {
+    const issues = [];
+    if (/have you ever stopped to think/i.test(scriptText)) {
+      issues.push('weak generic hook');
+    }
+    if (channelName && scriptText.toLowerCase().indexOf(channelName.toLowerCase()) === -1) {
+      issues.push('channel name not used in CTA');
+    }
+    const timestamps = (scriptText.match(/\[\d+:\d+\]/g) || []).length;
+    if (timestamps > 8) {
+      issues.push('too many fake timestamps (' + timestamps + ')');
+    }
+    const lines = scriptText.split('\n').filter(function(l) { return l.trim(); }).length;
+    if (lines < 15) {
+      issues.push('too short (' + lines + ' lines)');
+    }
+    if (!/\bHOOK\b/i.test(scriptText)) issues.push('missing HOOK section');
+    if (!/\bCTA\b/i.test(scriptText)) issues.push('missing CTA section');
+    return issues;
+  }
+
   async function generateScript(idea) {
     const container = $('scriptContainer');
     if (!container) return;
@@ -638,21 +678,37 @@
 
     try {
       const lang = appState.language || $('newLanguage')?.value || 'en';
-      const script = await withTimeout(API.generateScript({
+      const channelName = appState.channelName;
+      const apiParams = {
         topic: idea.title,
         niche: appState.niche || appState.channelAnalysis?.channelInfo?.name || 'general',
         contentType: appState.contentType,
         channelAnalysis: appState.channelAnalysis?.performance,
         creatorProfile: appState.creatorProfile,
         marketIntelligence: appState.marketIntelligence?.marketPatterns,
-        channelName: appState.channelName,
+        channelName: channelName,
         channelCategory: appState.channelCategory,
         language: lang
-      }), 45000);
+      };
 
-      appState.script = script;
-      appState.originalScript = script.script || '';
-      renderScript(script);
+      const script = await withTimeout(API.generateScript(apiParams), 45000);
+      const issues = checkScriptQuality(script.script || '', channelName);
+
+      if (issues.length > 0) {
+        showToast('Quality: ' + issues.join(', ') + ' — regenerating...');
+        const retry = await withTimeout(API.generateScript(apiParams), 45000);
+        const retryIssues = checkScriptQuality(retry.script || '', channelName);
+        if (retryIssues.length > 0) {
+          showToast('Regenerated with ' + retryIssues.length + ' issue(s) remaining');
+        }
+        appState.script = retry;
+        appState.originalScript = retry.script || '';
+        renderScript(retry);
+      } else {
+        appState.script = script;
+        appState.originalScript = script.script || '';
+        renderScript(script);
+      }
     } catch (err) {
       showError(container, err.message, () => generateScript(idea));
     }
@@ -883,6 +939,23 @@
     'Default': '#1a1a2e'
   };
 
+  function generateThumbnailImage(topic, channelCategory) {
+    const imagePrompts = {
+      'Dark Mystery': 'cinematic dark scene, mysterious atmosphere, dramatic shadows, scared human face with wide eyes, single spotlight, eerie background, photorealistic, 8k',
+      'True Crime': 'dramatic crime scene atmosphere, shocked human face, dark alley, police lights in background, cinematic lighting, photorealistic',
+      'Finance': 'confident person in suit looking at camera, city skyline background, professional lighting, sharp contrast, photorealistic',
+      'Gaming': 'gamer with intense expression, neon RGB lighting, gaming setup background, dramatic face, photorealistic',
+      'Technology': 'person looking shocked at glowing screen, futuristic blue lighting, tech background, photorealistic',
+      'Education': 'curious person with lightbulb moment expression, bright clean background, engaging face, photorealistic',
+      'Health': 'person with concerned or relieved expression, clean medical background, natural lighting, photorealistic',
+      'Motivation': 'determined person looking up, sunrise background, golden hour lighting, inspirational mood, photorealistic',
+      'Default': 'dramatic human face with curious expression, cinematic lighting, dark background with spotlight, photorealistic, 8k'
+    };
+    const basePrompt = imagePrompts[channelCategory] || imagePrompts['Default'];
+    const fullPrompt = basePrompt + ', related to topic: ' + topic + ', YouTube thumbnail composition, face clearly visible, space at bottom for text overlay, no text in image';
+    return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(fullPrompt) + '?width=1280&height=720&nologo=true&enhance=true';
+  }
+
   async function generateThumbnail(title) {
     const container = $('thumbnailContainer');
     if (!container) return;
@@ -893,21 +966,17 @@
       </div>`;
 
     try {
-      const [data, thumbTextData] = await Promise.all([
-        withTimeout(API.generateThumbnail({
-          title,
-          niche: appState.niche || appState.channelAnalysis?.channelInfo?.name || 'general',
-          analysis: appState.channelAnalysis,
-          channelCategory: appState.channelCategory
-        }), 60000),
-        API.generateThumbnailText(title, appState.channelCategory).catch(() => null)
-      ]);
-
-      appState.thumbnail = data;
-      appState._thumbShortText = thumbTextData?.thumbText || generateShortTextLocally(title);
-      renderThumbnail(data, title);
+      const channelCategory = appState.channelCategory;
+      const channelName = appState.channelName || appState.channelAnalysis?.channelInfo?.name || '';
+      let thumbText = generateShortTextLocally(title);
+      try {
+        const thumbTextData = await API.generateThumbnailText(title, channelCategory);
+        if (thumbTextData?.thumbText) thumbText = thumbTextData.thumbText;
+      } catch (e) { /* use local fallback */ }
+      appState._thumbShortText = thumbText;
+      await renderThumbnail(title, channelName, channelCategory, thumbText);
     } catch (err) {
-      showError(container, err.message, () => generateThumbnail(title));
+      showError(container, '⚠️ Servers are busy right now. Please try again in 2 minutes.', () => generateThumbnail(title));
     }
   }
 
@@ -918,88 +987,74 @@
   }
 
   let thumbCanvasData = null;
+  let _currentThumbImageUrl = null;
 
-  function drawThumbnailOnCanvas(imgUrl, text, textColor, fontSize) {
-    return new Promise((resolve) => {
+  async function loadAndDrawThumbnail(imgUrl, text, textColor, fontSize, channelName) {
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       canvas.width = 1280;
       canvas.height = 720;
       const ctx = canvas.getContext('2d');
-
       const cat = appState.channelCategory || 'Default';
       const bgColor = THUMB_BG_COLORS[cat] || THUMB_BG_COLORS['Default'];
-
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, 1280, 720);
-
-      ctx.fillStyle = 'rgba(139,92,246,0.05)';
-      for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.arc(200 + i * 400, 100 + i * 200, 300, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = function() {
         ctx.drawImage(img, 0, 0, 1280, 720);
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        const grad = ctx.createLinearGradient(0, 720, 0, 0);
+        grad.addColorStop(0, 'rgba(0,0,0,0.85)');
+        grad.addColorStop(0.35, 'rgba(0,0,0,0.35)');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 1280, 720);
-        drawTextOverlay(ctx, text, textColor, fontSize);
+        drawThumbnailText(ctx, text, textColor, fontSize, channelName);
         resolve(canvas);
       };
       img.onerror = function() {
-        drawTextOverlay(ctx, text, textColor, fontSize);
+        drawThumbnailText(ctx, text, textColor, fontSize, channelName);
         resolve(canvas);
       };
       img.src = imgUrl;
     });
   }
 
-  function drawTextOverlay(ctx, text, textColor, fontSize) {
+  function drawThumbnailText(ctx, text, textColor, fontSize, channelName) {
     const cleanText = text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
     const words = cleanText.split(/\s+/).filter(Boolean);
     const maxWords = 3;
     const shortText = words.slice(0, maxWords).join(' ').toUpperCase();
     if (!shortText) return;
-
     const fs = fontSize || 96;
     const cat = appState.channelCategory || 'Default';
     const defaultColor = THUMB_TEXT_COLORS[cat] || THUMB_TEXT_COLORS['Default'];
     const color = textColor || defaultColor;
-
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
-    ctx.font = `900 ${fs}px "Impact","Anton",sans-serif`;
-
+    ctx.font = '900 ' + fs + 'px "Impact","Anton",sans-serif';
     const x = 40;
     const y = 720 - 80;
-
     ctx.shadowColor = '#000';
     ctx.shadowBlur = 8;
     ctx.shadowOffsetX = 3;
     ctx.shadowOffsetY = 3;
     ctx.fillStyle = color;
     ctx.fillText(shortText, x, y);
-
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
-
     ctx.strokeStyle = '#000';
     ctx.lineWidth = fs / 12;
     ctx.lineJoin = 'round';
     ctx.strokeText(shortText, x, y);
-
     ctx.fillStyle = color;
     ctx.fillText(shortText, x, y);
-
     ctx.font = '18px Arial,sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
-    const channelName = appState.channelName || appState.channelAnalysis?.channelInfo?.name || '';
     if (channelName) {
       ctx.fillText('@' + channelName, 1260, 710);
     }
@@ -1010,120 +1065,82 @@
     return THUMB_TEXT_COLORS[cat] || THUMB_TEXT_COLORS['Default'];
   }
 
-  function renderThumbnail(data, title) {
+  async function renderThumbnail(topic, channelName, channelCategory, thumbnailText) {
     const container = $('thumbnailContainer');
     if (!container) return;
-
-    const channelName = appState.channelName || appState.channelAnalysis?.channelInfo?.name || '';
-    const topicSlug = (title || 'thumbnail').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().slice(0, 40);
-    const shortText = appState._thumbShortText || generateShortTextLocally(title);
+    const shortText = thumbnailText || generateShortTextLocally(topic);
     const defaultColor = getThumbCategoryColor();
-    const style = appState._channelThumbnailStyle;
-
-    const styleBadge = style ? `
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;font-size:0.78rem;">
-        <span class="tag">🎨 ${style.textStyle || 'minimal'}</span>
-        <span class="tag">🗣 ${style.language || 'English'}</span>
-        <span class="tag">😲 ${style.emotionType || 'curiosity'}</span>
-      </div>` : '';
-
-    const refStrip = appState._recentThumbnails?.length ? `
-      <div class="thumbnail-reference-strip" style="margin-bottom:16px;">
-        <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">📸 Your recent thumbnails (for reference):</p>
-        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;">
-          ${appState._recentThumbnails.slice(0, 6).map(t => `
-            <img src="${t}" alt="Recent thumbnail" style="width:120px;height:68px;border-radius:4px;object-fit:cover;flex-shrink:0;border:1px solid var(--border);" loading="lazy" onerror="this.style.display='none'" />
-          `).join('')}
-        </div>
-      </div>` : '';
-
-    const thumbText = shortText.replace(/"/g, '&quot;');
-
     container.innerHTML = `
-      <div class="thumbnail-prompt-box">${data.prompt || 'Generating thumbnail...'}</div>
-      ${styleBadge}
-      ${refStrip}
-      ${data.imageUrl ? `
-        <div class="thumbnail-img-wrap" id="thumbnailCanvasWrap">
-          <canvas id="thumbnailCanvas" width="1280" height="720" style="width:100%;height:auto;aspect-ratio:16/9;border-radius:var(--r-lg);display:block;"></canvas>
-        </div>` : `
-        <div class="thumbnail-placeholder">
-          <p>Thumbnail generation is processing. The prompt has been saved.</p>
-        </div>`}
-      <div class="thumbnail-actions">
-        ${data.imageUrl ? `<button class="btn-primary btn-sm" id="downloadThumbBtn">⬇️ Download Thumbnail</button>` : ''}
-        <button class="btn-ghost btn-sm" id="copyPromptBtn">Copy Prompt</button>
-        <button class="btn-ghost btn-sm" id="regenThumbBtn">🔄 Regenerate</button>
+      <div id="thumbnailLoading" style="text-align:center;padding:60px 20px;">
+        <div style="width:36px;height:36px;border:3px solid #333;border-top-color:#a78bfa;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px;"></div>
+        <p style="color:var(--text-dim);margin-top:12px;">Generating AI thumbnail...</p>
       </div>
-      ${data.imageUrl ? `
-      <div class="thumb-edit-panel" id="thumbEditPanel">
-        <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:8px;">✏️ Thumbnail Text Overlay</h4>
-        <label for="thumbTextInput">Overlay Text (max 3 words)</label>
-        <input type="text" id="thumbTextInput" value="${thumbText}" maxlength="30" />
-        <label for="thumbColorInput">Text Color</label>
-        <input type="color" id="thumbColorInput" value="${defaultColor}" />
-        <label for="thumbFontSize">Font Size: <span id="thumbFontSizeLabel">96</span>px</label>
-        <input type="range" id="thumbFontSize" min="36" max="120" value="96" />
-        <div class="form-actions" style="margin-top:12px;">
-          <button class="btn-primary btn-sm" id="regenCanvasBtn">🔄 Update Thumbnail</button>
-          <button class="btn-ghost btn-sm" id="autoGenTextBtn">✨ Auto-Generate Text</button>
+      <div class="thumbnail-img-wrap" id="thumbnailCanvasWrap" style="display:none;">
+        <canvas id="thumbnailCanvas" width="1280" height="720" style="width:100%;height:auto;aspect-ratio:16/9;border-radius:var(--r-lg);display:block;"></canvas>
+      </div>
+      <div id="thumbnailActions" style="display:none;">
+        <div class="thumbnail-actions">
+          <button class="btn-primary btn-sm" id="downloadThumbBtn">⬇️ Download Thumbnail</button>
+          <button class="btn-ghost btn-sm" id="regenThumbBtn">🔄 Regenerate</button>
         </div>
-      </div>` : ''}
-      ${data.altImageUrl ? `
-        <div style="margin-top:16px;">
-          <h4 style="font-size:0.85rem;margin-bottom:8px;">Alternative Version</h4>
-          <div class="thumbnail-img-wrap">
-            <img src="${data.altImageUrl}" alt="Alternative Thumbnail" class="thumbnail-image" crossorigin="anonymous" onerror="this.closest('.thumbnail-img-wrap').innerHTML='<p style=\\'padding:40px;color:var(--text-dim);\\'>Alternative image failed to load</p>'">
+        <div class="thumb-edit-panel">
+          <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:8px;">✏️ Thumbnail Text Overlay</h4>
+          <label for="thumbTextInput">Overlay Text (max 3 words)</label>
+          <input type="text" id="thumbTextInput" value="${shortText.replace(/"/g, '&quot;')}" maxlength="30" />
+          <label for="thumbColorInput">Text Color</label>
+          <input type="color" id="thumbColorInput" value="${defaultColor}" />
+          <label for="thumbFontSize">Font Size: <span id="thumbFontSizeLabel">96</span>px</label>
+          <input type="range" id="thumbFontSize" min="36" max="120" value="96" />
+          <div class="form-actions" style="margin-top:12px;">
+            <button class="btn-primary btn-sm" id="regenCanvasBtn">🔄 Update Thumbnail</button>
+            <button class="btn-ghost btn-sm" id="autoGenTextBtn">✨ Auto-Generate Text</button>
           </div>
-        </div>` : ''}
-      <div class="sticky-bottom-bar">
-        <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Download Package</span>
-        <button class="btn-ghost btn-sm" id="copyScriptBtn2">Copy Script</button>
-        <button class="btn-ghost btn-sm" id="copyTitleBtn2">Copy Title</button>
-        <button class="btn-ghost btn-sm" id="copyTopicBtn2">Copy Topic</button>
+        </div>
       </div>`;
 
-    if (data.imageUrl) {
-      drawThumbnailOnCanvas(data.imageUrl, shortText, null, 96).then(canvas => {
-        const destCanvas = $('thumbnailCanvas');
-        if (destCanvas) {
-          const ctx = destCanvas.getContext('2d');
-          ctx.clearRect(0, 0, 1280, 720);
-          ctx.drawImage(canvas, 0, 0, 1280, 720);
-          thumbCanvasData = canvas;
-        }
-      });
+    try {
+      _currentThumbImageUrl = generateThumbnailImage(topic, channelCategory);
+      const canvas = await loadAndDrawThumbnail(_currentThumbImageUrl, shortText, null, 96, channelName);
+      const destCanvas = $('thumbnailCanvas');
+      if (destCanvas) {
+        const ctx = destCanvas.getContext('2d');
+        ctx.clearRect(0, 0, 1280, 720);
+        ctx.drawImage(canvas, 0, 0, 1280, 720);
+      }
+      thumbCanvasData = canvas;
+      const loading = $('thumbnailLoading');
+      if (loading) loading.remove();
+      const wrap = $('thumbnailCanvasWrap');
+      if (wrap) wrap.style.display = '';
+      const actions = $('thumbnailActions');
+      if (actions) actions.style.display = '';
 
       $('downloadThumbBtn')?.addEventListener('click', () => {
         if (thumbCanvasData) {
           const link = document.createElement('a');
-          link.download = `thumbnail_${channelName || 'creator'}_${topicSlug}.png`;
+          link.download = 'thumbnail_' + (channelName || 'creator') + '_' + topic.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().slice(0, 40) + '.png';
           link.href = thumbCanvasData.toDataURL('image/png');
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           const sizeInfo = Math.round(thumbCanvasData.toDataURL('image/png').length * 0.75 / 1024);
-          showToast(`Downloaded: ~${sizeInfo} KB`);
-        } else {
-          const a = document.createElement('a');
-          a.href = data.imageUrl;
-          a.download = `thumbnail_${channelName || 'creator'}_${topicSlug}.png`;
-          a.click();
+          showToast('Downloaded: ~' + sizeInfo + ' KB');
         }
       });
 
+      $('regenThumbBtn')?.addEventListener('click', () => generateThumbnail(topic));
       $('regenCanvasBtn')?.addEventListener('click', () => {
         const newText = $('thumbTextInput')?.value || shortText;
         const newColor = $('thumbColorInput')?.value || defaultColor;
         const newSize = parseInt($('thumbFontSize')?.value || '96');
-        drawThumbnailOnCanvas(data.imageUrl, newText, newColor, newSize).then(canvas => {
+        loadAndDrawThumbnail(_currentThumbImageUrl, newText, newColor, newSize, channelName).then(canvas => {
           const destCanvas = $('thumbnailCanvas');
           if (destCanvas) {
             const ctx = destCanvas.getContext('2d');
             ctx.clearRect(0, 0, 1280, 720);
             ctx.drawImage(canvas, 0, 0, 1280, 720);
-            thumbCanvasData = canvas;
           }
+          thumbCanvasData = canvas;
           showToast('Thumbnail updated!');
         });
       });
@@ -1133,7 +1150,7 @@
         btn.disabled = true;
         btn.textContent = 'Generating...';
         try {
-          const res = await API.generateThumbnailText(title, appState.channelCategory);
+          const res = await API.generateThumbnailText(topic, channelCategory);
           if (res?.thumbText) {
             appState._thumbShortText = res.thumbText;
             $('thumbTextInput').value = res.thumbText.replace(/"/g, '&quot;');
@@ -1150,28 +1167,130 @@
       $('thumbFontSize')?.addEventListener('input', function() {
         $('thumbFontSizeLabel').textContent = this.value;
       });
+
+      $('copyScriptBtn2')?.addEventListener('click', () => {
+        const body = appState.script?.script || appState.originalScript || '';
+        navigator.clipboard.writeText(body);
+        showToast('Script copied!');
+      });
+      $('copyTitleBtn2')?.addEventListener('click', () => {
+        const t = appState.script?.title || topic || '';
+        navigator.clipboard.writeText(t);
+        showToast('Title copied!');
+      });
+      $('copyTopicBtn2')?.addEventListener('click', () => {
+        const copyTopic = appState.selectedIdea?.title || topic || '';
+        navigator.clipboard.writeText(copyTopic);
+        showToast('Topic copied!');
+      });
+    } catch (err) {
+      const loading = $('thumbnailLoading');
+      if (loading) loading.remove();
+      showError(container, '⚠️ Servers are busy right now. Please try again in 2 minutes.', () => generateThumbnail(topic));
+    }
+  }
+
+  // ─── COMPETITOR ANALYSIS ─────────────────────────────────
+  function sanitizeOutput(text, competitorName, userChannelName) {
+    if (!text) return text;
+    if (competitorName && userChannelName) {
+      const regex = new RegExp(competitorName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      return text.replace(regex, userChannelName);
+    }
+    return text;
+  }
+
+  async function analyzeCompetitor() {
+    const url = $('competitorUrl')?.value?.trim();
+    if (!url) return showToast('Please enter a competitor channel URL');
+
+    const userChannelName = appState.channelName || '';
+    const userUrl = userChannelName ? userChannelName.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+    const enteredName = url.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (userUrl && userUrl.length > 3 && enteredName.includes(userUrl)) {
+      return showToast("That's your own channel! Please enter a competitor's channel URL.");
     }
 
-    $('copyPromptBtn')?.addEventListener('click', () => {
-      navigator.clipboard.writeText(data.prompt || '');
-      showToast('Prompt copied!');
-    });
-    $('regenThumbBtn')?.addEventListener('click', () => generateThumbnail(title));
-    $('copyScriptBtn2')?.addEventListener('click', () => {
-      const body = appState.script?.script || appState.originalScript || '';
-      navigator.clipboard.writeText(body);
-      showToast('Script copied!');
-    });
-    $('copyTitleBtn2')?.addEventListener('click', () => {
-      const t = appState.script?.title || title || '';
-      navigator.clipboard.writeText(t);
-      showToast('Title copied!');
-    });
-    $('copyTopicBtn2')?.addEventListener('click', () => {
-      const topic = appState.selectedIdea?.title || title || '';
-      navigator.clipboard.writeText(topic);
-      showToast('Topic copied!');
-    });
+    const btn = $('analyzeCompetitorBtn');
+    const resultsContainer = $('competitorResults');
+    btn.disabled = true;
+    btn.textContent = 'Analyzing...';
+    resultsContainer.innerHTML = '<div class="analysis-loading" style="padding:20px;"><div class="loading-spinner"></div><p style="color:var(--text-dim);font-size:0.85rem;margin-top:12px;">Analyzing competitor channel...</p></div>';
+
+    try {
+      const data = await withTimeout(API.analyzeCompetitor(url, userChannelName), 30000);
+      const { competitorName, competitorVideos, insights } = data;
+      const safeName = competitorName || '';
+
+      const sanitizedInsights = {
+        commonTopics: (insights.commonTopics || []).map(t => sanitizeOutput(t, safeName, userChannelName)),
+        titlePatterns: (insights.titlePatterns || []).map(t => sanitizeOutput(t, safeName, userChannelName)),
+        emotionType: insights.emotionType || 'curiosity',
+        avgTitleLength: insights.avgTitleLength || 'medium',
+        languageStyle: insights.languageStyle || 'English',
+        contentGaps: (insights.contentGaps || []).map(g => sanitizeOutput(g, safeName, userChannelName)),
+        thumbnailStyle: insights.thumbnailStyle || 'mixed',
+        hookWords: (insights.hookWords || []).map(w => sanitizeOutput(w, safeName, userChannelName)),
+        whatIsWorking: sanitizeOutput(insights.whatIsWorking || '', safeName, userChannelName)
+      };
+
+      resultsContainer.innerHTML = `
+        <div class="competitor-results">
+          <div class="premium-preview-banner">&#9889; This feature is FREE during beta. It will become a premium feature soon — use it while you can!</div>
+          <div class="competitor-insights">
+            <h4>&#128269; Competitor Channel Analysis</h4>
+            <div class="insight-grid">
+              <div class="insight-card">
+                <span class="insight-label">&#127919; Common Topics</span>
+                <div class="tag-list">${sanitizedInsights.commonTopics.map(t => '<span class="tag">' + t + '</span>').join('')}</div>
+              </div>
+              <div class="insight-card">
+                <span class="insight-label">&#128221; Title Patterns</span>
+                <div class="tag-list">${sanitizedInsights.titlePatterns.map(t => '<span class="tag">' + t + '</span>').join('')}</div>
+              </div>
+              <div class="insight-card">
+                <span class="insight-label">&#128578; Emotion Type</span>
+                <div class="insight-value">${sanitizedInsights.emotionType}</div>
+              </div>
+              <div class="insight-card">
+                <span class="insight-label">&#128207; Title Length</span>
+                <div class="insight-value">${sanitizedInsights.avgTitleLength}</div>
+              </div>
+              <div class="insight-card">
+                <span class="insight-label">&#128266; Language</span>
+                <div class="insight-value">${sanitizedInsights.languageStyle}</div>
+              </div>
+              <div class="insight-card">
+                <span class="insight-label">&#128444; Thumbnail Style</span>
+                <div class="insight-value">${sanitizedInsights.thumbnailStyle}</div>
+              </div>
+              <div class="insight-card">
+                <span class="insight-label">&#128218; Content Gaps (Your Opportunity)</span>
+                <div class="tag-list">${sanitizedInsights.contentGaps.map(g => '<span class="tag">' + g + '</span>').join('')}</div>
+              </div>
+              <div class="insight-card">
+                <span class="insight-label">&#128240; Hook Words</span>
+                <div class="tag-list">${sanitizedInsights.hookWords.map(w => '<span class="tag">' + w + '</span>').join('')}</div>
+              </div>
+              <div class="insight-card insight-full">
+                <span class="insight-label">&#128200; What's Working</span>
+                <div class="insight-text">${sanitizedInsights.whatIsWorking}</div>
+              </div>
+            </div>
+            ${competitorVideos.length ? '<div style="margin-top:12px;"><span class="insight-label" style="display:block;margin-bottom:8px;">&#127916; Recent Videos (style reference only)</span><div class="thumbnail-strip">' + competitorVideos.slice(0, 10).map(function(v) { return '<img src="' + v.thumbnailUrl + '" alt="Video thumbnail" loading="lazy" onerror="this.style.display=\'none\'" />'; }).join('') + '</div></div>' : ''}
+            <p style="font-size:0.72rem;color:var(--text-muted);margin-top:16px;">&#9432; Analysis is for inspiration only. All generated content is 100% original and tailored to your channel.</p>
+          </div>
+        </div>`;
+    } catch (err) {
+      resultsContainer.innerHTML = '<div style="padding:16px;text-align:center;"><p style="color:var(--error);font-size:0.85rem;">' + err.message + '</p><button class="btn-ghost btn-sm" style="margin-top:8px;" onclick="window.app.retryCompetitor()">Try Again</button></div>';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '\uD83D\uDD0D Analyze Channel';
+    }
+  }
+
+  function retryCompetitor() {
+    analyzeCompetitor();
   }
 
   // ─── NICHE ANALYSIS ──────────────────────────────────────
@@ -1312,6 +1431,8 @@
     $('newChannelLink')?.addEventListener('click', (e) => { e.preventDefault(); $('channelUrlFormCard').style.display = 'none'; $('newChannelFormCard').style.display = 'block'; });
     $('showUrlFallback')?.addEventListener('click', (e) => { e.preventDefault(); showManualChannelForm(); });
 
+    $('analyzeCompetitorBtn')?.addEventListener('click', analyzeCompetitor);
+
     $('backToContentType')?.addEventListener('click', () => { appState.contentType = null; showView('view-channel-url'); });
     $('backToNiche')?.addEventListener('click', () => { showView('view-channel-url'); });
     $('backToIdeas')?.addEventListener('click', () => {
@@ -1362,6 +1483,7 @@
     showView,
     startOver,
     showToast,
-    loadDashboard
+    loadDashboard,
+    retryCompetitor
   };
 })();
