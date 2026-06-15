@@ -10,7 +10,8 @@ if (!GROQ_API_KEY) {
 
 const MODELS = [
   'llama-3.3-70b-versatile',
-  'deepseek-r1-distill-llama-70b'
+  'llama-3.1-70b-versatile',
+  'llama-3.2-90b-vision-preview'
 ];
 
 function estimateTokens(text) {
@@ -38,47 +39,54 @@ async function callGroq(systemPrompt, userMessage, modelIndex = 0) {
     console.warn(`Prompt still ~${estimateTokens(promptText)} tokens after truncation`);
   }
 
-  // --- Try Groq First (15s timeout) ---
-  try {
-    const model = MODELS[modelIndex] || MODELS[0];
-    const resp = await fetch(GROQ_ENDPOINT, {
-      signal: AbortSignal.timeout(15000),
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage }
-        ],
-        temperature: 0.8,
-        max_tokens: 4000
-      })
-    });
+  // --- Try Groq First (25s timeout, retry with next model) ---
+  for (let attempt = modelIndex; attempt < MODELS.length; attempt++) {
+    try {
+      const model = MODELS[attempt];
+      const resp = await fetch(GROQ_ENDPOINT, {
+        signal: AbortSignal.timeout(25000),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMessage }
+          ],
+          temperature: 0.8,
+          max_tokens: 4000
+        })
+      });
 
-    if (resp.status === 404 && modelIndex < MODELS.length - 1) {
-      return callGroq(systemPrompt, userMessage, modelIndex + 1);
+      if (resp.status === 429) {
+        console.warn(`Groq model ${model} rate-limited, trying next...`);
+        continue;
+      }
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        console.warn(`Groq model ${model} failed (HTTP ${resp.status}), trying next...`);
+        continue;
+      }
+
+      const data = await resp.json();
+      const text = data.choices?.[0]?.message?.content;
+      if (!text) {
+        console.warn(`Groq model ${model} returned empty, trying next...`);
+        continue;
+      }
+
+      return text;
+
+    } catch (err) {
+      console.warn(`Groq model ${MODELS[attempt]} error: ${err.message}, trying next...`);
     }
-
-    if (resp.status === 429) throw new Error('GROQ_QUOTA');
-
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error?.message || `AI request failed (HTTP ${resp.status})`);
-    }
-
-    const data = await resp.json();
-    const text = data.choices?.[0]?.message?.content;
-    if (!text) throw new Error('GROQ_EMPTY');
-
-    return text;
-
-  } catch (err) {
-    console.warn('Groq failed, switching to OpenRouter...', err.message);
   }
+
+  console.warn('All Groq models failed, falling back to OpenRouter...');
 
   // --- Fallback to OpenRouter (30s timeout) ---
   try {
