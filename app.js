@@ -958,102 +958,410 @@
     'Default': '#1a1a2e'
   };
 
-  function generateThumbnailImage(topic, channelCategory) {
-    const imagePrompts = {
-      'Dark Mystery': 'cinematic dark scene, mysterious atmosphere, dramatic shadows, scared human face with wide eyes, single spotlight, eerie background, photorealistic, 8k',
-      'True Crime': 'dramatic crime scene atmosphere, shocked human face, dark alley, police lights in background, cinematic lighting, photorealistic',
-      'Finance': 'confident person in suit looking at camera, city skyline background, professional lighting, sharp contrast, photorealistic',
-      'Gaming': 'gamer with intense expression, neon RGB lighting, gaming setup background, dramatic face, photorealistic',
-      'Technology': 'person looking shocked at glowing screen, futuristic blue lighting, tech background, photorealistic',
-      'Education': 'curious person with lightbulb moment expression, bright clean background, engaging face, photorealistic',
-      'Health': 'person with concerned or relieved expression, clean medical background, natural lighting, photorealistic',
-      'Motivation': 'determined person looking up, sunrise background, golden hour lighting, inspirational mood, photorealistic',
-      'Default': 'dramatic human face with curious expression, cinematic lighting, dark background with spotlight, photorealistic, 8k'
-    };
-    const basePrompt = imagePrompts[channelCategory] || imagePrompts['Default'];
-    const fullPrompt = basePrompt + ', related to topic: ' + topic + ', YouTube thumbnail composition, face clearly visible, space at bottom for text overlay, no text in image';
-    return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(fullPrompt) + '?width=1280&height=720&nologo=true&enhance=true';
-  }
+  // ─── UNIVERSAL HIGH-CTR YOUTUBE THUMBNAIL GENERATION SYSTEM ──
+  // Adaptive 4-option strategy engine — analyzes content then generates optimized prompts
 
-  async function generateThumbnail(title) {
-    const container = $('thumbnailContainer');
-    if (!container) return;
-    container.innerHTML = `
-      <div class="thumbnail-skeleton">
-        <div class="skeleton" style="height:28px;width:50%;margin:0 auto 20px;"></div>
-        <div class="skeleton" style="width:100%;aspect-ratio:16/9;border-radius:12px;margin-bottom:16px;"></div>
-      </div>`;
+  function buildThumbnailStrategies(topic, channelCategory) {
+    var cat = channelCategory || 'Default';
 
-    try {
-      const channelCategory = appState.channelCategory;
-      const channelName = appState.channelName || appState.channelAnalysis?.channelInfo?.name || '';
-      let thumbText = generateShortTextLocally(title);
-      try {
-        const thumbTextData = await API.generateThumbnailText(title, channelCategory);
-        if (thumbTextData?.thumbText) thumbText = thumbTextData.thumbText;
-      } catch (e) { /* use local fallback */ }
-      appState._thumbShortText = thumbText;
-      await renderThumbnail(title, channelName, channelCategory, thumbText);
-    } catch (err) {
-      showError(container, '⚠️ Servers are busy right now. Please try again in 2 minutes.', () => generateThumbnail(title));
+    // ── STEP 1: CONTENT ANALYSIS ─────────────────────────────
+    var lowerTopic = topic.toLowerCase();
+    var isTech = /tech|ai|computer|software|app|digital|code|program|data|robot|gadget|phone|machine/i.test(lowerTopic);
+    var isFinance = /finance|money|invest|stock|crypto|bitcoin|earn|wealth|budget|saving|profit|credit|loan|bank/i.test(lowerTopic);
+    var isHealth = /health|fitness|weight|workout|exercise|diet|nutrition|yoga|meditation|muscle|fat/i.test(lowerTopic);
+    var isGaming = /gaming|game|gta|pubg|fortnite|minecraft|gamer|gameplay|roblox/i.test(lowerTopic);
+    var isEducation = /learn|study|course|skill|tutorial|guide|how to|tips|lesson|class|teach|explain/i.test(lowerTopic);
+    var isMystery = /mystery|unsolved|truth|hidden|secret|conspiracy|paranormal|haunted|strange|weird|dark|horror|scary/i.test(lowerTopic);
+    var isTravel = /travel|wander|explore|journey|destination|visit|trip|vacation|adventure/i.test(lowerTopic);
+    var isSuccess = /success|achieve|win|earn|make money|become|transform|change|growth|result|before|after/i.test(lowerTopic);
+    var isFood = /food|cook|recipe|tasty|delicious|meal|kitchen|bake|chef|restaurant/i.test(lowerTopic);
+    var isRelationships = /relationship|love|dating|marriage|partner|breakup|friend|social/i.test(lowerTopic);
+    var isBusiness = /business|entrepreneur|startup|market|sales|marketing|brand|CEO|founder/i.test(lowerTopic);
+    var isScience = /science|physics|chemistry|biology|space|universe|nature|discovery|experiment/i.test(lowerTopic);
+
+    // Determine primary emotion based on topic analysis
+    var primaryEmotion, faceExpression, humanDesc, colorScheme, videoType;
+
+    if (isMystery || isScience) {
+      primaryEmotion = 'curiosity';
+      faceExpression = 'wide curious eyes, slightly raised eyebrows, intrigued expression';
+      humanDesc = 'person with curious discovery expression, eyes locked on something off-screen';
+      colorScheme = ['#8B5CF6','#0a0a1a','#fff'];
+    } else if (isFinance || isSuccess || isBusiness) {
+      primaryEmotion = 'achievement';
+      faceExpression = 'confident smirk, determined eyes, self-assured expression, power pose';
+      humanDesc = 'confident professional with power pose, sharp suit or business attire, successful aura';
+      colorScheme = (isFinance ? ['#00FF88','#0a1a0a','#FFD700'] : ['#FFD700','#1a1a2e','#fff']);
+    } else if (isTech) {
+      primaryEmotion = 'surprise';
+      faceExpression = 'mind-blown expression, wide eyes, mouth slightly open in awe, focused';
+      humanDesc = 'modern tech person with futuristic setup, blue screen glow on face, focused expression';
+      colorScheme = ['#00CFFF','#0a0a1a','#fff'];
+    } else if (isGaming) {
+      primaryEmotion = 'excitement';
+      faceExpression = 'intense competitive eyes, high energy reaction, adrenaline rush';
+      humanDesc = 'gamer with intense focus, neon RGB lighting reflecting on face, competitive energy';
+      colorScheme = ['#00FFFF','#0a0a2e','#FF00FF'];
+    } else if (isHealth) {
+      primaryEmotion = 'inspiration';
+      faceExpression = 'determined hopeful eyes, sweat on skin, gritted teeth, transformation energy';
+      humanDesc = 'fit athletic person mid-workout or showing transformation results, sweat, muscle definition';
+      colorScheme = ['#FF6B35','#0a1a0a','#fff'];
+    } else if (isEducation) {
+      primaryEmotion = 'curiosity';
+      faceExpression = 'lightbulb moment expression, eyes lighting up, enlightened smile';
+      humanDesc = 'student or expert with aha moment expression, bright clear background';
+      colorScheme = ['#4A90E2','#0a1a2e','#fff'];
+    } else if (isTravel) {
+      primaryEmotion = 'wonder';
+      faceExpression = 'amazed awe-inspired expression, eyes wide with wonder, joyful';
+      humanDesc = 'traveler exploring a breathtaking location, natural golden light on face';
+      colorScheme = ['#F5A623','#1a2e2e','#fff'];
+    } else if (isFood) {
+      primaryEmotion = 'satisfaction';
+      faceExpression = 'surprised delighted expression, eyes wide, mouth watering, pure joy';
+      humanDesc = 'person reacting to amazing food, delighted expression, warm lighting';
+      colorScheme = ['#FF6B35','#1a0a00','#fff'];
+    } else if (isRelationships) {
+      primaryEmotion = 'hope';
+      faceExpression = 'warm empathetic eyes, gentle caring smile, emotional connection';
+      humanDesc = 'person with warm emotional expression, soft natural lighting';
+      colorScheme = ['#FF6B9D','#1a0a0a','#fff'];
+    } else {
+      // Fallback to category-based
+      var fallbackMap = {
+        'Dark Mystery': { emo: 'curiosity', face: 'scared wide eyes, raised brows, fearful expression', human: 'fearful person in dark atmosphere', colors: ['#FF0000','#0a0a1a','#fff'] },
+        'True Crime': { emo: 'shock', face: 'shocked expression, intense stare, serious concern', human: 'shocked person in crime scene atmosphere', colors: ['#FF4444','#0a0a0a','#fff'] },
+        'Finance': { emo: 'achievement', face: 'confident smirk, determined eyes, power pose', human: 'confident professional in suit', colors: ['#00FF88','#0a1a0a','#FFD700'] },
+        'Gaming': { emo: 'excitement', face: 'intense focused eyes, competitive rage, high energy', human: 'gamer with intense focus', colors: ['#00FFFF','#0a0a2e','#FF00FF'] },
+        'Motivation': { emo: 'inspiration', face: 'determined hopeful eyes, inspiring gaze upward', human: 'inspired person looking toward future', colors: ['#FFD700','#1a0a00','#fff'] },
+        'Education': { emo: 'curiosity', face: 'curious raised eyebrow, lightbulb moment expression', human: 'student or expert with lightbulb moment', colors: ['#4A90E2','#0a1a2e','#fff'] },
+        'Technology': { emo: 'surprise', face: 'mind-blown expression, shocked eyes', human: 'tech professional with screen glow', colors: ['#00CFFF','#0a0a1a','#fff'] },
+        'Health': { emo: 'inspiration', face: 'determined hopeful expression', human: 'athletic person with transformation energy', colors: ['#7ED321','#0a1a0a','#fff'] },
+        'Default': { emo: 'curiosity', face: 'curious raised eyebrow, intense intrigued eyes', human: 'curious person with intrigued expression', colors: ['#8B5CF6','#0a0a1a','#fff'] }
+      };
+      var f = fallbackMap[cat] || fallbackMap['Default'];
+      primaryEmotion = f.emo;
+      faceExpression = f.face;
+      humanDesc = f.human;
+      colorScheme = f.colors;
     }
+
+    var negativePrompt = 'blurry, low quality, cluttered composition, multiple focal points, unrealistic face, plastic skin, distorted anatomy, extra fingers, low contrast, boring expression, tiny subject, busy background, watermark, logo, text in image, cropped subject';
+
+    var topicWords = topic.split(/\s+/).filter(function(w){return w.length>2}).slice(0,3).join(' ').toUpperCase();
+    var shortText = topicWords;
+
+    function buildPrompt(type, promptBody) {
+      var qualityBase = ', photorealistic, 8k, DSLR quality, professional lighting, cinematic depth, high detail, sharp focus, realistic skin, realistic eyes, professional color grading, modern YouTube thumbnail style, high contrast, mobile optimized, 16:9 composition';
+      var spacing = ', subject occupies 40-70 percent of frame, space at bottom for text overlay, no text in image';
+      var parenthetical = ' ' + promptBody + qualityBase + spacing;
+      return parenthetical;
+    }
+
+    // ── STEP 2: GENERATE 4 ADAPTIVE STRATEGIES ────────────
+    var strategies = [
+      {
+        id: 'face',
+        label: '👤 Face Expression',
+        desc: 'Close-up emotional face — highest CTR for personality-driven content',
+        prompt: buildPrompt('face', 'Extreme close-up portrait of ' + humanDesc + ' with ' + faceExpression + ', dramatic cinematic rim lighting from one side, dark atmospheric background with subtle vignette, sharp focus on eyes, skin texture visible, related to ' + topic),
+        text: shortText,
+        type: 'human-centric'
+      },
+      {
+        id: 'mystery',
+        label: '❓ Mystery Hook',
+        desc: 'Curiosity gap — viewer must click to find out what happened',
+        prompt: buildPrompt('mystery', 'Cinematic mysterious scene related to ' + topic + ', partial reveal composition, dramatic shadows obscuring key elements, single dramatic light source creating suspense, fog or smoke atmosphere, sense of mystery and revelation, curiosity gap visual'),
+        text: shortText.slice(0, 2) + '?',
+        type: 'mystery-centric'
+      },
+      {
+        id: 'result',
+        label: '🏆 Result / Transformation',
+        desc: 'Show the outcome — what the viewer will achieve or witness',
+        prompt: buildPrompt('result', 'Dramatic transformation or stunning result scene related to ' + topic + ', epic before and after moment, visible achievement outcome, golden hour or dramatic cinematic lighting, sense of accomplishment and success, inspirational composition, wow factor'),
+        text: isFinance || isSuccess ? 'GAIN' : (isHealth ? 'BEFORE→AFTER' : shortText),
+        type: 'result-centric'
+      },
+      {
+        id: 'object',
+        label: (isGaming ? '🎮' : isTech ? '💻' : isFood ? '🍽️' : '🎯') + ' ' + (isGaming ? 'Game Action' : isTech ? 'Tech Focus' : isFood ? 'Food Shot' : 'Object Focus'),
+        desc: (isGaming ? 'Game scene or character' : isTech ? 'The device or technology' : isFood ? 'The food itself' : 'The product or subject') + ' — lets the subject speak',
+        prompt: buildPrompt('object', (isGaming ? 'Intense gaming moment or scene from ' : isTech ? 'Detailed close-up of modern technology related to ' : isFood ? 'Delicious mouth-watering food photography related to ' : 'Detailed close-up of the main subject related to ') + topic + ', product photography style, clean background, dramatic lighting, highly detailed, sharp focus on main subject, professional commercial quality, 8k detail'),
+        text: shortText,
+        type: 'object-centric'
+      }
+    ];
+
+    strategies.forEach(function(s) {
+      s.colorPalette = colorScheme;
+      s.emotion = primaryEmotion;
+      s.faceExpression = faceExpression;
+      s.negativePrompt = negativePrompt;
+    });
+
+    return strategies;
   }
 
-  function generateShortTextLocally(title) {
-    const clean = title.split('|')[0].trim();
-    const words = clean.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 2);
-    return words.slice(0, 3).join(' ').toUpperCase();
+  function generateThumbnailURL(strategy, topic) {
+    var fullPrompt = strategy.prompt;
+    var url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(fullPrompt) + '?width=1280&height=720&nologo=true&enhance=true';
+    return url;
   }
 
-  let thumbCanvasData = null;
-  let _currentThumbImageUrl = null;
-
-  async function loadAndDrawThumbnail(imgUrl, text, textColor, fontSize, channelName) {
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1280;
-      canvas.height = 720;
-      const ctx = canvas.getContext('2d');
-      const cat = appState.channelCategory || 'Default';
-      const bgColor = THUMB_BG_COLORS[cat] || THUMB_BG_COLORS['Default'];
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, 1280, 720);
-      const img = new Image();
+  async function loadThumbnailAsImage(imgUrl) {
+    return new Promise(function(resolve, reject) {
+      var img = new Image();
       img.crossOrigin = 'anonymous';
-      img.onload = function() {
-        ctx.drawImage(img, 0, 0, 1280, 720);
-        const grad = ctx.createLinearGradient(0, 720, 0, 0);
-        grad.addColorStop(0, 'rgba(0,0,0,0.85)');
-        grad.addColorStop(0.35, 'rgba(0,0,0,0.35)');
-        grad.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 1280, 720);
-        drawThumbnailText(ctx, text, textColor, fontSize, channelName);
-        resolve(canvas);
-      };
-      img.onerror = function() {
-        drawThumbnailText(ctx, text, textColor, fontSize, channelName);
-        resolve(canvas);
-      };
+      img.onload = function() { resolve(img); };
+      img.onerror = function() { reject(new Error('Image load failed')); };
       img.src = imgUrl;
     });
   }
 
-  function drawThumbnailText(ctx, text, textColor, fontSize, channelName) {
-    const cleanText = text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
-    const words = cleanText.split(/\s+/).filter(Boolean);
-    const maxWords = 3;
-    const shortText = words.slice(0, maxWords).join(' ').toUpperCase();
+  async function generateThumbnail(title) {
+    var container = $('thumbnailContainer');
+    if (!container) return;
+    container.innerHTML =
+      '<div class="thumbnail-skeleton">' +
+        '<div class="skeleton" style="height:28px;width:50%;margin:0 auto 20px;"></div>' +
+        '<div class="skeleton" style="width:100%;aspect-ratio:16/9;border-radius:12px;margin-bottom:16px;"></div>' +
+      '</div>';
+
+    try {
+      var channelCategory = appState.channelCategory;
+      var channelName = appState.channelName || appState.channelAnalysis?.channelInfo?.name || '';
+
+      var strategies = buildThumbnailStrategies(title, channelCategory);
+      var thumbText = generateShortTextLocally(title);
+      try {
+        var thumbTextData = await API.generateThumbnailText(title, channelCategory);
+        if (thumbTextData && thumbTextData.thumbText) thumbText = thumbTextData.thumbText;
+      } catch (e) {}
+
+      var urls = strategies.map(function(s) { return generateThumbnailURL(s, title); });
+
+      container.innerHTML =
+        '<div id="thumbGridLoading" style="text-align:center;padding:40px 20px;">' +
+          '<div style="width:36px;height:36px;border:3px solid #333;border-top-color:#a78bfa;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px;"></div>' +
+          '<p style="color:var(--text-dim);margin-top:12px;">Generating 4 AI thumbnail concepts...</p>' +
+        '</div>' +
+        '<div id="thumbOptionsGrid" style="display:none;"></div>' +
+        '<div id="thumbSelectedArea" style="display:none;"></div>';
+
+      var images = await Promise.all(urls.map(function(url) {
+        return loadThumbnailAsImage(url).catch(function() { return null; });
+      }));
+
+      var gridItems = '';
+      for (var i = 0; i < strategies.length; i++) {
+        var s = strategies[i];
+        var imgData = images[i];
+        var imgHtml = imgData
+          ? '<img src="' + urls[i] + '" alt="' + s.label + '" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous" />'
+          : '<div class="thumb-option-failed">Generation failed</div>';
+        gridItems +=
+          '<div class="thumb-option" data-idx="' + i + '" data-url="' + urls[i] + '" data-type="' + s.id + '">' +
+            '<div class="thumb-option-preview">' + imgHtml + '</div>' +
+            '<div class="thumb-option-info">' +
+              '<div class="thumb-option-label">' + s.label + '</div>' +
+              '<div class="thumb-option-desc">' + s.desc + '</div>' +
+            '</div>' +
+          '</div>';
+      }
+
+      var loading = $('thumbGridLoading');
+      if (loading) loading.remove();
+      var grid = $('thumbOptionsGrid');
+      if (grid) {
+        grid.style.display = '';
+        grid.innerHTML = '<div class="thumb-grid-header"><h3 style="font-size:1rem;font-weight:700;margin:0;">Choose Your Thumbnail Style</h3><p style="font-size:0.8rem;color:var(--text-dim);margin:4px 0 0 0;">Click one to select and edit</p></div><div class="thumb-grid">' + gridItems + '</div>';
+        grid.querySelectorAll('.thumb-option').forEach(function(el) {
+          el.addEventListener('click', function() {
+            var idx = parseInt(this.dataset.idx);
+            selectThumbnailOption(idx, title, channelName, channelCategory, strategies, urls, images, thumbText);
+          });
+        });
+      }
+    } catch (err) {
+      showError(container, '⚠️ Servers are busy right now. Please try again in 2 minutes.', function() { generateThumbnail(title); });
+    }
+  }
+
+  var _selectedThumbData = { canvas: null, url: null, text: '', color: '', fontSize: 96 };
+
+  function selectThumbnailOption(idx, topic, channelName, channelCategory, strategies, urls, images, thumbText) {
+    var strategy = strategies[idx];
+    var imgUrl = urls[idx];
+    var container = $('thumbnailContainer');
+    if (!container) return;
+
+    var selectedArea = $('thumbSelectedArea');
+    if (!selectedArea) return;
+
+    var defaultColor = (strategy.colorPalette && strategy.colorPalette[0]) || '#FFFFFF';
+    var shortText = thumbText || strategy.text || generateShortTextLocally(topic);
+
+    selectedArea.style.display = '';
+    selectedArea.innerHTML =
+      '<div class="thumb-selected-wrap">' +
+        '<h4 style="font-size:1rem;font-weight:700;margin:0 0 12px 0;">' + strategy.label + '</h4>' +
+        '<div class="thumbnail-img-wrap">' +
+          '<canvas id="thumbnailCanvas" width="1280" height="720" style="width:100%;height:auto;aspect-ratio:16/9;border-radius:var(--r-lg);display:block;"></canvas>' +
+        '</div>' +
+        '<div id="thumbnailActions">' +
+          '<div class="thumbnail-actions">' +
+            '<button class="btn-primary btn-sm" id="downloadThumbBtn">⬇️ Download Thumbnail</button>' +
+            '<button class="btn-ghost btn-sm" id="backToGridBtn">⬅️ Back to Options</button>' +
+          '</div>' +
+          '<div class="thumb-edit-panel">' +
+            '<h4 style="font-size:0.9rem;font-weight:700;margin-bottom:8px;">✏️ Thumbnail Text Overlay</h4>' +
+            '<label for="thumbTextInput">Overlay Text (max 3 words)</label>' +
+            '<input type="text" id="thumbTextInput" value="' + shortText.replace(/"/g, '&quot;') + '" maxlength="30" />' +
+            '<label for="thumbColorInput">Text Color</label>' +
+            '<input type="color" id="thumbColorInput" value="' + defaultColor + '" />' +
+            '<label for="thumbFontSize">Font Size: <span id="thumbFontSizeLabel">96</span>px</label>' +
+            '<input type="range" id="thumbFontSize" min="36" max="120" value="96" />' +
+            '<div class="form-actions" style="margin-top:12px;">' +
+              '<button class="btn-primary btn-sm" id="regenCanvasBtn">🔄 Update</button>' +
+              '<button class="btn-ghost btn-sm" id="autoGenTextBtn">✨ Auto Text</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    var fullPrompt = strategy.prompt;
+
+    _selectedThumbData = { canvas: null, url: imgUrl, text: shortText, color: defaultColor, fontSize: 96 };
+
+    loadAndDrawThumbnailCanvas(imgUrl, shortText, null, 96, channelName);
+
+    $('downloadThumbBtn')?.addEventListener('click', function() {
+      if (_selectedThumbData.canvas) {
+        var link = document.createElement('a');
+        link.download = 'thumbnail_' + (channelName || 'creator') + '_' + topic.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().slice(0, 40) + '.png';
+        link.href = _selectedThumbData.canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('Downloaded!');
+      }
+    });
+
+    $('backToGridBtn')?.addEventListener('click', function() {
+      selectedArea.style.display = 'none';
+      selectedArea.innerHTML = '';
+      var grid = $('thumbOptionsGrid');
+      if (grid) grid.style.display = '';
+      window.scrollTo({ top: container.offsetTop - 20, behavior: 'smooth' });
+    });
+
+    $('regenCanvasBtn')?.addEventListener('click', function() {
+      var newText = ($('thumbTextInput') && $('thumbTextInput').value) || shortText;
+      var newColor = ($('thumbColorInput') && $('thumbColorInput').value) || defaultColor;
+      var newSize = parseInt(($('thumbFontSize') && $('thumbFontSize').value) || '96');
+      _selectedThumbData.text = newText;
+      _selectedThumbData.color = newColor;
+      _selectedThumbData.fontSize = newSize;
+      loadAndDrawThumbnailCanvas(imgUrl, newText, newColor, newSize, channelName);
+    });
+
+    $('autoGenTextBtn')?.addEventListener('click', async function() {
+      var btn = $('autoGenTextBtn');
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+      try {
+        var res = await API.generateThumbnailText(topic, channelCategory);
+        if (res && res.thumbText) {
+          appState._thumbShortText = res.thumbText;
+          var input = $('thumbTextInput');
+          if (input) input.value = res.thumbText.replace(/"/g, '&quot;');
+          var updBtn = $('regenCanvasBtn');
+          if (updBtn) updBtn.click();
+        }
+      } catch (e) {
+        showToast('Could not generate text');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Auto Text';
+      }
+    });
+
+    $('thumbFontSize')?.addEventListener('input', function() {
+      var lbl = $('thumbFontSizeLabel');
+      if (lbl) lbl.textContent = this.value;
+    });
+  }
+
+  function generateShortTextLocally(title) {
+    var clean = title.split('|')[0].trim();
+    var words = clean.replace(/[^\w\s]/g, '').split(/\s+/).filter(function(w){return w.length > 2});
+    return words.slice(0, 3).join(' ').toUpperCase();
+  }
+
+  function getThumbCategoryColor() {
+    var cat = appState.channelCategory || 'Default';
+    return THUMB_TEXT_COLORS[cat] || THUMB_TEXT_COLORS['Default'];
+  }
+
+  function loadAndDrawThumbnailCanvas(imgUrl, text, textColor, fontSize, channelName) {
+    var canvas = document.createElement('canvas');
+    canvas.width = 1280;
+    canvas.height = 720;
+    var ctx = canvas.getContext('2d');
+    var cat = appState.channelCategory || 'Default';
+    var bgColor = THUMB_BG_COLORS[cat] || THUMB_BG_COLORS['Default'];
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, 1280, 720);
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      ctx.drawImage(img, 0, 0, 1280, 720);
+      var grad = ctx.createLinearGradient(0, 720, 0, 0);
+      grad.addColorStop(0, 'rgba(0,0,0,0.85)');
+      grad.addColorStop(0.35, 'rgba(0,0,0,0.35)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1280, 720);
+      drawThumbText(ctx, text, textColor, fontSize, channelName);
+      _selectedThumbData.canvas = canvas;
+      var destCanvas = $('thumbnailCanvas');
+      if (destCanvas) {
+        var dCtx = destCanvas.getContext('2d');
+        dCtx.clearRect(0, 0, 1280, 720);
+        dCtx.drawImage(canvas, 0, 0, 1280, 720);
+      }
+    };
+    img.onerror = function() {
+      drawThumbText(ctx, text, textColor, fontSize, channelName);
+      _selectedThumbData.canvas = canvas;
+      var destCanvas = $('thumbnailCanvas');
+      if (destCanvas) {
+        var dCtx = destCanvas.getContext('2d');
+        dCtx.clearRect(0, 0, 1280, 720);
+        dCtx.drawImage(canvas, 0, 0, 1280, 720);
+      }
+    };
+    img.src = imgUrl;
+  }
+
+  function drawThumbText(ctx, text, textColor, fontSize, channelName) {
+    var cleanText = text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
+    var words = cleanText.split(/\s+/).filter(Boolean);
+    var maxWords = 3;
+    var shortText = words.slice(0, maxWords).join(' ').toUpperCase();
     if (!shortText) return;
-    const fs = fontSize || 96;
-    const cat = appState.channelCategory || 'Default';
-    const defaultColor = THUMB_TEXT_COLORS[cat] || THUMB_TEXT_COLORS['Default'];
-    const color = textColor || defaultColor;
+    var fs = fontSize || 96;
+    var cat = appState.channelCategory || 'Default';
+    var defaultColor = THUMB_TEXT_COLORS[cat] || THUMB_TEXT_COLORS['Default'];
+    var color = textColor || defaultColor;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
     ctx.font = '900 ' + fs + 'px "Impact","Anton",sans-serif';
-    const x = 40;
-    const y = 720 - 80;
+    var x = 40;
+    var y = 720 - 80;
     ctx.shadowColor = '#000';
     ctx.shadowBlur = 8;
     ctx.shadowOffsetX = 3;
@@ -1079,134 +1387,8 @@
     }
   }
 
-  function getThumbCategoryColor() {
-    const cat = appState.channelCategory || 'Default';
-    return THUMB_TEXT_COLORS[cat] || THUMB_TEXT_COLORS['Default'];
-  }
-
-  async function renderThumbnail(topic, channelName, channelCategory, thumbnailText) {
-    const container = $('thumbnailContainer');
-    if (!container) return;
-    const shortText = thumbnailText || generateShortTextLocally(topic);
-    const defaultColor = getThumbCategoryColor();
-    container.innerHTML = `
-      <div id="thumbnailLoading" style="text-align:center;padding:60px 20px;">
-        <div style="width:36px;height:36px;border:3px solid #333;border-top-color:#a78bfa;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px;"></div>
-        <p style="color:var(--text-dim);margin-top:12px;">Generating AI thumbnail...</p>
-      </div>
-      <div class="thumbnail-img-wrap" id="thumbnailCanvasWrap" style="display:none;">
-        <canvas id="thumbnailCanvas" width="1280" height="720" style="width:100%;height:auto;aspect-ratio:16/9;border-radius:var(--r-lg);display:block;"></canvas>
-      </div>
-      <div id="thumbnailActions" style="display:none;">
-        <div class="thumbnail-actions">
-          <button class="btn-primary btn-sm" id="downloadThumbBtn">⬇️ Download Thumbnail</button>
-          <button class="btn-ghost btn-sm" id="regenThumbBtn">🔄 Regenerate</button>
-        </div>
-        <div class="thumb-edit-panel">
-          <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:8px;">✏️ Thumbnail Text Overlay</h4>
-          <label for="thumbTextInput">Overlay Text (max 3 words)</label>
-          <input type="text" id="thumbTextInput" value="${shortText.replace(/"/g, '&quot;')}" maxlength="30" />
-          <label for="thumbColorInput">Text Color</label>
-          <input type="color" id="thumbColorInput" value="${defaultColor}" />
-          <label for="thumbFontSize">Font Size: <span id="thumbFontSizeLabel">96</span>px</label>
-          <input type="range" id="thumbFontSize" min="36" max="120" value="96" />
-          <div class="form-actions" style="margin-top:12px;">
-            <button class="btn-primary btn-sm" id="regenCanvasBtn">🔄 Update Thumbnail</button>
-            <button class="btn-ghost btn-sm" id="autoGenTextBtn">✨ Auto-Generate Text</button>
-          </div>
-        </div>
-      </div>`;
-
-    try {
-      _currentThumbImageUrl = generateThumbnailImage(topic, channelCategory);
-      const canvas = await loadAndDrawThumbnail(_currentThumbImageUrl, shortText, null, 96, channelName);
-      const destCanvas = $('thumbnailCanvas');
-      if (destCanvas) {
-        const ctx = destCanvas.getContext('2d');
-        ctx.clearRect(0, 0, 1280, 720);
-        ctx.drawImage(canvas, 0, 0, 1280, 720);
-      }
-      thumbCanvasData = canvas;
-      const loading = $('thumbnailLoading');
-      if (loading) loading.remove();
-      const wrap = $('thumbnailCanvasWrap');
-      if (wrap) wrap.style.display = '';
-      const actions = $('thumbnailActions');
-      if (actions) actions.style.display = '';
-
-      $('downloadThumbBtn')?.addEventListener('click', () => {
-        if (thumbCanvasData) {
-          const link = document.createElement('a');
-          link.download = 'thumbnail_' + (channelName || 'creator') + '_' + topic.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().slice(0, 40) + '.png';
-          link.href = thumbCanvasData.toDataURL('image/png');
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          const sizeInfo = Math.round(thumbCanvasData.toDataURL('image/png').length * 0.75 / 1024);
-          showToast('Downloaded: ~' + sizeInfo + ' KB');
-        }
-      });
-
-      $('regenThumbBtn')?.addEventListener('click', () => generateThumbnail(topic));
-      $('regenCanvasBtn')?.addEventListener('click', () => {
-        const newText = $('thumbTextInput')?.value || shortText;
-        const newColor = $('thumbColorInput')?.value || defaultColor;
-        const newSize = parseInt($('thumbFontSize')?.value || '96');
-        loadAndDrawThumbnail(_currentThumbImageUrl, newText, newColor, newSize, channelName).then(canvas => {
-          const destCanvas = $('thumbnailCanvas');
-          if (destCanvas) {
-            const ctx = destCanvas.getContext('2d');
-            ctx.clearRect(0, 0, 1280, 720);
-            ctx.drawImage(canvas, 0, 0, 1280, 720);
-          }
-          thumbCanvasData = canvas;
-          showToast('Thumbnail updated!');
-        });
-      });
-
-      $('autoGenTextBtn')?.addEventListener('click', async () => {
-        const btn = $('autoGenTextBtn');
-        btn.disabled = true;
-        btn.textContent = 'Generating...';
-        try {
-          const res = await API.generateThumbnailText(topic, channelCategory);
-          if (res?.thumbText) {
-            appState._thumbShortText = res.thumbText;
-            $('thumbTextInput').value = res.thumbText.replace(/"/g, '&quot;');
-            $('regenCanvasBtn').click();
-          }
-        } catch (e) {
-          showToast('Could not generate text');
-        } finally {
-          btn.disabled = false;
-          btn.textContent = 'Auto-Generate Text';
-        }
-      });
-
-      $('thumbFontSize')?.addEventListener('input', function() {
-        $('thumbFontSizeLabel').textContent = this.value;
-      });
-
-      $('copyScriptBtn2')?.addEventListener('click', () => {
-        const body = appState.script?.script || appState.originalScript || '';
-        navigator.clipboard.writeText(body);
-        showToast('Script copied!');
-      });
-      $('copyTitleBtn2')?.addEventListener('click', () => {
-        const t = appState.script?.title || topic || '';
-        navigator.clipboard.writeText(t);
-        showToast('Title copied!');
-      });
-      $('copyTopicBtn2')?.addEventListener('click', () => {
-        const copyTopic = appState.selectedIdea?.title || topic || '';
-        navigator.clipboard.writeText(copyTopic);
-        showToast('Topic copied!');
-      });
-    } catch (err) {
-      const loading = $('thumbnailLoading');
-      if (loading) loading.remove();
-      showError(container, '⚠️ Servers are busy right now. Please try again in 2 minutes.', () => generateThumbnail(topic));
-    }
+  function renderThumbnail(topic, channelName, channelCategory, thumbnailText) {
+    generateThumbnail(topic);
   }
 
   // ─── COMPETITOR ANALYSIS ─────────────────────────────────
