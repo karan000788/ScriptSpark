@@ -76,41 +76,44 @@ async function callGroq(systemPrompt, userMessage, modelIndex = 0) {
     return text;
 
   } catch (err) {
-    console.warn('Groq unavailable, switching to Gemini...', err.message);
+    console.warn('Groq failed, switching to OpenRouter...', err.message);
   }
 
-  // --- Fallback to Gemini ---
+  // --- Fallback to OpenRouter ---
   try {
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-    if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not configured');
+    const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+    if (!OPENROUTER_API_KEY) throw new Error('OPENROUTER_API_KEY not configured');
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: systemPrompt + '\n\n' + userMessage
-            }]
-          }],
-          generationConfig: {
-            maxOutputTokens: 2000,
-            temperature: 0.8
-          }
-        })
-      }
-    );
+    const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://scriptspark.onrender.com',
+        'X-Title': 'ScriptSpark'
+      },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-3.1-8b-instruct',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage }
+        ],
+        max_tokens: 2000,
+        temperature: 0.8
+      })
+    });
 
-    const geminiData = await geminiRes.json();
-    const geminiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!geminiText) throw new Error('GEMINI_EMPTY');
+    if (!orRes.ok) throw new Error('OPENROUTER_FAILED');
 
-    return geminiText;
+    const orData = await orRes.json();
+    const orText = orData.choices?.[0]?.message?.content;
+    if (!orText) throw new Error('OPENROUTER_EMPTY');
+
+    console.log('Used OpenRouter as fallback');
+    return orText;
 
   } catch (err) {
-    console.error('Gemini also failed:', err.message);
+    console.error('OpenRouter also failed:', err.message);
     throw new Error('\u26A0\uFE0F Servers are busy right now. Please try again in 2 minutes.');
   }
 }
