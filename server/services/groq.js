@@ -38,10 +38,11 @@ async function callGroq(systemPrompt, userMessage, modelIndex = 0) {
     console.warn(`Prompt still ~${estimateTokens(promptText)} tokens after truncation`);
   }
 
-  // --- Try Groq First ---
+  // --- Try Groq First (15s timeout) ---
   try {
     const model = MODELS[modelIndex] || MODELS[0];
     const resp = await fetch(GROQ_ENDPOINT, {
+      signal: AbortSignal.timeout(15000),
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -54,7 +55,7 @@ async function callGroq(systemPrompt, userMessage, modelIndex = 0) {
           { role: 'user', content: userMessage }
         ],
         temperature: 0.8,
-        max_tokens: 8000
+        max_tokens: 4000
       })
     });
 
@@ -79,12 +80,13 @@ async function callGroq(systemPrompt, userMessage, modelIndex = 0) {
     console.warn('Groq failed, switching to OpenRouter...', err.message);
   }
 
-  // --- Fallback to OpenRouter ---
+  // --- Fallback to OpenRouter (30s timeout) ---
   try {
     const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
     if (!OPENROUTER_API_KEY) throw new Error('OPENROUTER_API_KEY not configured');
 
     const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      signal: AbortSignal.timeout(30000),
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
