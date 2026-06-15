@@ -1047,50 +1047,62 @@
       colorScheme = f.colors;
     }
 
-    var negativePrompt = 'blurry, low quality, cluttered composition, multiple focal points, unrealistic face, plastic skin, distorted anatomy, extra fingers, low contrast, boring expression, tiny subject, busy background, watermark, logo, text in image, cropped subject';
+    var topicShort = topic.split(/\s+/).filter(function(w){return w.length>2}).slice(0,3).join(' ').toUpperCase();
 
-    var topicWords = topic.split(/\s+/).filter(function(w){return w.length>2}).slice(0,3).join(' ').toUpperCase();
-    var shortText = topicWords;
-
-    function buildPrompt(type, promptBody) {
-      var qualityBase = ', photorealistic, 8k, DSLR quality, professional lighting, cinematic depth, high detail, sharp focus, realistic skin, realistic eyes, professional color grading, modern YouTube thumbnail style, high contrast, mobile optimized, 16:9 composition';
-      var spacing = ', subject occupies 40-70 percent of frame, space at bottom for text overlay, no text in image';
-      var parenthetical = ' ' + promptBody + qualityBase + spacing;
-      return parenthetical;
+    function thumbPrompt(body) {
+      return 'youtube thumbnail ' + body + ' vibrant colors high contrast sharp focus cinematic lighting 16x9';
     }
 
-    // ── STEP 2: GENERATE 4 ADAPTIVE STRATEGIES ────────────
+    var facePrompt = thumbPrompt('close-up portrait ' + faceExpression + ' dramatic rim lighting dark background');
+    if (isFinance) facePrompt = thumbPrompt('confident businessman close-up smirk suit power pose dark background');
+    else if (isTech) facePrompt = thumbPrompt('shocked person blue screen glow on face futuristic tech background');
+    else if (isGaming) facePrompt = thumbPrompt('gamer intense reaction face neon rgb lighting dark gaming setup');
+    else if (isHealth) facePrompt = thumbPrompt('fit athletic person sweating determined expression gym lighting');
+    else if (isFood) facePrompt = thumbPrompt('person amazed delicious food close-up warm lighting joy expression');
+    else if (isMystery) facePrompt = thumbPrompt('fearful person wide eyes dark atmosphere scared expression horror');
+
+    var mysteryPrompt = thumbPrompt('mysterious scene dark shadows suspense fog dramatic single light source curiosity');
+    var resultPrompt = thumbPrompt('epic transformation stunning result golden hour lighting achievement success wow');
+    var objectPrompt = thumbPrompt('product photography clean background dramatic lighting sharp focus commercial quality');
+
+    if (isGaming) objectPrompt = thumbPrompt('gaming setup neon rgb lights keyboard mouse dark atmosphere intense');
+    else if (isTech) objectPrompt = thumbPrompt('modern technology device close-up blue LED glow sleek futuristic');
+    else if (isFood) objectPrompt = thumbPrompt('delicious food close-up mouth watering steam warm lighting tasty');
+    else if (isFinance) objectPrompt = thumbPrompt('money gold coins growth chart wealth success finance concept');
+    else if (isHealth) objectPrompt = thumbPrompt('fitness equipment gym lighting dumbbell water bottle workout energy');
+    else if (isTravel) objectPrompt = thumbPrompt('beautiful travel destination golden hour scenic view wanderlust');
+
     var strategies = [
       {
         id: 'face',
         label: '👤 Face Expression',
         desc: 'Close-up emotional face — highest CTR for personality-driven content',
-        prompt: buildPrompt('face', 'Extreme close-up portrait of ' + humanDesc + ' with ' + faceExpression + ', dramatic cinematic rim lighting from one side, dark atmospheric background with subtle vignette, sharp focus on eyes, skin texture visible, related to ' + topic),
-        text: shortText,
+        prompt: facePrompt,
+        text: topicShort,
         type: 'human-centric'
       },
       {
         id: 'mystery',
         label: '❓ Mystery Hook',
         desc: 'Curiosity gap — viewer must click to find out what happened',
-        prompt: buildPrompt('mystery', 'Cinematic mysterious scene related to ' + topic + ', partial reveal composition, dramatic shadows obscuring key elements, single dramatic light source creating suspense, fog or smoke atmosphere, sense of mystery and revelation, curiosity gap visual'),
-        text: shortText.slice(0, 2) + '?',
+        prompt: mysteryPrompt,
+        text: topicShort.slice(0, 2) + '?',
         type: 'mystery-centric'
       },
       {
         id: 'result',
         label: '🏆 Result / Transformation',
         desc: 'Show the outcome — what the viewer will achieve or witness',
-        prompt: buildPrompt('result', 'Dramatic transformation or stunning result scene related to ' + topic + ', epic before and after moment, visible achievement outcome, golden hour or dramatic cinematic lighting, sense of accomplishment and success, inspirational composition, wow factor'),
-        text: isFinance || isSuccess ? 'GAIN' : (isHealth ? 'BEFORE→AFTER' : shortText),
+        prompt: resultPrompt,
+        text: isFinance || isSuccess ? 'GAIN' : (isHealth ? 'BEFORE→AFTER' : topicShort),
         type: 'result-centric'
       },
       {
         id: 'object',
-        label: (isGaming ? '🎮' : isTech ? '💻' : isFood ? '🍽️' : '🎯') + ' ' + (isGaming ? 'Game Action' : isTech ? 'Tech Focus' : isFood ? 'Food Shot' : 'Object Focus'),
-        desc: (isGaming ? 'Game scene or character' : isTech ? 'The device or technology' : isFood ? 'The food itself' : 'The product or subject') + ' — lets the subject speak',
-        prompt: buildPrompt('object', (isGaming ? 'Intense gaming moment or scene from ' : isTech ? 'Detailed close-up of modern technology related to ' : isFood ? 'Delicious mouth-watering food photography related to ' : 'Detailed close-up of the main subject related to ') + topic + ', product photography style, clean background, dramatic lighting, highly detailed, sharp focus on main subject, professional commercial quality, 8k detail'),
-        text: shortText,
+        label: (isGaming ? '🎮' : isTech ? '💻' : isFood ? '🍽️' : isTravel ? '✈️' : isFinance ? '💰' : '🎯') + ' ' + (isGaming ? 'Game Action' : isTech ? 'Tech Focus' : isFood ? 'Food Shot' : isTravel ? 'Travel Scene' : isFinance ? 'Wealth Visual' : 'Object Focus'),
+        desc: (isGaming ? 'Game scene or character' : isTech ? 'The device or technology' : isFood ? 'The food itself' : isTravel ? 'The destination' : isFinance ? 'Money visualization' : 'The product or subject') + ' — lets the subject speak',
+        prompt: objectPrompt,
+        text: topicShort,
         type: 'object-centric'
       }
     ];
@@ -1099,15 +1111,15 @@
       s.colorPalette = colorScheme;
       s.emotion = primaryEmotion;
       s.faceExpression = faceExpression;
-      s.negativePrompt = negativePrompt;
     });
 
     return strategies;
   }
 
   function generateThumbnailURL(strategy, topic) {
-    var fullPrompt = strategy.prompt;
-    var url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(fullPrompt) + '?width=1280&height=720&nologo=true&enhance=true';
+    var prompt = strategy.prompt;
+    var seed = strategy.id.charCodeAt(0) + strategy.id.charCodeAt(strategy.id.length - 1);
+    var url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?width=1280&height=720&nologo=true&seed=' + seed;
     return url;
   }
 
