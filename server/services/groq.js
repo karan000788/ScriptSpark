@@ -127,7 +127,11 @@ async function callGroqJson(systemPrompt, userMessage, modelIndex = 0) {
   } catch (parseErr) {
     const strictPrompt = systemPrompt + `\n\nCRITICAL: Your previous response was NOT valid JSON. Return ONLY valid JSON. No explanations, no markdown, no text before or after the JSON.`;
     const retryResult = await callGroq(strictPrompt, userMessage, modelIndex);
-    return JSON.parse(cleanJsonString(retryResult));
+    try {
+      return JSON.parse(cleanJsonString(retryResult));
+    } catch (retryErr) {
+      throw new Error('AI returned invalid JSON after retry');
+    }
   }
 }
 
@@ -140,7 +144,15 @@ function cleanJsonString(raw) {
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     const code = ch.charCodeAt(0);
-    if (escaped) { result += ch; escaped = false; continue; }
+    if (escaped) {
+      if (code === 0x0A) { result += '\\n'; }
+      else if (code === 0x0D) { result += '\\r'; }
+      else if (code === 0x09) { result += '\\t'; }
+      else if (code < 0x20) { result += '\\u' + code.toString(16).padStart(4, '0'); }
+      else { result += ch; }
+      escaped = false;
+      continue;
+    }
     if (inString) {
       if (ch === '\\') { result += ch; escaped = true; continue; }
       if (ch === '"') { result += ch; inString = false; continue; }

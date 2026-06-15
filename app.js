@@ -691,12 +691,30 @@
         language: lang
       };
 
+      window.Animations?.showLoading([
+        'Analyzing Topic...',
+        'Researching Trends...',
+        'Writing Hook...',
+        'Building Story...',
+        'Optimizing Script...'
+      ], 40000);
+
       const script = await withTimeout(API.generateScript(apiParams), 45000);
       const issues = checkScriptQuality(script.script || '', channelName);
 
+      window.Animations?.hideLoading();
+
       if (issues.length > 0) {
         showToast('Quality: ' + issues.join(', ') + ' — regenerating...');
+        window.Animations?.showLoading([
+          'Analyzing Topic...',
+          'Researching Trends...',
+          'Writing Hook...',
+          'Building Story...',
+          'Optimizing Script...'
+        ], 40000);
         const retry = await withTimeout(API.generateScript(apiParams), 45000);
+        window.Animations?.hideLoading();
         const retryIssues = checkScriptQuality(retry.script || '', channelName);
         if (retryIssues.length > 0) {
           showToast('Regenerated with ' + retryIssues.length + ' issue(s) remaining');
@@ -710,6 +728,7 @@
         renderScript(script);
       }
     } catch (err) {
+      window.Animations?.hideLoading();
       showError(container, err.message, () => generateScript(idea));
     }
   }
@@ -1200,25 +1219,79 @@
     return text;
   }
 
-  async function analyzeCompetitor() {
-    const url = $('competitorUrl')?.value?.trim();
-    if (!url) return showToast('Please enter a competitor channel URL');
+  async function findCompetitors() {
+    const niche = appState.niche || appState.channelAnalysis?.channelInfo?.name || '';
+    if (!niche) return showToast('Please set your niche first');
+
+    const nicheDisplay = $('competitorNicheDisplay');
+    if (nicheDisplay) nicheDisplay.textContent = niche;
+    const listContainer = $('competitorList');
+    const resultsContainer = $('competitorResults');
+    if (resultsContainer) resultsContainer.innerHTML = '';
+    const btn = $('findCompetitorsBtn');
+    btn.disabled = true;
+    btn.textContent = 'Searching...';
+    listContainer.innerHTML = '<div class="analysis-loading" style="padding:20px;"><div class="loading-spinner"></div><p style="color:var(--text-dim);font-size:0.85rem;margin-top:12px;">Finding top channels in your niche...</p></div>';
+
+    try {
+      const audience = appState.channelAnalysis?.performance?.audience || appState.creatorProfile?.audienceTone || '';
+      const language = appState.language || 'en';
+      const data = await withTimeout(API.searchCompetitors(niche, audience, language, ''), 45000);
+      const channels = data?.topChannels || [];
+      if (!channels.length) {
+        listContainer.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:12px;">No competitors found. Try a different niche or add one manually.</p>';
+        btn.disabled = false;
+        btn.textContent = 'Find My Competitors';
+        return;
+      }
+      listContainer.innerHTML = '<div style="margin-top:12px;"><span class="insight-label" style="display:block;margin-bottom:8px;">Click a channel to analyze:</span><div class="competitor-list">' +
+        channels.slice(0, 6).map(function(ch) {
+          var name = ch.title || ch.channelTitle || ch.name || 'Unknown';
+          var thumb = ch.thumbnail || ch.thumbnails?.default?.url || '';
+          var chUrl = ch.channelId ? 'https://www.youtube.com/channel/' + ch.channelId : '';
+          return '<div class="competitor-list-item" data-url="' + chUrl + '">' +
+            (thumb ? '<img src="' + thumb + '" alt="" onerror="this.style.display=\'none\'" />' : '<div class="competitor-list-avatar">' + name.charAt(0).toUpperCase() + '</div>') +
+            '<span>' + name + '</span></div>';
+        }).join('') + '</div></div>';
+
+      listContainer.querySelectorAll('.competitor-list-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+          var url = this.dataset.url;
+          if (url) analyzeCompetitor(url);
+        });
+      });
+    } catch (err) {
+      listContainer.innerHTML = '<div style="padding:12px;text-align:center;"><p style="color:var(--error);font-size:0.85rem;">' + err.message + '</p></div>';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Find My Competitors';
+    }
+  }
+
+  async function analyzeCompetitor(url) {
+    if (!url) return showToast('No competitor channel selected');
 
     const userChannelName = appState.channelName || '';
     const userUrl = userChannelName ? userChannelName.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
     const enteredName = url.toLowerCase().replace(/[^a-z0-9]/g, '');
     if (userUrl && userUrl.length > 3 && enteredName.includes(userUrl)) {
-      return showToast("That's your own channel! Please enter a competitor's channel URL.");
+      return showToast("That's your own channel! Please select a competitor channel.");
     }
 
-    const btn = $('analyzeCompetitorBtn');
     const resultsContainer = $('competitorResults');
-    btn.disabled = true;
-    btn.textContent = 'Analyzing...';
     resultsContainer.innerHTML = '<div class="analysis-loading" style="padding:20px;"><div class="loading-spinner"></div><p style="color:var(--text-dim);font-size:0.85rem;margin-top:12px;">Analyzing competitor channel...</p></div>';
 
     try {
+      window.Animations?.showLoading([
+        'Fetching competitor data...',
+        'Analyzing content strategy...',
+        'Identifying patterns...',
+        'Finding opportunities...'
+      ], 28000);
+
       const data = await withTimeout(API.analyzeCompetitor(url, userChannelName), 30000);
+      window.Animations?.hideLoading();
+
       const { competitorName, competitorVideos, insights } = data;
       const safeName = competitorName || '';
 
@@ -1282,15 +1355,13 @@
           </div>
         </div>`;
     } catch (err) {
+      window.Animations?.hideLoading();
       resultsContainer.innerHTML = '<div style="padding:16px;text-align:center;"><p style="color:var(--error);font-size:0.85rem;">' + err.message + '</p><button class="btn-ghost btn-sm" style="margin-top:8px;" onclick="window.app.retryCompetitor()">Try Again</button></div>';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '\uD83D\uDD0D Analyze Channel';
     }
   }
 
   function retryCompetitor() {
-    analyzeCompetitor();
+    findCompetitors();
   }
 
   // ─── NICHE ANALYSIS ──────────────────────────────────────
@@ -1431,7 +1502,7 @@
     $('newChannelLink')?.addEventListener('click', (e) => { e.preventDefault(); $('channelUrlFormCard').style.display = 'none'; $('newChannelFormCard').style.display = 'block'; });
     $('showUrlFallback')?.addEventListener('click', (e) => { e.preventDefault(); showManualChannelForm(); });
 
-    $('analyzeCompetitorBtn')?.addEventListener('click', analyzeCompetitor);
+    $('findCompetitorsBtn')?.addEventListener('click', findCompetitors);
 
     $('backToContentType')?.addEventListener('click', () => { appState.contentType = null; showView('view-channel-url'); });
     $('backToNiche')?.addEventListener('click', () => { showView('view-channel-url'); });
@@ -1484,6 +1555,8 @@
     startOver,
     showToast,
     loadDashboard,
-    retryCompetitor
+    retryCompetitor,
+    findCompetitors,
+    analyzeCompetitor
   };
 })();

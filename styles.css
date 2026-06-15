@@ -526,6 +526,34 @@ button:active, .btn-primary:active, .btn-ghost:active {
   margin-bottom: 0;
 }
 
+/* ── Competitor List (Auto-Discovery) ──────────────── */
+.competitor-list {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.competitor-list-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; background: var(--bg-input);
+  border: 1px solid var(--border); border-radius: var(--r);
+  cursor: pointer; transition: all 0.2s ease;
+}
+.competitor-list-item:hover {
+  border-color: var(--accent); background: var(--accent-soft);
+  transform: translateX(4px);
+}
+.competitor-list-item img {
+  width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+  flex-shrink: 0;
+}
+.competitor-list-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--gradient); display: flex; align-items: center;
+  justify-content: center; font-size: 0.85rem; font-weight: 700;
+  color: #fff; flex-shrink: 0; text-transform: uppercase;
+}
+.competitor-list-item span {
+  font-size: 0.88rem; color: var(--text); font-weight: 500;
+}
+
 /* ── Competitor Results ────────────────────────────── */
 .competitor-results {
   margin-top: 20px; animation: fadeUp 0.4s ease both;

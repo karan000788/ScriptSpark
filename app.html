@@ -486,24 +486,19 @@
       <!-- ─── COMPETITOR ANALYSIS ──────────────────────────── -->
       <div class="competitor-card" id="competitorCard">
         <div class="premium-badge">&#9889; BETA — Free for now</div>
-        <h3>&#128269; Analyze a Competitor's Channel</h3>
+        <h3>&#128269; Find Competitors in Your Niche</h3>
         <p>
-          Paste a competitor's YouTube channel URL. We'll study their
-          last 20 videos — what topics they cover, how their thumbnails
-          look, what's getting views — and help you make BETTER content
-          in your own style.
+          We'll search for top channels in <strong id="competitorNicheDisplay">your niche</strong>
+          and analyze what's working for them — their topics, thumbnail style,
+          hook words, and content gaps — so you can make BETTER content.
         </p>
-        <input
-          type="text"
-          placeholder="Paste competitor channel URL (optional)"
-          id="competitorUrl"
-        />
-        <button class="btn-primary btn-sm" id="analyzeCompetitorBtn">&#128269; Analyze Channel</button>
+        <button class="btn-primary btn-sm" id="findCompetitorsBtn">&#128270; Find My Competitors</button>
         <p class="disclaimer">
           * Their content is used for inspiration only.
           Your script and thumbnail will be 100% original.
         </p>
       </div>
+      <div id="competitorList"></div>
       <div id="competitorResults"></div>
     </section>
 
