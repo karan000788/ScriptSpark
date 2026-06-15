@@ -1288,15 +1288,7 @@
     resultsContainer.innerHTML = '<div class="analysis-loading" style="padding:20px;"><div class="loading-spinner"></div><p style="color:var(--text-dim);font-size:0.85rem;margin-top:12px;">Analyzing competitor channel...</p></div>';
 
     try {
-      window.Animations?.showLoading([
-        'Fetching competitor data...',
-        'Analyzing content strategy...',
-        'Identifying patterns...',
-        'Finding opportunities...'
-      ], 28000);
-
-      const data = await withTimeout(API.analyzeCompetitor(url, userChannelName), 30000);
-      window.Animations?.hideLoading();
+      const data = await withTimeout(API.analyzeCompetitor(url, userChannelName), 45000);
 
       if (!data || !data.insights) {
         resultsContainer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:0.85rem;"><p>Could not analyze this channel. Try another one.</p><button class="btn-ghost btn-sm" style="margin-top:8px;" onclick="window.app.retryCompetitor()">Try Again</button></div>';
@@ -1352,7 +1344,6 @@
         '</div>';
     } catch (err) {
       console.error('analyzeCompetitor error:', err);
-      window.Animations?.hideLoading();
       var errContainer = $('competitorResults');
       if (errContainer) {
         errContainer.innerHTML = '<div style="padding:16px;text-align:center;"><p style="color:var(--error);font-size:0.85rem;">' + err.message + '</p><button class="btn-ghost btn-sm" style="margin-top:8px;" onclick="window.app.retryCompetitor()">Try Again</button></div>';
