@@ -530,7 +530,7 @@
 
     appState.niche = niche;
     appState.language = language;
-    const results = $('competitorResults');
+    const results = $('newChannelResults');
     results.innerHTML = `
       <div class="analysis-loading">
         <div class="loading-spinner"></div>
