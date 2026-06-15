@@ -1160,7 +1160,7 @@
         var s = strategies[i];
         var imgData = images[i];
         var imgHtml = imgData
-          ? '<img src="' + urls[i] + '" alt="' + s.label + '" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous" />'
+          ? '<img src="' + urls[i] + '" alt="' + s.label + '" style="width:100%;height:100%;object-fit:cover;display:block;" />'
           : '<div class="thumb-option-failed">Generation failed</div>';
         gridItems +=
           '<div class="thumb-option" data-idx="' + i + '" data-url="' + urls[i] + '" data-type="' + s.id + '">' +
@@ -1232,11 +1232,13 @@
         '</div>' +
       '</div>';
 
-    var fullPrompt = strategy.prompt;
-
-    _selectedThumbData = { canvas: null, url: imgUrl, text: shortText, color: defaultColor, fontSize: 96 };
-
-    loadAndDrawThumbnailCanvas(imgUrl, shortText, null, 96, channelName);
+    var loadedImg = images[idx] || null;
+    _selectedThumbData = { canvas: null, url: imgUrl, text: shortText, color: defaultColor, fontSize: 96, img: loadedImg };
+    if (loadedImg) {
+      drawImageOnCanvas(loadedImg, shortText, null, 96, channelName);
+    } else {
+      loadAndDrawThumbnailCanvas(imgUrl, shortText, null, 96, channelName);
+    }
 
     $('downloadThumbBtn')?.addEventListener('click', function() {
       if (_selectedThumbData.canvas) {
@@ -1265,7 +1267,11 @@
       _selectedThumbData.text = newText;
       _selectedThumbData.color = newColor;
       _selectedThumbData.fontSize = newSize;
-      loadAndDrawThumbnailCanvas(imgUrl, newText, newColor, newSize, channelName);
+      if (_selectedThumbData.img) {
+        drawImageOnCanvas(_selectedThumbData.img, newText, newColor, newSize, channelName);
+      } else {
+        loadAndDrawThumbnailCanvas(imgUrl, newText, newColor, newSize, channelName);
+      }
     });
 
     $('autoGenTextBtn')?.addEventListener('click', async function() {
@@ -1304,6 +1310,32 @@
   function getThumbCategoryColor() {
     var cat = appState.channelCategory || 'Default';
     return THUMB_TEXT_COLORS[cat] || THUMB_TEXT_COLORS['Default'];
+  }
+
+  function drawImageOnCanvas(img, text, textColor, fontSize, channelName) {
+    var canvas = document.createElement('canvas');
+    canvas.width = 1280;
+    canvas.height = 720;
+    var ctx = canvas.getContext('2d');
+    var cat = appState.channelCategory || 'Default';
+    var bgColor = THUMB_BG_COLORS[cat] || THUMB_BG_COLORS['Default'];
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, 1280, 720);
+    ctx.drawImage(img, 0, 0, 1280, 720);
+    var grad = ctx.createLinearGradient(0, 720, 0, 0);
+    grad.addColorStop(0, 'rgba(0,0,0,0.85)');
+    grad.addColorStop(0.35, 'rgba(0,0,0,0.35)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1280, 720);
+    drawThumbText(ctx, text, textColor, fontSize, channelName);
+    _selectedThumbData.canvas = canvas;
+    var destCanvas = $('thumbnailCanvas');
+    if (destCanvas) {
+      var dCtx = destCanvas.getContext('2d');
+      dCtx.clearRect(0, 0, 1280, 720);
+      dCtx.drawImage(canvas, 0, 0, 1280, 720);
+    }
   }
 
   function loadAndDrawThumbnailCanvas(imgUrl, text, textColor, fontSize, channelName) {
