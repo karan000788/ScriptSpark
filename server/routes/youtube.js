@@ -154,7 +154,9 @@ router.post('/auto-fetch', requireAuth, async (req, res) => {
       }
     }
 
-    res.json({ channelId: stats.channelId, name: stats.title, description: stats.description, subscribers: stats.subscribers, totalVideos: stats.totalVideos, thumbnail: stats.thumbnail, recentTitles, detectedCategory });
+    const recentThumbnails = videos.map(v => v.thumbnails?.high?.url || v.thumbnails?.medium?.url || null).filter(Boolean);
+
+    res.json({ channelId: stats.channelId, name: stats.title, description: stats.description, subscribers: stats.subscribers, totalVideos: stats.totalVideos, thumbnail: stats.thumbnail, recentTitles, detectedCategory, recentThumbnails });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

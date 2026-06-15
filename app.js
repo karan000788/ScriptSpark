@@ -196,7 +196,8 @@
       has50Videos: null, channelAnalysis: null, creatorProfile: null,
       marketIntelligence: null, niche: null, channelName: null, channelCategory: null, language: null,
       ideas: [], selectedIdea: null, script: null, originalScript: null,
-      thumbnail: null
+      thumbnail: null, _recentTitles: null, _recentThumbnails: null,
+      _channelVideoCount: null, _channelThumbnailStyle: null, _thumbShortText: null
     };
     showView('view-login');
     showToast('Logged out');
@@ -401,6 +402,12 @@
       appState._channelVideoCount = data.totalVideos || 0;
       if (data.recentTitles && data.recentTitles.length) {
         appState._recentTitles = data.recentTitles;
+      }
+      if (data.recentThumbnails && data.recentThumbnails.length) {
+        appState._recentThumbnails = data.recentThumbnails;
+        API.detectThumbnailStyle(data.recentTitles).then(style => {
+          appState._channelThumbnailStyle = style;
+        }).catch(() => {});
       }
       const catEmoji = CATEGORY_EMOJI_MAP[data.detectedCategory] || '🎬';
       const nicheMatch = CATEGORY_NICHE_MAP[data.detectedCategory];
@@ -820,6 +827,23 @@
   }
 
   // ─── THUMBNAIL ───────────────────────────────────────────
+  const THUMB_TEXT_COLORS = {
+    'Dark Mystery': '#FF0000',
+    'True Crime': '#FF4444',
+    'Finance': '#00FF88',
+    'Gaming': '#00FFFF',
+    'Motivation': '#FFD700',
+    'Default': '#FFFFFF'
+  };
+
+  const EMOTION_TO_COLOR = {
+    'fear': '#FF0000',
+    'curiosity': '#FFD700',
+    'shock': '#FF4444',
+    'inspiration': '#FFD700',
+    'humor': '#FFFFFF'
+  };
+
   async function generateThumbnail(title) {
     const container = $('thumbnailContainer');
     if (!container) return;
@@ -830,17 +854,28 @@
       </div>`;
 
     try {
-      const data = await withTimeout(API.generateThumbnail({
-        title,
-        niche: appState.niche || appState.channelAnalysis?.channelInfo?.name || 'general',
-        analysis: appState.channelAnalysis
-      }), 60000);
+      const [data, thumbTextData] = await Promise.all([
+        withTimeout(API.generateThumbnail({
+          title,
+          niche: appState.niche || appState.channelAnalysis?.channelInfo?.name || 'general',
+          analysis: appState.channelAnalysis,
+          channelCategory: appState.channelCategory
+        }), 60000),
+        API.generateThumbnailText(title).catch(() => null)
+      ]);
 
       appState.thumbnail = data;
+      appState._thumbShortText = thumbTextData?.thumbText || generateShortTextLocally(title);
       renderThumbnail(data, title);
     } catch (err) {
       showError(container, err.message, () => generateThumbnail(title));
     }
+  }
+
+  function generateShortTextLocally(title) {
+    const clean = title.split('|')[0].trim();
+    const words = clean.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 2);
+    return words.slice(0, 3).join(' ').toUpperCase();
   }
 
   let thumbCanvasData = null;
@@ -884,54 +919,49 @@
   }
 
   function drawTextOverlay(ctx, text, textColor, fontSize) {
-    const words = text.split(' ');
-    const maxWords = 6;
-    const shortText = words.slice(0, maxWords).join(' ');
-    const lines = [];
-    let line = '';
-    for (const word of shortText.split(' ')) {
-      if ((line + ' ' + word).length > 20) { lines.push(line.trim()); line = word; }
-      else line += (line ? ' ' : '') + word;
-    }
-    if (line) lines.push(line.trim());
-    if (!lines.length) lines.push(shortText);
+    const cleanText = text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
+    const words = cleanText.split(/\s+/).filter(Boolean);
+    const maxWords = 3;
+    const shortText = words.slice(0, maxWords).join(' ').toUpperCase();
+    if (!shortText) return;
 
-    const fs = fontSize || 72;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    const fs = fontSize || 96;
+    const category = appState.channelCategory;
+    const emotion = appState._channelThumbnailStyle?.emotionType;
 
-    const textY = lines.length > 1 ? 720 / 2 - 30 : 720 / 2;
-
-    let defaultColor;
-    if (appState.channelCategory === 'Dark Mystery' || appState.channelCategory === 'True Crime') defaultColor = '#ff4444';
-    else if (appState.channelCategory === 'Finance') defaultColor = '#22c55e';
-    else if (appState.channelCategory === 'Gaming') defaultColor = '#00ffff';
-    else defaultColor = '#ffffff';
-
+    let defaultColor = THUMB_TEXT_COLORS[category] || THUMB_TEXT_COLORS['Default'];
+    if (emotion && EMOTION_TO_COLOR[emotion]) defaultColor = EMOTION_TO_COLOR[emotion];
     const color = textColor || defaultColor;
 
-    lines.forEach((lineText, i) => {
-      const y = textY + i * (fs * 1.2);
-      if (appState.channelCategory === 'Dark Mystery' || appState.channelCategory === 'True Crime') {
-        ctx.shadowColor = '#000';
-        ctx.shadowBlur = 12;
-        ctx.shadowOffsetX = 4;
-        ctx.shadowOffsetY = 4;
-      } else {
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = fs / 12;
-        ctx.lineJoin = 'round';
-        ctx.strokeText(lineText, 640, y);
-        ctx.shadowColor = 'transparent';
-      }
-      ctx.fillStyle = color;
-      ctx.font = `900 ${fs}px "Impact","Anton",sans-serif`;
-      ctx.fillText(lineText, 640, y);
-    });
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.font = `900 ${fs}px "Impact","Anton",sans-serif`;
+
+    const x = 40;
+    const y = 720 - 80;
+
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
+    ctx.fillStyle = color;
+    ctx.fillText(shortText, x, y);
 
     ctx.shadowColor = 'transparent';
-    ctx.font = '20px "Inter",sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = fs / 12;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(shortText, x, y);
+
+    ctx.fillStyle = color;
+    ctx.fillText(shortText, x, y);
+
+    ctx.font = '18px Arial,sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
     const channelName = appState.channelName || appState.channelAnalysis?.channelInfo?.name || '';
@@ -940,15 +970,46 @@
     }
   }
 
+  function getThumbCategoryColor() {
+    const cat = appState.channelCategory;
+    const emotion = appState._channelThumbnailStyle?.emotionType;
+    if (emotion && EMOTION_TO_COLOR[emotion]) return EMOTION_TO_COLOR[emotion];
+    return THUMB_TEXT_COLORS[cat] || THUMB_TEXT_COLORS['Default'];
+  }
+
   function renderThumbnail(data, title) {
     const container = $('thumbnailContainer');
     if (!container) return;
 
     const channelName = appState.channelName || appState.channelAnalysis?.channelInfo?.name || '';
     const topicSlug = (title || 'thumbnail').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().slice(0, 40);
+    const shortText = appState._thumbShortText || generateShortTextLocally(title);
+    const defaultColor = getThumbCategoryColor();
+    const style = appState._channelThumbnailStyle;
+
+    const styleBadge = style ? `
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;font-size:0.78rem;">
+        <span class="tag">🎨 ${style.textStyle || 'minimal'}</span>
+        <span class="tag">🗣 ${style.language || 'English'}</span>
+        <span class="tag">😲 ${style.emotionType || 'curiosity'}</span>
+      </div>` : '';
+
+    const refStrip = appState._recentThumbnails?.length ? `
+      <div class="thumbnail-reference-strip" style="margin-bottom:16px;">
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">📸 Your recent thumbnails (for reference):</p>
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;">
+          ${appState._recentThumbnails.slice(0, 6).map(t => `
+            <img src="${t}" alt="Recent thumbnail" style="width:120px;height:68px;border-radius:4px;object-fit:cover;flex-shrink:0;border:1px solid var(--border);" loading="lazy" onerror="this.style.display='none'" />
+          `).join('')}
+        </div>
+      </div>` : '';
+
+    const thumbText = shortText.replace(/"/g, '&quot;');
 
     container.innerHTML = `
       <div class="thumbnail-prompt-box">${data.prompt || 'Generating thumbnail...'}</div>
+      ${styleBadge}
+      ${refStrip}
       ${data.imageUrl ? `
         <div class="thumbnail-img-wrap" id="thumbnailCanvasWrap">
           <canvas id="thumbnailCanvas" width="1280" height="720" style="width:100%;height:auto;aspect-ratio:16/9;border-radius:var(--r-lg);display:block;"></canvas>
@@ -963,15 +1024,16 @@
       </div>
       ${data.imageUrl ? `
       <div class="thumb-edit-panel" id="thumbEditPanel">
-        <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:8px;">✏️ Edit Thumbnail Text</h4>
-        <label for="thumbTextInput">Overlay Text (max 6 words)</label>
-        <input type="text" id="thumbTextInput" value="${(title || '').replace(/"/g, '&quot;').split(' ').slice(0, 6).join(' ')}" />
+        <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:8px;">✏️ Thumbnail Text Overlay</h4>
+        <label for="thumbTextInput">Overlay Text (max 3 words)</label>
+        <input type="text" id="thumbTextInput" value="${thumbText}" maxlength="30" />
         <label for="thumbColorInput">Text Color</label>
-        <input type="color" id="thumbColorInput" value="${appState.channelCategory === 'Dark Mystery' || appState.channelCategory === 'True Crime' ? '#ff4444' : appState.channelCategory === 'Finance' ? '#22c55e' : appState.channelCategory === 'Gaming' ? '#00ffff' : '#ffffff'}" />
-        <label for="thumbFontSize">Font Size: <span id="thumbFontSizeLabel">72</span>px</label>
-        <input type="range" id="thumbFontSize" min="36" max="120" value="72" />
+        <input type="color" id="thumbColorInput" value="${defaultColor}" />
+        <label for="thumbFontSize">Font Size: <span id="thumbFontSizeLabel">96</span>px</label>
+        <input type="range" id="thumbFontSize" min="36" max="120" value="96" />
         <div class="form-actions" style="margin-top:12px;">
           <button class="btn-primary btn-sm" id="regenCanvasBtn">🔄 Update Thumbnail</button>
+          <button class="btn-ghost btn-sm" id="autoGenTextBtn">✨ Auto-Generate Text</button>
         </div>
       </div>` : ''}
       ${data.altImageUrl ? `
@@ -982,14 +1044,14 @@
           </div>
         </div>` : ''}
       <div class="sticky-bottom-bar">
-        <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">📦 Download Package</span>
-        <button class="btn-ghost btn-sm" id="copyScriptBtn2">📋 Copy Script</button>
-        <button class="btn-ghost btn-sm" id="copyTitleBtn2">📋 Copy Title</button>
-        <button class="btn-ghost btn-sm" id="copyTopicBtn2">📋 Copy Topic</button>
+        <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Download Package</span>
+        <button class="btn-ghost btn-sm" id="copyScriptBtn2">Copy Script</button>
+        <button class="btn-ghost btn-sm" id="copyTitleBtn2">Copy Title</button>
+        <button class="btn-ghost btn-sm" id="copyTopicBtn2">Copy Topic</button>
       </div>`;
 
     if (data.imageUrl) {
-      drawThumbnailOnCanvas(data.imageUrl, title, null, 72).then(canvas => {
+      drawThumbnailOnCanvas(data.imageUrl, shortText, null, 96).then(canvas => {
         const destCanvas = $('thumbnailCanvas');
         if (destCanvas) {
           const ctx = destCanvas.getContext('2d');
@@ -1018,9 +1080,9 @@
       });
 
       $('regenCanvasBtn')?.addEventListener('click', () => {
-        const newText = $('thumbTextInput')?.value || title;
-        const newColor = $('thumbColorInput')?.value || '#ffffff';
-        const newSize = parseInt($('thumbFontSize')?.value || '72');
+        const newText = $('thumbTextInput')?.value || shortText;
+        const newColor = $('thumbColorInput')?.value || defaultColor;
+        const newSize = parseInt($('thumbFontSize')?.value || '96');
         drawThumbnailOnCanvas(data.imageUrl, newText, newColor, newSize).then(canvas => {
           const destCanvas = $('thumbnailCanvas');
           if (destCanvas) {
@@ -1029,8 +1091,27 @@
             ctx.drawImage(canvas, 0, 0, 1280, 720);
             thumbCanvasData = canvas;
           }
-          showToast('✅ Thumbnail updated!');
+          showToast('Thumbnail updated!');
         });
+      });
+
+      $('autoGenTextBtn')?.addEventListener('click', async () => {
+        const btn = $('autoGenTextBtn');
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+        try {
+          const res = await API.generateThumbnailText(title);
+          if (res?.thumbText) {
+            appState._thumbShortText = res.thumbText;
+            $('thumbTextInput').value = res.thumbText.replace(/"/g, '&quot;');
+            $('regenCanvasBtn').click();
+          }
+        } catch (e) {
+          showToast('Could not generate text');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Auto-Generate Text';
+        }
       });
 
       $('thumbFontSize')?.addEventListener('input', function() {
@@ -1040,23 +1121,23 @@
 
     $('copyPromptBtn')?.addEventListener('click', () => {
       navigator.clipboard.writeText(data.prompt || '');
-      showToast('✅ Prompt copied!');
+      showToast('Prompt copied!');
     });
     $('regenThumbBtn')?.addEventListener('click', () => generateThumbnail(title));
     $('copyScriptBtn2')?.addEventListener('click', () => {
       const body = appState.script?.script || appState.originalScript || '';
       navigator.clipboard.writeText(body);
-      showToast('✅ Script copied!');
+      showToast('Script copied!');
     });
     $('copyTitleBtn2')?.addEventListener('click', () => {
       const t = appState.script?.title || title || '';
       navigator.clipboard.writeText(t);
-      showToast('✅ Title copied!');
+      showToast('Title copied!');
     });
     $('copyTopicBtn2')?.addEventListener('click', () => {
       const topic = appState.selectedIdea?.title || title || '';
       navigator.clipboard.writeText(topic);
-      showToast('✅ Topic copied!');
+      showToast('Topic copied!');
     });
   }
 
@@ -1095,7 +1176,10 @@
     appState.originalScript = null;
     appState.thumbnail = null;
     appState._recentTitles = null;
+    appState._recentThumbnails = null;
     appState._channelVideoCount = null;
+    appState._channelThumbnailStyle = null;
+    appState._thumbShortText = null;
     $('channelUrlFormCard').style.display = 'block';
     $('channelDetectCard').style.display = 'none';
     $('channelFallbackFields').style.display = 'none';

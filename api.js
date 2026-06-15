@@ -175,10 +175,24 @@ const API = {
   },
 
   // Thumbnails
-  async generateThumbnail({ title, niche, topic, analysis }) {
+  async generateThumbnail({ title, niche, topic, analysis, channelCategory }) {
     return apiRequest('/thumbnails/generate', {
       method: 'POST',
-      body: JSON.stringify({ title, niche, topic, analysis })
+      body: JSON.stringify({ title, niche, topic, analysis, channelCategory })
+    });
+  },
+
+  async generateThumbnailText(title) {
+    return apiRequest('/thumbnails/text', {
+      method: 'POST',
+      body: JSON.stringify({ title })
+    });
+  },
+
+  async detectThumbnailStyle(recentTitles) {
+    return apiRequest('/thumbnails/style', {
+      method: 'POST',
+      body: JSON.stringify({ recentTitles })
     });
   },
 

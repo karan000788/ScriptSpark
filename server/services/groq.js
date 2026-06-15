@@ -166,17 +166,76 @@ Output ONLY valid JSON array: [{"title":"under 70 chars","hook":"one-sentence ho
   return JSON.parse(cleanJsonString(result));
 }
 
-export async function generateThumbnailPrompt({ title, niche, analysis }) {
+const STORY_ELEMENTS = {
+  'Dark Mystery': 'shadow silhouette in background, missing poster texture, abandoned location, fog effect',
+  'True Crime': 'newspaper clipping texture overlay, police tape element, dark alley, crime scene tape',
+  'Finance': 'stock chart in background, money blur effect, office setting, green screen glow',
+  'Gaming': 'neon glow effects, controller silhouette, game UI elements, keyboard backlight',
+  'Motivation': 'sunrise background, crowd silhouette, stadium lighting, golden hour glow',
+  'Default': 'dramatic lighting, dark background with spotlight, cinematic fog'
+};
+
+export async function generateThumbnailPrompt({ title, niche, analysis, channelCategory }) {
   const bestPerforming = analysis?.viralTopics?.slice(0, 3).join(', ') || '';
-  const systemPrompt = `You are an elite YouTube thumbnail designer. Create a thumbnail image prompt for "${title}" (${niche}).
+  const storyElem = STORY_ELEMENTS[channelCategory] || STORY_ELEMENTS['Default'];
 
-Requirements: photorealistic, ultra detailed, emotional expression (shock/awe/fear/curiosity/anger), dramatic lighting, cinematic composition, vivid colors, high contrast, 16:9, no text, no watermarks, max CTR.
+  const systemPrompt = `You are an elite YouTube thumbnail designer. Create a thumbnail image prompt for "${title}" (Niche: ${niche}, Category: ${channelCategory || niche || 'General'}).
 
-${bestPerforming ? `Best content: ${bestPerforming}` : ''}
+VISUAL STYLE:
+- Photorealistic, ultra detailed, cinematic composition
+- 16:9 aspect ratio, no text, no watermarks
+- MAX CTR composition
+
+FACE REQUIREMENTS:
+- face clearly visible, eyes expressive, text overlay space at bottom
+- face 30% brighter than background
+- strong rim lighting or screen glow on face
+- eyes clearly visible and expressive
+- dark background with single light source on subject
+
+STORY ELEMENT:
+${storyElem}
+
+${bestPerforming ? `Best performing content reference: ${bestPerforming}` : ''}
 Return ONLY the prompt string. Max 100 words. No markdown.`;
 
   const result = await callGroq(systemPrompt, `Generate thumbnail prompt for: ${title}`);
   return result.replace(/```/g, '').trim();
+}
+
+export async function generateThumbnailText(fullTitle) {
+  const cleanTitle = fullTitle.split('|')[0].trim();
+  const systemPrompt = `Given this YouTube video title: "${cleanTitle}"
+Return ONLY 2-3 word dramatic thumbnail text in the same language.
+Rules:
+- Max 3 words
+- Must create curiosity or fear
+- No emoji
+- Capitalize all words
+- Return only the text, nothing else`;
+
+  const result = await callGroq(systemPrompt, `Generate short thumbnail text for: ${cleanTitle}`);
+  return result.replace(/["'`\n\r]/g, '').trim();
+}
+
+export async function detectThumbnailStyle(recentTitles) {
+  const titleAnalysis = recentTitles.join(', ');
+  const systemPrompt = `Analyze these YouTube video titles from a creator:
+${titleAnalysis}
+
+Detect their thumbnail style pattern and return ONLY a JSON object:
+{
+  "textStyle": "minimal" | "descriptive" | "question-based" | "number-based",
+  "language": "Hindi" | "English" | "Hinglish",
+  "emotionType": "fear" | "curiosity" | "shock" | "inspiration" | "humor",
+  "usesNumbers": true | false,
+  "commonWords": ["word1", "word2"],
+  "recommendedTextStyle": "2-3 word dramatic text in their language and emotion style"
+}
+Return ONLY the JSON. No explanation.`;
+
+  const result = await callGroq(systemPrompt, 'Detect thumbnail style from titles');
+  return JSON.parse(cleanJsonString(result));
 }
 
 export async function generateScriptIdeas({ channelAnalysis, niche, contentType, count = 5 }) {

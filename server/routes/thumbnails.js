@@ -1,19 +1,19 @@
 import { Router } from 'express';
 import { supabase } from '../services/supabase.js';
 import { requireAuth } from '../middleware/auth.js';
-import { generateThumbnailPrompt } from '../services/groq.js';
+import { generateThumbnailPrompt, generateThumbnailText, detectThumbnailStyle } from '../services/groq.js';
 import { generateThumbnail } from '../services/replicate.js';
 
 const router = Router();
 
 router.post('/generate', requireAuth, async (req, res) => {
   try {
-    const { title, niche, topic, analysis } = req.body;
+    const { title, niche, topic, analysis, channelCategory } = req.body;
     if (!title || !niche) {
       return res.status(400).json({ error: 'Title and niche required' });
     }
 
-    const prompt = await generateThumbnailPrompt({ title, niche, analysis });
+    const prompt = await generateThumbnailPrompt({ title, niche, analysis, channelCategory });
 
     let thumbnailUrl = null;
     let provider = null;
@@ -76,12 +76,34 @@ router.post('/generate', requireAuth, async (req, res) => {
 
 router.post('/prompt-only', requireAuth, async (req, res) => {
   try {
-    const { title, niche } = req.body;
+    const { title, niche, channelCategory } = req.body;
     if (!title || !niche) {
       return res.status(400).json({ error: 'Title and niche required' });
     }
-    const prompt = await generateThumbnailPrompt({ title, niche });
+    const prompt = await generateThumbnailPrompt({ title, niche, channelCategory });
     res.json({ prompt });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/text', requireAuth, async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!title) return res.status(400).json({ error: 'Title required' });
+    const thumbText = await generateThumbnailText(title);
+    res.json({ thumbText });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/style', requireAuth, async (req, res) => {
+  try {
+    const { recentTitles } = req.body;
+    if (!recentTitles || !recentTitles.length) return res.status(400).json({ error: 'Recent titles required' });
+    const style = await detectThumbnailStyle(recentTitles);
+    res.json(style);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
