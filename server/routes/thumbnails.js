@@ -31,6 +31,18 @@ router.post('/generate', requireAuth, async (req, res) => {
       console.error('Thumbnail generation failed:', err.message);
     }
 
+    if (customPrompt) {
+      // Strategy exploration — just return the image, no DB saves or alt generation
+      return res.json({
+        prompt,
+        imageUrl: thumbnailUrl,
+        provider,
+        altPrompt: null,
+        altImageUrl: null,
+        error: thumbnailError
+      });
+    }
+
     const record = {
       user_id: req.user.id,
       prompt,
