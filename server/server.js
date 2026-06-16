@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js';
 import youtubeRoutes from './routes/youtube.js';
 import scriptRoutes from './routes/scripts.js';
 import thumbnailRoutes from './routes/thumbnails.js';
+import pipelineRoutes from './routes/contentPipeline.js';
 import setupRoutes from './routes/setup.js';
 
 dotenv.config();
@@ -42,6 +43,7 @@ app.use('/api/auth', apiLimiter, authRoutes);
 app.use('/api/youtube', youtubeRoutes);
 app.use('/api/scripts', scriptRoutes);
 app.use('/api/thumbnails', thumbnailRoutes);
+app.use('/api/pipeline', pipelineRoutes);
 app.use('/api/setup', setupRoutes);
 
 app.use(express.static(path.join(__dirname, '..')));
