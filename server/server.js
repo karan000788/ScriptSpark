@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { ensureTemplates } from './services/templates.js';
 import authRoutes from './routes/auth.js';
 import youtubeRoutes from './routes/youtube.js';
 import scriptRoutes from './routes/scripts.js';
@@ -13,6 +14,7 @@ import pipelineRoutes from './routes/contentPipeline.js';
 import setupRoutes from './routes/setup.js';
 
 dotenv.config();
+ensureTemplates();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -70,5 +72,6 @@ app.listen(PORT, () => {
   console.log(`Supabase: ${process.env.SUPABASE_URL ? 'configured' : 'missing'}`);
   console.log(`YouTube API: ${process.env.YOUTUBE_API_KEY ? 'configured' : 'missing'}`);
   console.log(`Groq API: ${process.env.GROQ_API_KEY ? 'configured' : 'missing'}`);
-  console.log(`Replicate API: ${process.env.REPLICATE_API_TOKEN ? 'configured' : 'missing'}`);
+  console.log(`HuggingFace API: ${process.env.HF_ACCESS_TOKEN ? 'configured' : 'missing'}`);
+  console.log('Thumbnail templates: loaded');
 });
