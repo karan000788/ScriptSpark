@@ -57,19 +57,23 @@ export async function generateThumbnail(prompt, niche = 'General') {
 
   try {
     const response = await Promise.race([
-      fetch(`${HF_ENDPOINT}?prompt=${encodeURIComponent(instruction)}`, {
+      fetch(`${HF_ENDPOINT}?wait_for_model=true`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${HF_TOKEN}`,
-          'Content-Type': 'image/png'
+          'Content-Type': 'application/json'
         },
-        body: templateBuffer
+        body: JSON.stringify({
+          inputs: templateBuffer.toString('base64'),
+          parameters: { prompt: instruction }
+        })
       }),
       rejectAfterTimeout(TIMEOUT_MS)
     ]);
 
     if (!response.ok) {
-      throw new Error(`HF API returned ${response.status}`);
+      const errBody = await response.text().catch(() => '');
+      throw new Error(`HF API returned ${response.status}: ${errBody.slice(0, 200)}`);
     }
 
     const contentType = response.headers.get('content-type') || 'image/png';
