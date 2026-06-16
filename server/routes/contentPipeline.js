@@ -159,7 +159,7 @@ router.post('/thumbnail', requireAuth, async (req, res) => {
       channelCategory: (channelContext && channelContext.niche) || 'General'
     });
 
-    const result = await generateThumbnail(prompt);
+    const result = await generateThumbnail(prompt, (channelContext && channelContext.niche) || 'General');
 
     await supabase.from('generation_history').insert({
       user_id: req.user.id,

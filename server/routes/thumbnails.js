@@ -23,7 +23,7 @@ router.post('/generate', requireAuth, async (req, res) => {
     let thumbnailError = null;
 
     try {
-      const result = await generateThumbnail(prompt);
+      const result = await generateThumbnail(prompt, niche);
       thumbnailUrl = result.url;
       provider = result.provider;
     } catch (err) {
@@ -71,7 +71,7 @@ router.post('/generate', requireAuth, async (req, res) => {
     const altPrompt = prompt + ' (alternative version with warmer tones and different composition)';
     let altThumbnailUrl = null;
     try {
-      const altResult = await generateThumbnail(altPrompt);
+      const altResult = await generateThumbnail(altPrompt, niche);
       altThumbnailUrl = altResult.url;
     } catch (_) {}
 
