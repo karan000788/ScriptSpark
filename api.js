@@ -182,10 +182,10 @@ const API = {
   },
 
   // Thumbnails
-  async generateThumbnail({ title, niche, topic, analysis, channelCategory }) {
+  async generateThumbnail({ title, niche, topic, analysis, channelCategory, customPrompt }) {
     return apiRequest('/thumbnails/generate', {
       method: 'POST',
-      body: JSON.stringify({ title, niche, topic, analysis, channelCategory })
+      body: JSON.stringify({ title, niche, topic, analysis, channelCategory, customPrompt })
     });
   },
 

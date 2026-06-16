@@ -8,12 +8,15 @@ const router = Router();
 
 router.post('/generate', requireAuth, async (req, res) => {
   try {
-    const { title, niche, topic, analysis, channelCategory } = req.body;
-    if (!title || !niche) {
-      return res.status(400).json({ error: 'Title and niche required' });
+    const { title, niche, topic, analysis, channelCategory, customPrompt } = req.body;
+    if (!title) {
+      return res.status(400).json({ error: 'Title required' });
+    }
+    if (!niche && !customPrompt) {
+      return res.status(400).json({ error: 'Niche required when no custom prompt' });
     }
 
-    const prompt = await generateThumbnailPrompt({ title, niche, analysis, channelCategory });
+    const prompt = customPrompt || await generateThumbnailPrompt({ title, niche, analysis, channelCategory });
 
     let thumbnailUrl = null;
     let provider = null;

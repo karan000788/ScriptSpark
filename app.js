@@ -1153,18 +1153,31 @@
         if (thumbTextData && thumbTextData.thumbText) thumbText = thumbTextData.thumbText;
       } catch (e) {}
 
-      var urls = strategies.map(function(s) { return generateThumbnailURL(s, title); });
+      var niche = appState.niche || (function(){
+        var m = { 'Dark Mystery': 'dark mystery', 'Finance': 'finance', 'Gaming': 'gaming', 'True Crime': 'true crime', 'Tech': 'tech', 'Technology': 'tech', 'Motivation': 'motivation', 'Education': 'education', 'History': 'history', 'Food': 'food', 'Travel': 'travel', 'Health': 'health', 'Relationships': 'relationships', 'Business': 'business', 'Mythology': 'mythology', 'Astrology': 'astrology', 'Science': 'science' };
+        return m[channelCategory] || title;
+      })();
 
       container.innerHTML =
         '<div id="thumbGridLoading" style="text-align:center;padding:40px 20px;">' +
           '<div style="width:36px;height:36px;border:3px solid #333;border-top-color:#a78bfa;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px;"></div>' +
-          '<p style="color:var(--text-dim);margin-top:12px;">Generating 4 AI thumbnail concepts...</p>' +
+          '<p style="color:var(--text-dim);margin-top:12px;">Generating 4 AI thumbnail concepts via Replicate AI...</p>' +
         '</div>' +
         '<div id="thumbOptionsGrid" style="display:none;"></div>' +
         '<div id="thumbSelectedArea" style="display:none;"></div>';
 
+      var results = await Promise.all(strategies.map(function(s) {
+        return API.generateThumbnail({
+          title: title,
+          niche: niche,
+          customPrompt: s.prompt,
+          channelCategory: channelCategory
+        }).catch(function() { return null; });
+      }));
+
+      var urls = results.map(function(r) { return r && r.imageUrl ? r.imageUrl : null; });
       var images = await Promise.all(urls.map(function(url) {
-        return loadThumbnailAsImage(url).catch(function() { return null; });
+        return url ? loadThumbnailAsImage(url).catch(function() { return null; }) : Promise.resolve(null);
       }));
 
       var gridItems = '';
